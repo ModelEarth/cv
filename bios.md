@@ -1,4 +1,4 @@
-# Developers
+# Team
 
 ![Akhila Guska](AkhilaGuska/AkhilaGuska.jpg)
 
