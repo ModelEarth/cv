@@ -1,1 +1,3 @@
-# contributors
+# Developers
+
+From concept to visualization
