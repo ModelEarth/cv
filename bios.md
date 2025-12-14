@@ -6,7 +6,7 @@
 
 ## Akhila Guska
 
-Akhila Guska she focuses on process automation and tools that streamline data workflows. As a Data Analyst with an MS in Business Analytics, she applies Python, SQL, JavaScript, Tableau, and GitHub API in building automated data pipelines and visualization systems. Recent work includes automating university admissions processing (70% time reduction), developing ML report generation systems that reduced creation time by 85%, and creating dashboards for real-time KPI tracking. Akhila previous work also includes Amazon's Alexa ML team and Wipro.
+Akhila Guska focuses on process automation and tools that streamline data workflows. As a Data Analyst with an MS in Business Analytics, she applies Python, SQL, JavaScript, Tableau, and GitHub API in building automated data pipelines and visualization systems. Recent work includes automating university admissions processing (70% time reduction), developing ML report generation systems that reduced creation time by 85%, and creating dashboards for real-time KPI tracking. Akhila previous work also includes Amazon's Alexa ML team and Wipro.
 
 </div>
 
