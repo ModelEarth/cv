@@ -1,4 +1,4 @@
-# Team
+# Our Team
 
 ![Akhila Guska](AkhilaGuska/AkhilaGuska.jpg)
 
