@@ -1,0 +1,23 @@
+:root {
+  --bg-page: #ecfeff;
+  --bg-card: #f0f9ff;
+  --accent: #0ea5e9;
+  --accent-soft: #e0f2fe;
+  --text-main: #02131b;
+  --text-muted: #0369a1;
+  --border-subtle: #bae6fd;
+  --chip-bg: #e0f2fe;
+  --chip-text: #0369a1;
+}
+
+#resumeContainer {
+  border: 1px solid var(--border-subtle);
+}
+
+.header {
+  border-bottom-color: var(--border-subtle);
+}
+
+.section-title {
+  color: var(--text-muted);
+}

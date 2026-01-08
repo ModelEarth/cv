@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Upload Test</title>
+    <style>
+      body {
+        font-family: system-ui;
+        padding: 20px;
+        background: #1a1a1a;
+        color: #fff;
+      }
+      .box {
+        border: 2px dashed #0066ff;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+        text-align: center;
+      }
+      input[type="file"] {
+        padding: 10px;
+      }
+      button {
+        background: #0066ff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 10px 5px 0 0;
+      }
+      button:hover {
+        background: #0044cc;
+      }
+      .log {
+        background: #222;
+        border: 1px solid #444;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 5px;
+        max-height: 300px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 12px;
+      }
+      .success {
+        color: #4afa4a;
+      }
+      .error {
+        color: #ff4444;
+      }
+      .info {
+        color: #0099ff;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧪 Simple Upload Test</h1>
+
+    <div class="box">
+      <h2>Step 1: Upload PDF</h2>
+      <input type="file" id="pdfFile" accept=".pdf" />
+      <button onclick="testUpload()">Upload & Read File</button>
+    </div>
+
+    <div class="box">
+      <h2>Step 2: Extract Text</h2>
+      <button onclick="testExtraction()" id="extractBtn" disabled>
+        Extract Text from PDF
+      </button>
+    </div>
+
+    <div class="box">
+      <h2>Step 3: Parse Resume</h2>
+      <button onclick="testParsing()" id="parseBtn" disabled>
+        Parse Resume Data
+      </button>
+    </div>
+
+    <h2>📝 Console Output:</h2>
+    <div class="log" id="output"></div>
+
+    <script>
+      let pdfBuffer = null;
+
+      function log(msg, type = "info") {
+        const output = document.getElementById("output");
+        const className = type;
+        const line = document.createElement("div");
+        line.className = className;
+        line.textContent = "[" + new Date().toLocaleTimeString() + "] " + msg;
+        output.appendChild(line);
+        output.scrollTop = output.scrollHeight;
+        console.log("[" + type + "]", msg);
+      }
+
+      async function testUpload() {
+        log("Starting file upload test...", "info");
+        const input = document.getElementById("pdfFile");
+
+        if (!input.files.length) {
+          log("❌ No file selected", "error");
+          return;
+        }
+
+        const file = input.files[0];
+        log(`✅ File selected: ${file.name}`, "success");
+        log(`   Size: ${(file.size / 1024).toFixed(1)}KB`, "info");
+        log(`   Type: ${file.type}`, "info");
+
+        try {
+          log("📖 Reading file as ArrayBuffer...", "info");
+          pdfBuffer = await file.arrayBuffer();
+          log(
+            `✅ File read successfully (${pdfBuffer.byteLength} bytes)`,
+            "success"
+          );
+          document.getElementById("extractBtn").disabled = false;
+        } catch (error) {
+          log(`❌ Error reading file: ${error.message}`, "error");
+        }
+      }
+
+      async function testExtraction() {
+        if (!pdfBuffer) {
+          log("❌ No PDF buffer available", "error");
+          return;
+        }
+
+        log("Checking PDFTextExtractor...", "info");
+        if (!window.PDFTextExtractor) {
+          log("❌ PDFTextExtractor not available", "error");
+          log(
+            `   window.PDFTextExtractor = ${typeof window.PDFTextExtractor}`,
+            "error"
+          );
+          return;
+        }
+
+        try {
+          log("⏳ Extracting text from PDF...", "info");
+          const text = await window.PDFTextExtractor.extractText(pdfBuffer);
+          log(
+            `✅ Text extracted successfully (${text.length} characters)`,
+            "success"
+          );
+          log(`   Preview: "${text.substring(0, 100)}..."`, "info");
+
+          // Store in window for next step
+          window._extractedText = text;
+          document.getElementById("parseBtn").disabled = false;
+        } catch (error) {
+          log(`❌ Extraction error: ${error.message}`, "error");
+        }
+      }
+
+      async function testParsing() {
+        const text = window._extractedText;
+        if (!text) {
+          log("❌ No extracted text", "error");
+          return;
+        }
+
+        log("Checking parseResumeText function...", "info");
+        if (typeof parseResumeText !== "function") {
+          log("❌ parseResumeText function not found", "error");
+          return;
+        }
+
+        try {
+          log("⏳ Parsing resume...", "info");
+
+          // Debug: Show what sections are found
+          const cleanedText = window.cleanAndNormalizeText(text);
+          const sections = window.identifySections(cleanedText);
+
+          log("\n📋 Sections extracted:", "info");
+          for (const [name, content] of Object.entries(sections)) {
+            const preview = content.substring(0, 120).replace(/\n/g, " ");
+            log(`  ${name}: "${preview}..."`, "info");
+          }
+
+          // Parse and show individual results
+          log("\n🔍 Parsing sections individually:", "info");
+
+          if (sections.experience) {
+            log(
+              `  EXPERIENCE section (${sections.experience.length} chars):`,
+              "info"
+            );
+            log(`    "${sections.experience.substring(0, 300)}..."`, "info");
+
+            // Look for dates in this section
+            const datePattern =
+              /([A-Z][a-z]+\.?\s+\d{4})\s*[-–—]\s*((?:[A-Z][a-z]+\.?\s+\d{4})|Present)/g;
+            const dates = [...sections.experience.matchAll(datePattern)];
+            log(`    Found ${dates.length} date patterns`, "info");
+          }
+
+          const workResult = sections.experience
+            ? window.parseWorkExperience(sections.experience)
+            : [];
+          log(
+            `  Work: ${workResult.length} jobs found`,
+            workResult.length > 0 ? "success" : "error"
+          );
+
+          const eduResult = sections.education
+            ? window.parseEducation(sections.education)
+            : [];
+
+          if (sections.education) {
+            log(
+              `  EDUCATION section (${sections.education.length} chars):`,
+              "info"
+            );
+            log(`    "${sections.education.substring(0, 200)}..."`, "info");
+          }
+
+          log(
+            `  Education: ${eduResult.length} entries found`,
+            eduResult.length > 0 ? "success" : "error"
+          );
+
+          const skillsResult = sections.skills
+            ? window.parseSkills(sections.skills)
+            : [];
+          log(
+            `  Skills: ${skillsResult.length} categories found`,
+            skillsResult.length > 0 ? "success" : "error"
+          );
+
+          const projResult = sections.projects
+            ? window.parseProjects(sections.projects)
+            : [];
+          log(
+            `  Projects: ${projResult.length} projects found`,
+            projResult.length > 0 ? "success" : "error"
+          );
+
+          const resumeData = parseResumeText(text);
+          log("\n✅ Resume parsed successfully!", "success");
+          log(`   Name: ${resumeData.basics.name}`, "success");
+          log(`   Work positions: ${resumeData.work.length}`, "info");
+          log(`   Education entries: ${resumeData.education.length}`, "info");
+          log(`   Skills categories: ${resumeData.skills.length}`, "info");
+          log(`   Projects: ${resumeData.projects.length}`, "info");
+
+          // Show detailed breakdown
+          if (resumeData.work.length > 0) {
+            log("\n📋 Work Experience:", "info");
+            resumeData.work.forEach((job, i) => {
+              log(`  ${i + 1}. ${job.position} at ${job.company}`, "info");
+            });
+          }
+          if (resumeData.education.length > 0) {
+            log("\n🎓 Education:", "info");
+            resumeData.education.forEach((edu, i) => {
+              log(`  ${i + 1}. ${edu.studyType} in ${edu.area}`, "info");
+            });
+          }
+          if (resumeData.projects.length > 0) {
+            log("\n📦 Projects:", "info");
+            resumeData.projects.forEach((proj, i) => {
+              log(`  ${i + 1}. ${proj.name}`, "info");
+            });
+          }
+
+          log("\n📊 Full Resume Data:", "info");
+          log(JSON.stringify(resumeData, null, 2), "info");
+        } catch (error) {
+          log(`❌ Parsing error: ${error.message}`, "error");
+          log(`   Stack: ${error.stack}`, "error");
+        }
+      }
+
+      // Auto-check on load
+      window.addEventListener("load", () => {
+        log("Page loaded", "info");
+        log(
+          `window.PDFTextExtractor: ${typeof window.PDFTextExtractor}`,
+          "info"
+        );
+        log(`parseResumeText function: ${typeof parseResumeText}`, "info");
+      });
+    </script>
+
+    <!-- PDF.js setup (same as main app) -->
+    <script type="module">
+      import * as pdfModule from "./vendor/pdf.mjs";
+      window.pdfjsLib = pdfModule;
+
+      if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "./vendor/pdf.worker.mjs";
+      }
+
+      window._pdfModuleReady = true;
+      window.dispatchEvent(new Event("pdfjs-ready"));
+      console.log("✅ PDF.js module loaded");
+    </script>
+
+    <!-- PDFTextExtractor -->
+    <script src="src/parsers/pdfjs-parser.js"></script>
+
+    <!-- Parse functions from app.js -->
+    <script src="app.js"></script>
+
+    <script>
+      // Expose functions for debugging
+      window.cleanAndNormalizeText = cleanAndNormalizeText;
+      window.identifySections = identifySections;
+      window.parseEducation = parseEducation;
+      window.parseWorkExperience = parseWorkExperience;
+      window.parseSkills = parseSkills;
+      window.parseProjects = parseProjects;
+    </script>
+  </body>
+</html>

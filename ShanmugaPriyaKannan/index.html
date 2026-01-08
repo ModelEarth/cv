@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio Resume Preview</title>
+
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      margin: 25px;
+      background-color: #f9fafb;
+      color: #333;
+    }
+    h3 { margin-bottom: 10px; }
+    label { margin-right: 8px; font-weight: 500; }
+    select {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: #fff;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 15px;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      max-height: 320px;
+    }
+    iframe {
+      width: 100%;
+      height: 900px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: white;
+    }
+    .section { margin-bottom: 40px; }
+    .row {
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="section">
+    <h3>Preview JSON Résumé Themes</h3>
+
+    <div class="row">
+      <label>Data:</label>
+      <select id="jsonSelect">
+        <option value="simple.json">simple.json</option>
+        <option value="detailed.json">detailed.json</option>
+      </select>
+
+      <label style="margin-left:12px;">Theme:</label>
+      <select id="theme">
+        <!-- 12 LOCAL CUSTOM THEMES (folder names) -->
+        <option value="creative-studio">Creative Studio</option>
+        <option value="data-driven">Data Driven</option>
+        <option value="elegant">Elegant</option>
+        <option value="executive-slate">Executive Slate</option>
+        <option value="kendall">Kendall</option>
+        <option value="macchiato">Macchiato</option>
+        <option value="minimalist">Minimalist</option>
+        <option value="modern-classic">Modern Classic</option>
+        <option value="onepage">OnePage</option>
+        <option value="professional">Professional</option>
+        <option value="pumpkin">Pumpkin</option>
+        <option value="striking">Striking</option>
+      </select>
+    </div>
+
+    <div style="margin:15px 0;"></div>
+
+    <iframe id="themePreview"></iframe>
+    <pre id="dataPreview">Loading JSON…</pre>
+    <div id="dataStatus" style="margin-top:8px;font:13px/1.4 system-ui;"></div>
+  </div>
+
+  <div class="section">
+    <h3>Project Notes (from README.md)</h3>
+    <div id="readmeContent" style="
+      background:#fff;border:1px solid #ddd;border-radius:8px;
+      padding:20px;line-height:1.6;
+    ">
+      <em>Loading README.md...</em>
+    </div>
+  </div>
+
+  <script>
+    const $ = s => document.querySelector(s);
+
+    const jsonSelect   = $("#jsonSelect");
+    const themeSelect  = $("#theme");
+    const previewFrame = $("#themePreview");
+    const dataPreview  = $("#dataPreview");
+    const statusBox    = $("#dataStatus");
+
+    function getParam(k, fallback) {
+      return new URLSearchParams(location.search).get(k) ?? fallback;
+    }
+
+    function setParam(params) {
+      const url = new URL(location.href);
+      Object.entries(params).forEach(([k, v]) =>
+        v ? url.searchParams.set(k, v) : url.searchParams.delete(k)
+      );
+      history.replaceState(null, "", url.toString());
+    }
+
+    async function loadJson(file) {
+      try {
+        const res = await fetch(file, { cache: "no-store" });
+        const json = await res.json();
+        dataPreview.textContent = JSON.stringify(json, null, 2);
+        return json;
+      } catch (err) {
+        console.error(err);
+        dataPreview.textContent = `⚠️ Failed to load ${file}`;
+      }
+    }
+
+    function loadTheme(jsonFile, theme) {
+      const url = `theme.html?resume=${encodeURIComponent(jsonFile)}&theme=${encodeURIComponent(theme)}`;
+      const start = performance.now();
+
+      previewFrame.onload = () => {
+        const ms = (performance.now() - start).toFixed(1);
+        statusBox.textContent = `Theme "${theme}" loaded in ${ms} ms`;
+      };
+
+      previewFrame.src = url;
+    }
+
+    async function loadAll(jsonFile, theme) {
+      await loadJson(jsonFile);
+      loadTheme(jsonFile, theme);
+    }
+
+    async function loadReadme() {
+      try {
+        const res = await fetch("./README.md", { cache: "no-store" });
+        if (!res.ok) throw new Error();
+        const text = await res.text();
+        document.getElementById("readmeContent").innerHTML =
+          text.replace(/\n/g, "<br>");
+      } catch {
+        document.getElementById("readmeContent").innerHTML =
+          "<p style='color:red;'>Failed to load README.md.</p>";
+      }
+    }
+
+    function init() {
+      const jsonFile = getParam("resume", "detailed.json");
+      const theme    = getParam("theme",  "elegant");
+
+      jsonSelect.value  = jsonFile;
+      themeSelect.value = theme;
+
+      setParam({ resume: jsonFile, theme });
+      loadAll(jsonFile, theme);
+      loadReadme();
+    }
+
+    jsonSelect.addEventListener("change", () => {
+      const jsonFile = jsonSelect.value;
+      const theme    = themeSelect.value;
+      setParam({ resume: jsonFile, theme });
+      loadAll(jsonFile, theme);
+    });
+
+    themeSelect.addEventListener("change", () => {
+      const jsonFile = jsonSelect.value;
+      const theme    = themeSelect.value;
+      setParam({ resume: jsonFile, theme });
+      loadAll(jsonFile, theme);
+    });
+
+    init();
+  </script>
+
+</body>
+</html>

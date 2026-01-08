@@ -1,0 +1,25 @@
+:root {
+  --bg-page: #020617;
+  --bg-card: #020617;
+  --accent: #38bdf8;
+  --accent-soft: rgba(56, 189, 248, 0.1);
+  --text-main: #e5e7eb;
+  --text-muted: #9ca3af;
+  --border-subtle: #1f2937;
+  --chip-bg: rgba(15, 23, 42, 0.8);
+  --chip-text: #38bdf8;
+}
+
+#resumeContainer {
+  border-radius: 0;
+  border-top: 4px solid var(--accent);
+  box-shadow: 0 15px 30px rgba(15, 23, 42, 0.9);
+}
+
+.header {
+  border-bottom-color: rgba(148, 163, 184, 0.3);
+}
+
+.section-title {
+  color: var(--accent);
+}

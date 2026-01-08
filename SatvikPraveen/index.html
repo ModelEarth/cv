@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume Template Generator - PDF to Multiple Styled Versions</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="container">
+        <h1>📄 Resume Template Generator</h1>
+        <p class="subtitle">
+          Upload PDF → Extract Data → Apply Beautiful Templates
+        </p>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="container">
+        <!-- SECTION 1: Upload -->
+        <section class="section upload-section">
+          <div class="section-header">
+            <h2><span class="step-num">1</span> Upload Resume PDF</h2>
+          </div>
+
+          <div class="upload-area">
+            <input type="file" id="pdfInput" accept="application/pdf" hidden />
+            <label for="pdfInput" class="upload-box" id="uploadBox">
+              <div class="upload-icon">📎</div>
+              <p class="upload-text">Click to upload or drag & drop</p>
+              <p class="upload-hint">PDF files only • Max 10MB</p>
+            </label>
+
+            <div id="fileInfo" class="file-info is-hidden">
+              <span class="file-icon">📄</span>
+              <span id="fileName" class="file-name"></span>
+              <button id="removeFile" class="btn-remove">✕</button>
+            </div>
+
+            <button id="parseBtn" class="btn btn-primary" disabled>
+              <span class="btn-icon">⚡</span>
+              Parse Resume
+            </button>
+
+            <div id="loadingIndicator" class="loading is-hidden">
+              <div class="spinner"></div>
+              <p>Extracting data from PDF...</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: Extracted Data -->
+        <section class="section data-section">
+          <div class="section-header">
+            <h2><span class="step-num">2</span> Extracted Data</h2>
+            <div class="tabs">
+              <button class="tab-btn active" data-tab="preview">Preview</button>
+              <button class="tab-btn" data-tab="json">JSON</button>
+              <button class="tab-btn" data-tab="raw">Raw Text</button>
+            </div>
+          </div>
+
+          <div class="tab-content active" id="previewTab">
+            <div id="dataPreview" class="data-preview">
+              <div class="empty-state">
+                <p>📋 Upload and parse a PDF to see structured data</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-content" id="jsonTab">
+            <div class="code-header">
+              <span class="code-title">Structured JSON Data</span>
+              <button
+                class="btn-copy"
+                onclick="copyToClipboard('jsonOutput', this)"
+              >
+                <span>📋</span> Copy
+              </button>
+            </div>
+            <label for="jsonOutput" class="sr-only">Structured JSON Data</label>
+            <textarea
+              id="jsonOutput"
+              class="code-textarea"
+              readonly
+              placeholder="JSON data will appear here..."
+            ></textarea>
+          </div>
+
+          <div class="tab-content" id="rawTab">
+            <div class="code-header">
+              <span class="code-title">Raw Extracted Text</span>
+              <button
+                class="btn-copy"
+                onclick="copyToClipboard('rawOutput', this)"
+              >
+                <span>📋</span> Copy
+              </button>
+            </div>
+            <label for="rawOutput" class="sr-only">Raw extracted text</label>
+            <textarea
+              id="rawOutput"
+              class="code-textarea"
+              readonly
+              placeholder="Raw text will appear here..."
+            ></textarea>
+          </div>
+        </section>
+
+        <!-- SECTION 3: Templates -->
+        <section class="section template-section">
+          <div class="section-header">
+            <h2><span class="step-num">3</span> Choose Resume Template</h2>
+            <p class="section-desc">Select a style to apply to your resume</p>
+          </div>
+
+          <div class="template-grid">
+            <button class="template-card" data-template="classic">
+              <div class="template-preview classic-preview">
+                <div class="prev-header"></div>
+                <div class="prev-line"></div>
+                <div class="prev-line short"></div>
+                <div class="prev-line"></div>
+              </div>
+              <div class="template-info">
+                <h3>Classic</h3>
+                <p>Traditional & Professional</p>
+              </div>
+            </button>
+
+            <button class="template-card" data-template="modern">
+              <div class="template-preview modern-preview">
+                <div class="prev-sidebar"></div>
+                <div class="prev-main">
+                  <div class="prev-line"></div>
+                  <div class="prev-line"></div>
+                </div>
+              </div>
+              <div class="template-info">
+                <h3>Modern</h3>
+                <p>Clean & Minimal</p>
+              </div>
+            </button>
+
+            <button class="template-card" data-template="creative">
+              <div class="template-preview creative-preview">
+                <div class="prev-accent"></div>
+                <div class="prev-line"></div>
+                <div class="prev-line short"></div>
+              </div>
+              <div class="template-info">
+                <h3>Creative</h3>
+                <p>Bold & Colorful</p>
+              </div>
+            </button>
+
+            <button class="template-card" data-template="tech">
+              <div class="template-preview tech-preview">
+                <div class="prev-grid">
+                  <div class="prev-box"></div>
+                  <div class="prev-box"></div>
+                  <div class="prev-box"></div>
+                  <div class="prev-box"></div>
+                </div>
+              </div>
+              <div class="template-info">
+                <h3>Tech</h3>
+                <p>Developer-Focused</p>
+              </div>
+            </button>
+
+            <button class="template-card" data-template="executive">
+              <div class="template-preview executive-preview">
+                <div class="prev-header elegant"></div>
+                <div class="prev-line"></div>
+                <div class="prev-line"></div>
+              </div>
+              <div class="template-info">
+                <h3>Executive</h3>
+                <p>Senior Leadership</p>
+              </div>
+            </button>
+
+            <button class="template-card" data-template="compact">
+              <div class="template-preview compact-preview">
+                <div class="prev-columns">
+                  <div class="prev-col">
+                    <div class="prev-line short"></div>
+                    <div class="prev-line short"></div>
+                  </div>
+                  <div class="prev-col">
+                    <div class="prev-line short"></div>
+                    <div class="prev-line short"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="template-info">
+                <h3>Compact</h3>
+                <p>Two-Column Layout</p>
+              </div>
+            </button>
+
+            <button class="template-card" data-template="minimal">
+              <div class="template-preview minimal-preview">
+                <div class="prev-header minimal"></div>
+                <div class="prev-line"></div>
+                <div class="prev-line short"></div>
+              </div>
+              <div class="template-info">
+                <h3>Minimal</h3>
+                <p>Ultra-Clean</p>
+              </div>
+            </button>
+
+            <button class="template-card" data-template="colorful">
+              <div class="template-preview colorful-preview">
+                <div class="prev-accent colorful"></div>
+                <div class="prev-box"></div>
+                <div class="prev-box"></div>
+              </div>
+              <div class="template-info">
+                <h3>Colorful</h3>
+                <p>Vibrant & Fun</p>
+              </div>
+            </button>
+
+            <button class="template-card" data-template="dark">
+              <div class="template-preview dark-preview">
+                <div class="prev-header dark"></div>
+                <div class="prev-line dark"></div>
+                <div class="prev-line dark short"></div>
+              </div>
+              <div class="template-info">
+                <h3>Dark</h3>
+                <p>Modern Dark Mode</p>
+              </div>
+            </button>
+
+            <button class="template-card" data-template="ats">
+              <div class="template-preview ats-preview">
+                <div class="prev-title"></div>
+                <div class="prev-line"></div>
+                <div class="prev-line"></div>
+                <div class="prev-line short"></div>
+              </div>
+              <div class="template-info">
+                <h3>ATS-Friendly</h3>
+                <p>Parser-Optimized</p>
+              </div>
+            </button>
+
+            <button class="template-card" data-template="academic">
+              <div class="template-preview academic-preview">
+                <div class="prev-center"></div>
+                <div class="prev-line"></div>
+                <div class="prev-line"></div>
+              </div>
+              <div class="template-info">
+                <h3>Academic</h3>
+                <p>Scholarly Format</p>
+              </div>
+            </button>
+
+            <button class="template-card" data-template="corporate">
+              <div class="template-preview corporate-preview">
+                <div class="prev-sidebar"></div>
+                <div class="prev-main">
+                  <div class="prev-line"></div>
+                  <div class="prev-line short"></div>
+                </div>
+              </div>
+              <div class="template-info">
+                <h3>Corporate</h3>
+                <p>Executive Style</p>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        <!-- SECTION 4: Preview -->
+        <section class="section preview-section">
+          <div class="section-header">
+            <h2><span class="step-num">4</span> Resume Preview</h2>
+            <div class="action-btns">
+              <button id="exportBtn" class="btn btn-secondary" disabled>
+                <span>💾</span> Export HTML
+              </button>
+              <button id="downloadJsonBtn" class="btn btn-secondary" disabled>
+                <span>📦</span> Download JSON
+              </button>
+              <button id="printBtn" class="btn btn-secondary" disabled>
+                <span>🖨️</span> Print / Save PDF
+              </button>
+            </div>
+          </div>
+
+          <div id="resumeContainer" class="resume-container">
+            <div class="empty-state large">
+              <div class="empty-icon">📄</div>
+              <h3>No Template Applied</h3>
+              <p>
+                Upload your PDF resume and select a template to see the preview
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <p>Built with PDF.js • Inspired by JSON Resume • GitHub Pages Ready</p>
+        <p class="privacy-note">
+          All processing happens locally in your browser. Your data never leaves
+          your device.
+        </p>
+      </div>
+    </footer>
+
+    <!-- PDF.js Library - Local Build (2.6MB combined) -->
+    <script type="module">
+      // Import pdf.mjs which sets up globalThis.pdfjsLib
+      import * as pdfModule from "./vendor/pdf.mjs";
+
+      // Explicitly attach pdfjsLib to window so non-module scripts can access it
+      window.pdfjsLib = pdfModule;
+
+      // Configure the worker to use local file
+      if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "./vendor/pdf.worker.mjs";
+      }
+
+      // Set flag to indicate module is ready
+      window._pdfModuleReady = true;
+
+      // Dispatch event so other scripts know pdf.js is ready
+      window.dispatchEvent(new Event("pdfjs-ready"));
+    </script>
+
+    <!-- Load PDFTextExtractor FIRST before other PDF scripts -->
+    <script src="src/parsers/pdfjs-parser.js"></script>
+
+    <!-- ========== PDF.JS MASTER APIS (Complete Capability Exposure) ========== -->
+    <!-- Master API wrapper - exposes ALL 56+ pdf.mjs APIs -->
+    <script src="src/core/PdfMasterApi.js"></script>
+
+    <!-- Advanced PDF Processor - domain-specific functionality -->
+    <script src="src/core/EnhancedPdfProcessor.js"></script>
+
+    <!-- Advanced Features - parallel processing, OCR, rendering, etc -->
+    <script src="src/core/PdfAdvancedFeatures.js"></script>
+
+    <!-- ========== ORIGINAL CORE MODULES ========== -->
+    <!-- Advanced PDF Extraction (legacy - still available) -->
+    <script src="src/core/PdfAdvancedExtractor.js"></script>
+
+    <!-- Enhanced Resume Normalizer (legacy - still available) -->
+    <script src="src/core/EnhancedResumeNormalizer.js"></script>
+
+    <!-- Advanced Template Renderer -->
+    <script src="src/core/TemplateRenderer.js"></script>
+
+    <!-- Legacy Template Renderer -->
+    <script src="templates.js"></script>
+
+    <!-- ========== MAIN APPLICATION ========== -->
+    <!-- Main Application Logic -->
+    <script src="app.js"></script>
+  </body>
+</html>

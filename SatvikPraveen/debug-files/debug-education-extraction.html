@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume Parsing Debug</title>
+    <style>
+      body {
+        font-family: monospace;
+        padding: 20px;
+        background: #1a1a1a;
+        color: #0f0;
+      }
+      .section {
+        border: 1px solid #0f0;
+        padding: 15px;
+        margin: 20px 0;
+        background: #111;
+      }
+      h2 {
+        color: #0ff;
+        margin-top: 0;
+      }
+      pre {
+        background: #000;
+        padding: 10px;
+        overflow-x: auto;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      button {
+        background: #0f0;
+        color: #000;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-family: monospace;
+        margin: 10px 5px 0 0;
+      }
+      button:hover {
+        background: #0f0;
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Resume Parsing Debug Tool</h1>
+
+    <div class="section">
+      <h2>Step 1: Upload PDF</h2>
+      <input type="file" id="pdfFile" accept=".pdf" />
+      <button onclick="testUpload()">Upload & Extract</button>
+    </div>
+
+    <div class="section">
+      <h2>Extracted Text (first 500 chars)</h2>
+      <pre id="extractedText"></pre>
+    </div>
+
+    <div class="section">
+      <h2>Section Boundaries</h2>
+      <pre id="sectionBoundaries"></pre>
+    </div>
+
+    <div class="section">
+      <h2>EDUCATION Section Content</h2>
+      <pre id="educationSection"></pre>
+    </div>
+
+    <div class="section">
+      <h2>parseEducation Debug Output</h2>
+      <pre id="educationDebug"></pre>
+    </div>
+
+    <div class="section">
+      <h2>Final Result</h2>
+      <pre id="finalResult"></pre>
+    </div>
+
+    <script>
+      // Capture console.log
+      const logs = {};
+      const originalLog = console.log;
+      console.log = function (...args) {
+        const msg = args
+          .map((a) =>
+            typeof a === "object" ? JSON.stringify(a, null, 2) : String(a)
+          )
+          .join(" ");
+        originalLog.apply(console, args);
+
+        // Categorize logs
+        if (msg.includes("[parseEducation]")) {
+          logs.education = (logs.education || "") + msg + "\n";
+          document.getElementById("educationDebug").textContent =
+            logs.education;
+        } else if (msg.includes("[Section:")) {
+          logs.sections = (logs.sections || "") + msg + "\n";
+          document.getElementById("sectionBoundaries").textContent =
+            logs.sections;
+        }
+      };
+
+      async function testUpload() {
+        const input = document.getElementById("pdfFile");
+        if (!input.files.length) {
+          alert("Please select a PDF");
+          return;
+        }
+
+        const file = input.files[0];
+        const buffer = await file.arrayBuffer();
+
+        // Extract text
+        const text = await window.PDFTextExtractor.extractText(buffer);
+        document.getElementById("extractedText").textContent = text.substring(
+          0,
+          500
+        );
+
+        // Clean and identify sections
+        const cleaned = window.cleanAndNormalizeText(text);
+        const sections = window.identifySections(cleaned);
+
+        // Show education section
+        if (sections.education) {
+          document.getElementById("educationSection").textContent =
+            sections.education;
+        }
+
+        // Parse education
+        const edu = window.parseEducation(sections.education || "");
+
+        // Final result
+        const result = {
+          educationEntriesFound: edu.length,
+          entries: edu.map((e) => ({
+            institution: e.institution,
+            studyType: e.studyType,
+            area: e.area,
+            dates: `${e.startDate} - ${e.endDate}`,
+            location: e.location,
+          })),
+        };
+
+        document.getElementById("finalResult").textContent = JSON.stringify(
+          result,
+          null,
+          2
+        );
+      }
+
+      // Wait for page load
+      window.addEventListener("load", () => {
+        // Expose functions
+        if (typeof cleanAndNormalizeText !== "undefined") {
+          window.cleanAndNormalizeText = cleanAndNormalizeText;
+        }
+        if (typeof identifySections !== "undefined") {
+          window.identifySections = identifySections;
+        }
+        if (typeof parseEducation !== "undefined") {
+          window.parseEducation = parseEducation;
+        }
+      });
+    </script>
+
+    <!-- PDF.js setup -->
+    <script type="module">
+      import * as pdfModule from "./vendor/pdf.mjs";
+      window.pdfjsLib = pdfModule;
+      if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "./vendor/pdf.worker.mjs";
+      }
+      window._pdfModuleReady = true;
+    </script>
+
+    <!-- PDFTextExtractor -->
+    <script src="src/parsers/pdfjs-parser.js"></script>
+
+    <!-- Parse functions -->
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Debug PDF Extraction</title>
+    <style>
+      body {
+        font-family: monospace;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .section {
+        margin: 20px 0;
+        padding: 15px;
+        background: white;
+        border-radius: 5px;
+        border-left: 4px solid #007bff;
+      }
+      .code {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 3px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+      h2 {
+        color: #007bff;
+        margin-top: 0;
+      }
+      .error {
+        border-left-color: #dc3545;
+      }
+      .success {
+        border-left-color: #28a745;
+      }
+      button {
+        padding: 10px 20px;
+        cursor: pointer;
+        margin: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔍 PDF Extraction Debug Tool</h1>
+
+    <div class="section">
+      <h2>Step 1: Upload PDF</h2>
+      <input type="file" id="pdfFile" accept=".pdf" />
+      <button onclick="loadPDF()">Load PDF</button>
+    </div>
+
+    <div class="section">
+      <h2>Step 2: Raw Text Extraction</h2>
+      <button onclick="extractRawText()">Extract Text</button>
+      <div id="rawTextOutput" class="code"></div>
+    </div>
+
+    <div class="section">
+      <h2>Step 3: Text Cleaning</h2>
+      <button onclick="testCleaning()">Test Cleaning</button>
+      <div id="cleaningOutput" class="code"></div>
+    </div>
+
+    <div class="section">
+      <h2>Step 4: Section Detection</h2>
+      <button onclick="testSectionDetection()">Test Sections</button>
+      <div id="sectionOutput" class="code"></div>
+    </div>
+
+    <div class="section">
+      <h2>Step 5: Full Parse</h2>
+      <button onclick="testFullParse()">Full Parse</button>
+      <div id="parseOutput" class="code"></div>
+    </div>
+
+    <script type="module">
+      // Import pdf.js
+      import * as pdfModule from "./vendor/pdf.mjs";
+      if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "./vendor/pdf.worker.mjs";
+      }
+      window.dispatchEvent(new Event("pdfjs-ready"));
+    </script>
+
+    <script src="src/parsers/pdfjs-parser.js"></script>
+    <script>
+      let STATE = {
+        pdfArrayBuffer: null,
+        rawText: "",
+      };
+
+      // Text cleaning function (copy from app.js)
+      function cleanAndNormalizeText(text) {
+        if (!text) return "";
+        let cleaned = text
+          .replace(/[ \t]+/g, " ")
+          .replace(/([A-Z])\s+([A-Z])\s+([A-Z])/g, (match) => {
+            const parts = match.split(/\s+/);
+            if (parts.length >= 3 && parts.every((p) => /^[A-Z]$/.test(p))) {
+              return parts.join("");
+            }
+            return match;
+          })
+          .replace(/([A-Z])\s+(?=[a-z](?:\s+[a-z])*(?:\s+[A-Z]|$))/g, "$1")
+          .replace(/\n\s*\n+/g, "\n\n")
+          .trim();
+        return cleaned;
+      }
+
+      // Section identification (copy from app.js)
+      function identifySections(text) {
+        const sections = {};
+        const sectionPatterns = {
+          summary:
+            /^(professional\s+summary|summary|objective|profile|overview|about)$/i,
+          experience:
+            /^(professional\s+experience|work\s+experience|employment|career|experience|work\s+history)$/i,
+          education:
+            /^(education|academic|qualifications|degrees|academic\s+background)$/i,
+          skills:
+            /^(skills|competencies|technical\s+skills|core\s+competencies)$/i,
+          projects: /^(projects|portfolio|key\s+projects|notable\s+projects)$/i,
+        };
+
+        const lines = text.split("\n").map((l) => l.trim());
+        let currentSection = null;
+        let currentContent = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const lineLower = line.toLowerCase();
+
+          let foundSection = null;
+          for (const [sectionName, pattern] of Object.entries(
+            sectionPatterns
+          )) {
+            if (pattern.test(lineLower)) {
+              foundSection = sectionName;
+              break;
+            }
+          }
+
+          if (foundSection) {
+            if (currentSection) {
+              sections[currentSection] = currentContent.join("\n").trim();
+            }
+            currentSection = foundSection;
+            currentContent = [];
+          } else if (currentSection && line.length > 0) {
+            currentContent.push(line);
+          } else if (currentSection && currentContent.length > 0) {
+            currentContent.push(line);
+          }
+        }
+
+        if (currentSection) {
+          sections[currentSection] = currentContent.join("\n").trim();
+        }
+
+        return sections;
+      }
+
+      function log(elementId, text) {
+        const el = document.getElementById(elementId);
+        if (typeof text === "object") {
+          text = JSON.stringify(text, null, 2);
+        }
+        el.textContent = text;
+      }
+
+      async function loadPDF() {
+        const file = document.getElementById("pdfFile").files[0];
+        if (!file) return alert("Select a PDF first");
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          STATE.pdfArrayBuffer = e.target.result;
+          log("rawTextOutput", '✓ PDF loaded. Now click "Extract Text"');
+        };
+        reader.readAsArrayBuffer(file);
+      }
+
+      async function extractRawText() {
+        if (!STATE.pdfArrayBuffer) return alert("Load PDF first");
+
+        try {
+          if (!window.PDFTextExtractor) {
+            return log("rawTextOutput", "❌ PDFTextExtractor not loaded");
+          }
+
+          STATE.rawText = await PDFTextExtractor.extractText(
+            STATE.pdfArrayBuffer
+          );
+          log(
+            "rawTextOutput",
+            `RAW TEXT (${
+              STATE.rawText.length
+            } chars):\n\n${STATE.rawText.substring(0, 1000)}...`
+          );
+        } catch (e) {
+          log("rawTextOutput", `❌ Error: ${e.message}`);
+        }
+      }
+
+      function testCleaning() {
+        if (!STATE.rawText) return alert("Extract text first");
+
+        const cleaned = cleanAndNormalizeText(STATE.rawText);
+        const comparison = `BEFORE (${
+          STATE.rawText.length
+        } chars):\n${STATE.rawText.substring(0, 500)}\n\n---\n\nAFTER (${
+          cleaned.length
+        } chars):\n${cleaned.substring(0, 500)}`;
+        log("cleaningOutput", comparison);
+      }
+
+      function testSectionDetection() {
+        if (!STATE.rawText) return alert("Extract text first");
+
+        const cleaned = cleanAndNormalizeText(STATE.rawText);
+        const sections = identifySections(cleaned);
+
+        const output = {
+          sectionsFound: Object.keys(sections),
+          details: {},
+        };
+
+        for (const [key, value] of Object.entries(sections)) {
+          output.details[key] = {
+            length: value.length,
+            preview:
+              value.substring(0, 200) + (value.length > 200 ? "..." : ""),
+          };
+        }
+
+        log("sectionOutput", output);
+      }
+
+      function testFullParse() {
+        if (!STATE.rawText) return alert("Extract text first");
+
+        // Simple parse
+        const cleaned = cleanAndNormalizeText(STATE.rawText);
+        const sections = identifySections(cleaned);
+
+        const result = {
+          name: cleaned.split("\n")[0],
+          sectionsDetected: Object.keys(sections).length,
+          sections: sections,
+        };
+
+        log("parseOutput", result);
+      }
+    </script>
+  </body>
+</html>

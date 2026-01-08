@@ -1,0 +1,29 @@
+:root {
+  --bg-page: #faf5f0;
+  --bg-card: #fefcf8;
+  --accent: #b45309;
+  --accent-soft: #fff7ed;
+  --text-main: #3f2a1d;
+  --text-muted: #9a6b4a;
+  --border-subtle: #f5e0c7;
+  --chip-bg: #f3e8ff;
+  --chip-text: #7c2d12;
+}
+
+body {
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+#resumeContainer {
+  border-radius: 18px;
+  box-shadow: 0 18px 36px rgba(148, 107, 74, 0.3);
+}
+
+.section-title {
+  color: var(--accent);
+}
+
+.chip {
+  background: #fef3c7;
+  color: #92400e;
+}

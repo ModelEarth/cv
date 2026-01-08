@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Full Stack Test</title>
+    <style>
+      body {
+        font-family: monospace;
+        padding: 20px;
+        background: #1a1a1a;
+        color: #fff;
+      }
+      .section {
+        border: 1px solid #444;
+        padding: 15px;
+        margin: 15px 0;
+        background: #222;
+        border-radius: 5px;
+      }
+      .success {
+        color: #4afa4a;
+      }
+      .error {
+        color: #ff4444;
+      }
+      .warn {
+        color: #ffaa00;
+      }
+      button {
+        background: #0066ff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 3px;
+        margin: 5px 0;
+      }
+      button:hover {
+        background: #0044cc;
+      }
+      input {
+        padding: 5px;
+      }
+      pre {
+        background: #111;
+        overflow-x: auto;
+        padding: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔍 Resume Loader - Full Stack Test</h1>
+
+    <div class="section">
+      <h2>1️⃣ PDF.js Module Test</h2>
+      <button onclick="testModule()">Test PDF.js Module Loading</button>
+      <pre id="log1"></pre>
+    </div>
+
+    <div class="section">
+      <h2>2️⃣ PDFTextExtractor Test</h2>
+      <button onclick="testExtractor()">Test PDFTextExtractor</button>
+      <pre id="log2"></pre>
+    </div>
+
+    <div class="section">
+      <h2>3️⃣ Full PDF Upload & Extract</h2>
+      <input type="file" id="pdfInput" accept=".pdf" />
+      <button onclick="testFullFlow()">Extract & Parse Resume</button>
+      <pre id="log3"></pre>
+    </div>
+
+    <div class="section">
+      <h2>4️⃣ Parsing Results</h2>
+      <pre id="parseResults"></pre>
+    </div>
+
+    <script>
+      function log(elementId, msg, type = "info") {
+        const el = document.getElementById(elementId);
+        const color =
+          type === "success"
+            ? "success"
+            : type === "error"
+            ? "error"
+            : type === "warn"
+            ? "warn"
+            : "";
+        const span = document.createElement("span");
+        span.className = color;
+        span.textContent = msg + "\n";
+        el.appendChild(span);
+        console.log(`[${elementId}] [${type}]`, msg);
+      }
+
+      function testModule() {
+        log("log1", "⏳ Checking PDF.js module...");
+
+        if (window.pdfjsLib) {
+          log("log1", "✅ window.pdfjsLib exists", "success");
+          const methods = Object.keys(window.pdfjsLib).slice(0, 5).join(", ");
+          log("log1", `📦 Sample methods: ${methods}...`, "success");
+
+          if (window.pdfjsLib.getDocument) {
+            log("log1", "✅ getDocument method found", "success");
+          } else {
+            log("log1", "❌ getDocument NOT found", "error");
+          }
+
+          if (window.pdfjsLib.GlobalWorkerOptions) {
+            log(
+              "log1",
+              `✅ GlobalWorkerOptions set to: ${window.pdfjsLib.GlobalWorkerOptions.workerSrc}`,
+              "success"
+            );
+          } else {
+            log("log1", "❌ GlobalWorkerOptions NOT found", "error");
+          }
+        } else {
+          log("log1", "❌ window.pdfjsLib NOT found", "error");
+          log("log1", "⚠️ Module may still be loading...", "warn");
+        }
+      }
+
+      function testExtractor() {
+        log("log2", "⏳ Checking PDFTextExtractor...");
+
+        if (window.PDFTextExtractor) {
+          log("log2", "✅ window.PDFTextExtractor exists", "success");
+
+          if (typeof window.PDFTextExtractor.extractText === "function") {
+            log("log2", "✅ extractText is a function", "success");
+          } else {
+            log("log2", "❌ extractText is NOT a function", "error");
+          }
+        } else {
+          log("log2", "❌ window.PDFTextExtractor NOT found", "error");
+        }
+      }
+
+      async function testFullFlow() {
+        const input = document.getElementById("pdfInput");
+        if (!input.files.length) {
+          log("log3", "❌ No file selected", "error");
+          return;
+        }
+
+        const file = input.files[0];
+        log(
+          "log3",
+          `📄 File: ${file.name} (${(file.size / 1024).toFixed(1)}KB)`,
+          "info"
+        );
+
+        try {
+          // Check prerequisites
+          log("log3", "🔍 Checking prerequisites...", "info");
+          if (!window.PDFTextExtractor) {
+            throw new Error("PDFTextExtractor not available");
+          }
+          log("log3", "✅ PDFTextExtractor available", "success");
+
+          // Read file
+          log("log3", "📖 Reading file...", "info");
+          const arrayBuffer = await file.arrayBuffer();
+          log(
+            "log3",
+            `✅ File read (${arrayBuffer.byteLength} bytes)`,
+            "success"
+          );
+
+          // Extract text
+          log("log3", "⏳ Extracting text from PDF...", "info");
+          const text = await window.PDFTextExtractor.extractText(arrayBuffer);
+          log("log3", `✅ Text extracted (${text.length} chars)`, "success");
+
+          // Show preview
+          const preview = text.substring(0, 300).replace(/\n/g, "\\n");
+          log("log3", `📝 Preview: "${preview}..."`, "info");
+
+          // Parse with app.js parseResumeText
+          log("log3", "🔄 Parsing resume...", "info");
+          if (typeof parseResumeText !== "function") {
+            throw new Error("parseResumeText function not available");
+          }
+
+          const resumeData = parseResumeText(text);
+          log("log3", `✅ Parsing complete!`, "success");
+
+          // Show results
+          const resultsEl = document.getElementById("parseResults");
+          resultsEl.innerHTML =
+            "<h3>📊 Parsing Results</h3>" +
+            `<span class="success">✅ Name: ${resumeData.basics.name}</span>\n` +
+            `<span class="success">✅ Work positions: ${resumeData.work.length}</span>\n` +
+            `<span class="success">✅ Education entries: ${resumeData.education.length}</span>\n` +
+            `<span class="success">✅ Skills categories: ${resumeData.skills.length}</span>\n` +
+            `<span class="success">✅ Projects: ${resumeData.projects.length}</span>\n\n` +
+            "<strong>Full JSON:</strong>\n" +
+            JSON.stringify(resumeData, null, 2);
+        } catch (error) {
+          log("log3", `❌ ERROR: ${error.message}`, "error");
+          log("log3", `Stack: ${error.stack}`, "error");
+        }
+      }
+
+      // Auto-check on load
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          log("log1", "🚀 Auto-checking on page load...");
+          testModule();
+        }, 500);
+      });
+    </script>
+
+    <!-- PDF.js setup (same as in index.html) -->
+    <script type="module">
+      import * as pdfModule from "./vendor/pdf.mjs";
+      window.pdfjsLib = pdfModule;
+
+      if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "./vendor/pdf.worker.mjs";
+      }
+
+      window.dispatchEvent(new Event("pdfjs-ready"));
+      console.log("✅ PDF.js module loaded");
+    </script>
+
+    <!-- Load parsing functions from app.js -->
+    <script src="app.js"></script>
+  </body>
+</html>

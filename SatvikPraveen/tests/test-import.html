@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test PDF.js Import</title>
+  </head>
+  <body>
+    <h1>PDF.js Import Test</h1>
+    <pre id="output"></pre>
+
+    <script type="module">
+      const output = document.getElementById("output");
+
+      try {
+        output.textContent += "Step 1: Attempting to import pdf.mjs...\n";
+
+        import("./vendor/pdf.mjs")
+          .then((pdfModule) => {
+            output.textContent += "Step 2: ✅ Import successful!\n";
+            output.textContent +=
+              "Step 3: Available exports: " +
+              Object.keys(pdfModule).slice(0, 10).join(", ") +
+              "...\n";
+
+            window.pdfjsLib = pdfModule;
+            output.textContent += "Step 4: ✅ Attached to window.pdfjsLib\n";
+
+            if (window.pdfjsLib.GlobalWorkerOptions) {
+              output.textContent += "Step 5: ✅ GlobalWorkerOptions found\n";
+              window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+                "./vendor/pdf.worker.mjs";
+              output.textContent += "Step 6: ✅ Worker path set\n";
+            } else {
+              output.textContent +=
+                "Step 5: ❌ GlobalWorkerOptions NOT found\n";
+            }
+
+            if (window.pdfjsLib.getDocument) {
+              output.textContent +=
+                "Step 7: ✅ getDocument function available\n";
+            } else {
+              output.textContent += "Step 7: ❌ getDocument NOT available\n";
+            }
+
+            window.dispatchEvent(new Event("pdfjs-ready"));
+            output.textContent += "Step 8: ✅ Dispatched pdfjs-ready event\n";
+          })
+          .catch((err) => {
+            output.textContent +=
+              "❌ Import failed: " + err.message + "\n" + err.stack;
+          });
+      } catch (err) {
+        output.textContent += "❌ Error: " + err.message + "\n" + err.stack;
+      }
+    </script>
+
+    <!-- Now load the PDFTextExtractor after a delay to ensure pdf.mjs is loaded -->
+    <script>
+      setTimeout(() => {
+        const script = document.createElement("script");
+        script.src = "src/parsers/pdfjs-parser.js";
+        document.head.appendChild(script);
+
+        script.onload = () => {
+          document.getElementById("output").textContent +=
+            "\nStep 9: ✅ PDFTextExtractor script loaded\n";
+          if (window.PDFTextExtractor) {
+            document.getElementById("output").textContent +=
+              "Step 10: ✅ window.PDFTextExtractor available\n";
+          } else {
+            document.getElementById("output").textContent +=
+              "Step 10: ❌ window.PDFTextExtractor NOT available\n";
+          }
+        };
+      }, 100);
+    </script>
+  </body>
+</html>

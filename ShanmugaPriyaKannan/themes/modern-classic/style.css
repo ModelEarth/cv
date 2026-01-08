@@ -1,0 +1,32 @@
+:root {
+  --bg-page: #eef2ff;
+  --bg-card: #ffffff;
+  --accent: #4f46e5;
+  --accent-soft: #e0e7ff;
+  --text-main: #1f2933;
+  --text-muted: #6b7280;
+  --border-subtle: #c7d2fe;
+  --chip-bg: #ede9fe;
+  --chip-text: #4c1d95;
+}
+
+.name {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.layout {
+  flex-direction: column;
+}
+
+@media (min-width: 900px) {
+  .layout {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 32px;
+  }
+}
+
+.section-title {
+  color: var(--accent);
+}

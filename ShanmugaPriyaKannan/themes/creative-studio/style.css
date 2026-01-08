@@ -1,0 +1,35 @@
+:root {
+  --bg-page: #0f172a;
+  --bg-card: #020617;
+  --accent: #f97316;
+  --accent-soft: rgba(249, 115, 22, 0.08);
+  --text-main: #f9fafb;
+  --text-muted: #94a3b8;
+  --border-subtle: #1e293b;
+  --chip-bg: rgba(248, 250, 252, 0.1);
+  --chip-text: #f97316;
+}
+
+#resumeContainer {
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  border: 1px solid #1f2937;
+}
+
+.header {
+  border-bottom-color: rgba(148, 163, 184, 0.35);
+}
+
+.name {
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.section-title {
+  color: #e5e7eb;
+  border-left: 3px solid var(--accent);
+  padding-left: 8px;
+}
+
+.pill-section {
+  background: radial-gradient(circle at top left, rgba(249,115,22,0.18), transparent);
+}

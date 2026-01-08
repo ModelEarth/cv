@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deep PDF Debug</title>
+    <style>
+      body {
+        font-family: monospace;
+        padding: 20px;
+        background: #1e1e1e;
+        color: #d4d4d4;
+      }
+      .section {
+        margin: 20px 0;
+        padding: 15px;
+        background: #252526;
+        border-left: 4px solid #007acc;
+        border-radius: 4px;
+      }
+      .code {
+        background: #1e1e1e;
+        padding: 15px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+      .line-num {
+        color: #858585;
+        margin-right: 10px;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 5px;
+        background: #007acc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #005a9e;
+      }
+      h1,
+      h2 {
+        color: #4fc3f7;
+      }
+      .error {
+        border-left-color: #f48771;
+      }
+      .success {
+        border-left-color: #89d185;
+      }
+      .warning {
+        border-left-color: #dcdcaa;
+      }
+      input {
+        padding: 8px;
+        background: #3e3e42;
+        color: #d4d4d4;
+        border: 1px solid #555;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔬 Deep PDF Extraction Debug</h1>
+
+    <div class="section">
+      <h2>Step 1: Load PDF</h2>
+      <input type="file" id="pdfFile" accept=".pdf" />
+      <button onclick="loadAndExtract()">Load & Extract</button>
+    </div>
+
+    <div class="section success" id="rawSection" style="display: none">
+      <h2>✓ Raw Text (First 2000 chars, Line by Line)</h2>
+      <div id="rawOutput" class="code"></div>
+    </div>
+
+    <div class="section warning" id="cleanSection" style="display: none">
+      <h2>⚠ Cleaned Text (First 2000 chars, Line by Line)</h2>
+      <div id="cleanOutput" class="code"></div>
+    </div>
+
+    <div class="section" id="analysisSection" style="display: none">
+      <h2>📊 Text Analysis</h2>
+      <div id="analysisOutput" class="code"></div>
+    </div>
+
+    <div class="section" id="headerSection" style="display: none">
+      <h2>🔍 Header Detection</h2>
+      <div id="headerOutput" class="code"></div>
+    </div>
+
+    <script type="module">
+      import * as pdfModule from "./vendor/pdf.mjs";
+      if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "./vendor/pdf.worker.mjs";
+      }
+      window.dispatchEvent(new Event("pdfjs-ready"));
+    </script>
+
+    <script src="src/parsers/pdfjs-parser.js"></script>
+    <script>
+      function cleanAndNormalizeText(text) {
+        if (!text) return "";
+        let cleaned = text.replace(/[ \t]+/g, " ");
+        for (let i = 0; i < 10; i++) {
+          const before = cleaned;
+          cleaned = cleaned.replace(/([A-Z])\s+([A-Z])/g, "$1$2");
+          if (cleaned === before) break;
+        }
+        cleaned = cleaned.replace(/\n\s*\n+/g, "\n\n").trim();
+        return cleaned;
+      }
+
+      function formatLines(text, limit = 2000) {
+        const truncated = text.substring(0, limit);
+        const lines = truncated.split("\n");
+        let html = "";
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const escaped = line
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/ /g, "·"); // Show spaces as dots
+          html += `<div><span class="line-num">${String(i + 1).padStart(
+            3,
+            "0"
+          )}:</span>${escaped}</div>`;
+        }
+        return html;
+      }
+
+      async function loadAndExtract() {
+        const file = document.getElementById("pdfFile").files[0];
+        if (!file) return alert("Select PDF first");
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            const rawText = await PDFTextExtractor.extractText(e.target.result);
+            const cleanedText = cleanAndNormalizeText(rawText);
+
+            // Show raw text
+            document.getElementById("rawSection").style.display = "block";
+            document.getElementById("rawOutput").innerHTML =
+              formatLines(rawText);
+
+            // Show cleaned text
+            document.getElementById("cleanSection").style.display = "block";
+            document.getElementById("cleanOutput").innerHTML =
+              formatLines(cleanedText);
+
+            // Analyze
+            document.getElementById("analysisSection").style.display = "block";
+            const analysis = {
+              rawLength: rawText.length,
+              cleanedLength: cleanedText.length,
+              rawLines: rawText.split("\n").length,
+              cleanedLines: cleanedText.split("\n").length,
+              hasEDUCATION: cleanedText.includes("EDUCATION"),
+              hasEXPERIENCE: cleanedText.includes("EXPERIENCE"),
+              hasPROJECTS: cleanedText.includes("PROJECTS"),
+              hasSKILLS: cleanedText.includes("SKILLS"),
+            };
+            document.getElementById("analysisOutput").innerText =
+              JSON.stringify(analysis, null, 2);
+
+            // Check for headers
+            document.getElementById("headerSection").style.display = "block";
+            const headerPatterns = [
+              /^education$/i,
+              /^experience$/i,
+              /^projects$/i,
+              /^skills$/i,
+              /^technical\s+skills$/i,
+            ];
+
+            const lines = cleanedText
+              .split("\n")
+              .map((l) => l.trim())
+              .filter((l) => l.length > 0);
+            const foundHeaders = [];
+
+            lines.forEach((line, idx) => {
+              for (const pattern of headerPatterns) {
+                if (pattern.test(line)) {
+                  foundHeaders.push({
+                    lineNumber: idx,
+                    text: line,
+                    pattern: pattern.toString(),
+                  });
+                }
+              }
+            });
+
+            document.getElementById("headerOutput").innerHTML =
+              "<strong>Headers Found:</strong>\n" +
+              JSON.stringify(foundHeaders, null, 2) +
+              "\n\n<strong>All non-empty lines:</strong>\n" +
+              lines
+                .slice(0, 30)
+                .map((l, i) => `${i}: "${l}"`)
+                .join("\n");
+
+            console.log("Analysis:", analysis);
+            console.log("Found headers:", foundHeaders);
+            console.log(
+              "Cleaned text (first 1000 chars):",
+              cleanedText.substring(0, 1000)
+            );
+          } catch (err) {
+            alert("Error: " + err.message);
+            console.error(err);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Debug PDF Upload</title>
+    <style>
+      body {
+        font-family: monospace;
+        padding: 20px;
+      }
+      .log {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin: 10px 0;
+        background: #f5f5f5;
+      }
+      .error {
+        color: red;
+      }
+      .success {
+        color: green;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 10px 0;
+      }
+      input {
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Debug: PDF Upload & Extraction</h1>
+
+    <div>
+      <h2>Step 1: Test PDF.js Module</h2>
+      <button onclick="testPdfjsModule()">Check if pdf.mjs loaded</button>
+      <div id="log1" class="log"></div>
+    </div>
+
+    <div>
+      <h2>Step 2: Test PDFTextExtractor</h2>
+      <button onclick="testPDFTextExtractor()">
+        Check if PDFTextExtractor available
+      </button>
+      <div id="log2" class="log"></div>
+    </div>
+
+    <div>
+      <h2>Step 3: Upload & Extract PDF</h2>
+      <input type="file" id="pdfInput" accept="application/pdf" />
+      <button onclick="testPDFExtraction()">Extract Text from PDF</button>
+      <div id="log3" class="log"></div>
+    </div>
+
+    <script>
+      function log(elementId, message, isError = false) {
+        const el = document.getElementById(elementId);
+        const className = isError ? "error" : "success";
+        el.innerHTML += `<div class="${className}">${message}</div>`;
+      }
+
+      function testPdfjsModule() {
+        log("log1", "🔍 Checking window.pdfjsLib...");
+
+        if (typeof window.pdfjsLib !== "undefined") {
+          log("log1", "✅ window.pdfjsLib is defined");
+          log(
+            "log1",
+            `📦 Available methods: ${Object.keys(window.pdfjsLib)
+              .slice(0, 5)
+              .join(", ")}...`
+          );
+
+          if (window.pdfjsLib.GlobalWorkerOptions) {
+            log("log1", `✅ GlobalWorkerOptions exists`);
+            log(
+              "log1",
+              `📍 Worker src: ${window.pdfjsLib.GlobalWorkerOptions.workerSrc}`
+            );
+          } else {
+            log("log1", "⚠️  GlobalWorkerOptions not found", true);
+          }
+        } else {
+          log("log1", "❌ window.pdfjsLib is NOT defined", true);
+        }
+      }
+
+      function testPDFTextExtractor() {
+        log("log2", "🔍 Checking window.PDFTextExtractor...");
+
+        if (typeof window.PDFTextExtractor !== "undefined") {
+          log("log2", "✅ window.PDFTextExtractor is defined");
+          if (typeof window.PDFTextExtractor.extractText === "function") {
+            log("log2", "✅ PDFTextExtractor.extractText is a function");
+          } else {
+            log("log2", "❌ extractText is not a function", true);
+          }
+        } else {
+          log("log2", "❌ window.PDFTextExtractor is NOT defined", true);
+        }
+      }
+
+      async function testPDFExtraction() {
+        const input = document.getElementById("pdfInput");
+        if (!input.files.length) {
+          log("log3", "❌ No file selected", true);
+          return;
+        }
+
+        const file = input.files[0];
+        log(
+          "log3",
+          `📄 File selected: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`
+        );
+
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          log(
+            "log3",
+            `✅ File read as ArrayBuffer (${arrayBuffer.byteLength} bytes)`
+          );
+
+          if (!window.PDFTextExtractor) {
+            log("log3", "❌ PDFTextExtractor not available", true);
+            return;
+          }
+
+          log("log3", "⏳ Extracting text from PDF...");
+          const text = await window.PDFTextExtractor.extractText(arrayBuffer);
+
+          log("log3", `✅ Text extracted! (${text.length} characters)`);
+          log("log3", `📝 First 200 chars: ${text.substring(0, 200)}...`);
+        } catch (error) {
+          log("log3", `❌ Error: ${error.message}`, true);
+          log("log3", `Stack: ${error.stack}`, true);
+        }
+      }
+
+      // Auto-check on load
+      window.addEventListener("load", () => {
+        log("log1", "⏳ Waiting for pdf.js to load...");
+        setTimeout(() => {
+          testPdfjsModule();
+        }, 1000);
+      });
+    </script>
+
+    <!-- PDF.js Library -->
+    <script type="module">
+      import * as pdfModule from "./vendor/pdf.mjs";
+      window.pdfjsLib = pdfModule;
+
+      if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "./vendor/pdf.worker.mjs";
+      }
+
+      window.dispatchEvent(new Event("pdfjs-ready"));
+      document.getElementById("log1").innerHTML +=
+        '<div class="success">✅ pdf.mjs module loaded and attached to window</div>';
+    </script>
+
+    <!-- PDFTextExtractor -->
+    <script src="src/parsers/pdfjs-parser.js"></script>
+  </body>
+</html>

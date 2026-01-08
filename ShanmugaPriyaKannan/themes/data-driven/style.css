@@ -1,0 +1,33 @@
+:root {
+  --bg-page: #0b1120;
+  --bg-card: #020617;
+  --accent: #22c55e;
+  --accent-soft: rgba(34, 197, 94, 0.08);
+  --text-main: #e5e7eb;
+  --text-muted: #64748b;
+  --border-subtle: #1e293b;
+  --chip-bg: #022c22;
+  --chip-text: #4ade80;
+}
+
+body {
+  font-family: system-ui, -apple-system, "SF Mono", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+#resumeContainer {
+  border-radius: 6px;
+  border: 1px solid #1f2937;
+}
+
+.header {
+  border-bottom-style: dashed;
+}
+
+.section-title {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.item-summary {
+  font-size: 12px;
+}

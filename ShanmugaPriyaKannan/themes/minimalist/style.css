@@ -1,0 +1,31 @@
+:root {
+  --bg-page: #ffffff;
+  --bg-card: #ffffff;
+  --accent: #111827;
+  --accent-soft: #ffffff;
+  --text-main: #111827;
+  --text-muted: #9ca3af;
+  --border-subtle: #e5e7eb;
+  --chip-bg: #f3f4f6;
+  --chip-text: #374151;
+}
+
+#resumeContainer {
+  box-shadow: none;
+  border-radius: 0;
+  border: none;
+  padding-inline: 8px;
+}
+
+.header {
+  border-bottom: 2px solid #111827;
+}
+
+.section-title {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 4px;
+}
+
+.chip {
+  border-radius: 0;
+}

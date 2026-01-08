@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Quick App Test</title>
+    <style>
+      body {
+        font-family: monospace;
+        background: #1a1a1a;
+        color: #fff;
+        padding: 2rem;
+      }
+      .test {
+        margin: 1rem 0;
+        padding: 1rem;
+        background: #333;
+        border-left: 3px solid #0f3;
+      }
+      .pass {
+        border-left-color: #0f0;
+      }
+      .fail {
+        border-left-color: #f00;
+      }
+      code {
+        background: #222;
+        padding: 0.2rem 0.5rem;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>📋 Resume App Quick Test</h1>
+    <div id="results"></div>
+
+    <script>
+      const results = [];
+
+      function log(title, status, details = "") {
+        const div = document.createElement("div");
+        div.className = `test ${status === "✓" ? "pass" : "fail"}`;
+        div.innerHTML = `<strong>${status}</strong> ${title}<br/><small>${details}</small>`;
+        document.getElementById("results").appendChild(div);
+        results.push({ title, status, details });
+      }
+
+      // Test 1: Check index.html loads
+      log("index.html", "✓", "This page loaded");
+
+      // Test 2: Check pdf.js from CDN
+      window.addEventListener("load", () => {
+        if (window.pdfjsLib && window.pdfjsLib.getDocument) {
+          log("PDF.js CDN", "✓", "pdfjsLib loaded with getDocument");
+        } else {
+          log("PDF.js CDN", "✗", "pdfjsLib not available");
+        }
+      });
+
+      // Test 3: Check templates.js
+      setTimeout(() => {
+        if (typeof window.renderTemplate === "function") {
+          log("templates.js", "✓", "renderTemplate function available");
+        } else {
+          log("templates.js", "✗", "renderTemplate not found");
+        }
+      }, 500);
+
+      // Test 4: Check SAMPLE_DATA after app loads
+      setTimeout(() => {
+        if (typeof SAMPLE_DATA !== "undefined" && SAMPLE_DATA.basics) {
+          log("SAMPLE_DATA", "✓", `Sample name: ${SAMPLE_DATA.basics.name}`);
+        } else {
+          log("SAMPLE_DATA", "✗", "SAMPLE_DATA not found");
+        }
+      }, 1000);
+
+      // Redirect after 2s
+      setTimeout(() => {
+        document.body.innerHTML +=
+          "<hr><p><strong>Redirecting to main app in 2 seconds...</strong></p>";
+        setTimeout(() => {
+          window.location.href = "index.html";
+        }, 2000);
+      }, 1500);
+    </script>
+
+    <!-- Load the app files to test them -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script>
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+    </script>
+    <script src="templates.js"></script>
+    <script src="src/parsers/normalize.js"></script>
+    <script src="src/parsers/pdfjs-parser.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

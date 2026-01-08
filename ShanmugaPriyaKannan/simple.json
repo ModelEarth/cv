@@ -1,0 +1,70 @@
+{
+  "basics": {
+    "name": "Shanmuga Priya Kannan",
+    "label": "Senior ServiceNow Developer",
+    "email": "shanmugapriyakannan019@gmail.com",
+    "phone": "",
+    "url": "https://linkedin.com/in/shanmuga",
+    "summary": "ServiceNow Developer specializing in ITSM, integrations, and workflow automation. Skilled in Java, Python, cloud platforms, and data analytics with hands-on project experience in machine learning and market analysis."
+  },
+  "work": [
+    {
+      "company": "Cognizant Technology Solutions",
+      "position": "Senior ServiceNow Developer (Autodesk, Fortive)",
+      "startDate": "2020-06",
+      "endDate": "2023-08",
+      "summary": "Worked on ITSM, CMDB, and Event Management for clients like Autodesk and Fortive. Developed REST APIs and 30+ custom workflows and catalog items to automate incidents, requests, and changes. Integrated third-party tools such as SAP, QlikView, and Azure, improving interoperability and automation."
+    }
+  ],
+  "education": [
+    {
+      "institution": "DePaul University",
+      "area": "Computer Science",
+      "studyType": "Master’s",
+      "startDate": "2023-09",
+      "endDate": "2025-06",
+      "location": "Chicago, USA"
+    },
+    {
+      "institution": "Velammal Engineering College",
+      "area": "Information Technology",
+      "studyType": "Bachelor of Technology",
+      "startDate": "2016-06",
+      "endDate": "2020-04",
+      "location": "Chennai, India"
+    }
+  ],
+  "skills": [
+    {
+      "name": "Programming Languages",
+      "keywords": ["C/C++", "Java", "Python", "R", "SQL"]
+    },
+    {
+      "name": "Web Development",
+      "keywords": ["HTML", "CSS", "JavaScript", "Node.js"]
+    },
+    {
+      "name": "Tools & Platforms",
+      "keywords": ["Git", "Docker", "AWS", "GCP", "VS Code", "Eclipse", "JIRA"]
+    },
+    {
+      "name": "Data & Analytics",
+      "keywords": ["Pandas", "NumPy", "Matplotlib", "Seaborn", "Excel", "Tableau", "Power BI", "RStudio"]
+    },
+    {
+      "name": "Machine Learning & Big Data",
+      "keywords": ["PySpark", "MLlib", "Hadoop", "Model Evaluation", "Algorithms"]
+    },
+    {
+      "name": "ServiceNow",
+      "keywords": ["ITSM", "CMDB", "Service Catalog", "REST APIs", "JSON", "XML", "Flow Designer", "Integration"]
+    }
+  ],
+  "projects": [
+    { "name": "Shopping System", "keywords": ["Java", "Eclipse"], "summary": "Developed user authentication and product catalog features to enhance security and streamline shopping." },
+    { "name": "Market Analysis of Google Play Store Apps", "keywords": ["Excel", "Tableau", "R"], "summary": "Analyzed app-store data to identify trends and insights for developers and marketers." },
+    { "name": "Real Estate Price Trend Analysis", "keywords": ["Excel", "R"], "summary": "Performed regression and time-series analysis on Connecticut housing data to forecast prices." },
+    { "name": "Lung Cancer Risk Prediction Using ML", "keywords": ["Python", "Excel"], "summary": "Built and evaluated Naive Bayes, Random Forest, and KNN classifiers on a 220 K+ record dataset." },
+    { "name": "NYC Taxi Fare Prediction Pipeline", "keywords": ["PySpark", "AWS EMR", "Athena"], "summary": "Built a distributed ML pipeline for 12 M+ trip records using Spark MLlib and automated reporting with Matplotlib + S3." }
+  ]
+}

@@ -1,0 +1,31 @@
+:root {
+  --bg-page: #f3f4f6;
+  --bg-card: #ffffff;
+  --accent: #4b5563;
+  --accent-soft: #f9fafb;
+  --text-main: #111827;
+  --text-muted: #6b7280;
+  --border-subtle: #e5e7eb;
+  --chip-bg: #e5e7eb;
+  --chip-text: #374151;
+}
+
+body {
+  font-family: "Georgia", "Times New Roman", serif;
+}
+
+#resumeContainer {
+  box-shadow: 0 18px 40px rgba(148, 163, 184, 0.35);
+}
+
+.name {
+  font-size: 32px;
+}
+
+.section-title {
+  letter-spacing: 0.18em;
+}
+
+.chip {
+  border-radius: 2px;
+}

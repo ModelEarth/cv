@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Resume Parser Test</title>
+    <style>
+      body {
+        font-family: monospace;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+      }
+      h2 {
+        border-bottom: 2px solid #333;
+        padding-bottom: 10px;
+      }
+      .section {
+        margin-bottom: 30px;
+        border: 1px solid #ddd;
+        padding: 15px;
+        background: #fafafa;
+      }
+      .entry {
+        margin-bottom: 15px;
+        border-left: 3px solid #007bff;
+        padding-left: 10px;
+      }
+      .label {
+        font-weight: bold;
+        color: #007bff;
+      }
+      pre {
+        background: #f0f0f0;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+      }
+      button {
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Resume Extraction Test</h1>
+
+      <div style="margin-bottom: 20px">
+        <input type="file" id="pdfFile" accept=".pdf" />
+        <button onclick="testParsing()">Parse Resume</button>
+      </div>
+
+      <div id="results"></div>
+    </div>
+
+    <script src="vendor/pdf.mjs"></script>
+    <script src="src/core/text-extractor.js"></script>
+
+    <script>
+      async function testParsing() {
+        const fileInput = document.getElementById("pdfFile");
+        if (!fileInput.files[0]) {
+          alert("Please select a PDF file");
+          return;
+        }
+
+        const file = fileInput.files[0];
+        const arrayBuffer = await file.arrayBuffer();
+
+        try {
+          // Use PDFTextExtractor
+          const extracted = await PDFTextExtractor.extractText(arrayBuffer);
+          displayResults(extracted);
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Error parsing PDF: " + error.message);
+        }
+      }
+
+      function displayResults(text) {
+        const results = document.getElementById("results");
+
+        // Show raw text
+        let html = '<div class="section"><h3>Raw Extracted Text</h3>';
+        html +=
+          "<pre>" + escapeHtml(text.substring(0, 500)) + "...</pre></div>";
+
+        // Parse
+        const resumeData = parseResumeText(text);
+
+        // Show results
+        html += '<div class="section"><h2>Work Experience</h2>';
+        if (resumeData.work.length > 0) {
+          for (const job of resumeData.work) {
+            html += `<div class="entry">
+                        <div><span class="label">Position:</span> ${escapeHtml(
+                          job.position
+                        )}</div>
+                        <div><span class="label">Company:</span> ${escapeHtml(
+                          job.company
+                        )}</div>
+                        <div><span class="label">Dates:</span> ${escapeHtml(
+                          job.startDate
+                        )} - ${escapeHtml(job.endDate)}</div>
+                        <div><span class="label">Summary:</span> ${escapeHtml(
+                          job.summary.substring(0, 100)
+                        )}...</div>
+                    </div>`;
+          }
+        } else {
+          html += "<p>No work experience found</p>";
+        }
+        html += "</div>";
+
+        // Show education
+        html += '<div class="section"><h2>Education</h2>';
+        if (resumeData.education.length > 0) {
+          for (const edu of resumeData.education) {
+            html += `<div class="entry">
+                        <div><span class="label">Institution:</span> ${escapeHtml(
+                          edu.institution
+                        )}</div>
+                        <div><span class="label">Degree:</span> ${escapeHtml(
+                          edu.studyType
+                        )} in ${escapeHtml(edu.area)}</div>
+                        <div><span class="label">Location:</span> ${escapeHtml(
+                          edu.location
+                        )}</div>
+                        <div><span class="label">Year:</span> ${escapeHtml(
+                          edu.endDate
+                        )}</div>
+                    </div>`;
+          }
+        } else {
+          html += "<p>No education found</p>";
+        }
+        html += "</div>";
+
+        // Show skills
+        html += '<div class="section"><h2>Skills</h2>';
+        if (resumeData.skills.length > 0) {
+          for (const skill of resumeData.skills) {
+            html += `<div class="entry">
+                        <div><span class="label">${escapeHtml(
+                          skill.name
+                        )}:</span> ${escapeHtml(
+              skill.keywords.join(", ")
+            )}</div>
+                    </div>`;
+          }
+        } else {
+          html += "<p>No skills found</p>";
+        }
+        html += "</div>";
+
+        // Show projects
+        html += '<div class="section"><h2>Projects</h2>';
+        if (resumeData.projects.length > 0) {
+          for (const proj of resumeData.projects) {
+            html += `<div class="entry">
+                        <div><span class="label">Name:</span> ${escapeHtml(
+                          proj.name
+                        )}</div>
+                        <div><span class="label">Technologies:</span> ${escapeHtml(
+                          proj.keywords.join(", ")
+                        )}</div>
+                        <div><span class="label">Summary:</span> ${escapeHtml(
+                          proj.summary.substring(0, 100)
+                        )}...</div>
+                    </div>`;
+          }
+        } else {
+          html += "<p>No projects found</p>";
+        }
+        html += "</div>";
+
+        results.innerHTML = html;
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Include parsing functions from app.js
+      function cleanAndNormalizeText(text) {
+        if (!text) return "";
+        let cleaned = text
+          .replace(/[ \t]+/g, " ")
+          .replace(/[-–—]/g, "-")
+          .replace(/\n\s*\n+/g, " ")
+          .replace(/\s+([.,;:])/g, "$1")
+          .trim();
+        return cleaned;
+      }
+
+      function parseResumeText(text) {
+        const cleanedText = cleanAndNormalizeText(text);
+        const lines = cleanedText
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l.length > 0);
+
+        let name = lines[0] || "Resume";
+        if (name.includes("|")) {
+          let namePart = name.split("|")[0].trim();
+          namePart = namePart
+            .replace(/\s+\d+\s*[-–—]\s*\d+\s*[-–—]\s*\d+\s*$/, "")
+            .trim();
+          name = namePart;
+        }
+
+        const sections = identifySections(cleanedText);
+
+        return {
+          basics: { name: name },
+          work: parseWorkExperience(sections.experience || ""),
+          education: parseEducation(sections.education || ""),
+          skills: parseSkills(sections.skills || ""),
+          projects: parseProjects(sections.projects || ""),
+        };
+      }
+
+      function identifySections(text) {
+        const sections = {};
+        const sectionKeywords = {
+          education: ["EDUCATION", "ACADEMIC"],
+          experience: [
+            "PROFESSIONAL EXPERIENCE",
+            "WORK EXPERIENCE",
+            "EXPERIENCE",
+          ],
+          projects: ["PROJECTS", "PORTFOLIO"],
+          skills: ["TECHNICAL SKILLS", "SKILLS"],
+        };
+
+        const headerMatches = [];
+        for (const [sectionName, keywords] of Object.entries(sectionKeywords)) {
+          for (const keyword of keywords) {
+            const regex = new RegExp(`\\b${keyword}\\b`, "g");
+            let match;
+            while ((match = regex.exec(text)) !== null) {
+              headerMatches.push({ sectionName, keyword, index: match.index });
+            }
+          }
+        }
+
+        headerMatches.sort((a, b) => a.index - b.index);
+        const uniqueMatches = [];
+        for (let i = 0; i < headerMatches.length; i++) {
+          const current = headerMatches[i];
+          let skipCurrent = false;
+          if (i > 0) {
+            const prev = headerMatches[i - 1];
+            if (
+              current.sectionName === prev.sectionName &&
+              Math.abs(current.index - prev.index) < 20
+            ) {
+              if (current.keyword.length < prev.keyword.length)
+                skipCurrent = true;
+            }
+          }
+          if (!skipCurrent) uniqueMatches.push(current);
+        }
+
+        for (let i = 0; i < uniqueMatches.length; i++) {
+          const currentHeader = uniqueMatches[i];
+          const nextHeader = uniqueMatches[i + 1];
+          let startIndex = currentHeader.index + currentHeader.keyword.length;
+          let endIndex = nextHeader ? nextHeader.index : text.length;
+          let content = text.substring(startIndex, endIndex).trim();
+          if (!sections[currentHeader.sectionName] && content.length > 0) {
+            sections[currentHeader.sectionName] = content;
+          }
+        }
+        return sections;
+      }
+
+      function parseWorkExperience(text) {
+        if (!text) return [];
+        const jobs = [];
+        const datePattern =
+          /([A-Z][a-z]+\.?\s+\d{4})\s*[-–—]\s*((?:[A-Z][a-z]+\.?\s+\d{4})|Present)/g;
+        const dateMatches = [];
+        let match;
+        while ((match = datePattern.exec(text)) !== null) {
+          dateMatches.push({
+            startDate: match[1],
+            endDate: match[2],
+            index: match.index,
+            length: match[0].length,
+          });
+        }
+        if (dateMatches.length === 0) return [];
+        for (let i = 0; i < dateMatches.length; i++) {
+          const dateInfo = dateMatches[i];
+          const nextDateInfo = dateMatches[i + 1];
+          let headerStart =
+            i === 0 ? 0 : dateMatches[i - 1].index + dateMatches[i - 1].length;
+          let headerEnd = dateInfo.index;
+          let header = text.substring(headerStart, headerEnd).trim();
+          let descStart = dateInfo.index + dateInfo.length;
+          let descEnd = nextDateInfo ? nextDateInfo.index : text.length;
+          let description = text.substring(descStart, descEnd).trim();
+          const locationRemoved = description.replace(
+            /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*),\s*([A-Z]{2}|[A-Z][a-z]+)\b\s*/,
+            ""
+          );
+          const headerLines = header
+            .split(/[\n•]+/)
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0);
+          let position = "",
+            company = "";
+          if (headerLines.length >= 2) {
+            position = headerLines[0];
+            company = headerLines[1];
+          } else if (headerLines.length === 1) {
+            position = headerLines[0];
+          }
+          jobs.push({
+            position: position || "Position",
+            company: company || "Company",
+            startDate: dateInfo.startDate,
+            endDate: dateInfo.endDate,
+            summary: locationRemoved.trim(),
+          });
+        }
+        return jobs;
+      }
+
+      function parseEducation(text) {
+        if (!text) return [];
+        const education = [];
+        const lines = text
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l.length > 0 && l.length > 10);
+        for (const line of lines) {
+          const locationMatch = line.match(
+            /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*),\s*([A-Z][a-z]+|[A-Z]{2}|[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b/
+          );
+          const location = locationMatch ? locationMatch[0] : "";
+          const yearMatch = line.match(/\b(20\d{2})\b/);
+          const year = yearMatch ? yearMatch[1] : "";
+          let studyType = "Degree";
+          if (/\bMaster['']?s?\b/i.test(line)) studyType = "Master's";
+          else if (/\bBachelor['']?s?\b/i.test(line)) studyType = "Bachelor's";
+          let area = "";
+          const fieldPattern =
+            /(?:Bachelor|Master|PhD)['']?s?(?:\s+(?:of|in))?\s+([^,]+?)(?:\s+(?:in|from|,|\d{4}|May|June|July|August|September|October|November|December))/i;
+          const fieldMatch = line.match(fieldPattern);
+          if (fieldMatch) area = fieldMatch[1].trim();
+          let institution = line;
+          if (locationMatch)
+            institution = line.substring(0, locationMatch.index).trim();
+          institution = institution
+            .replace(/Bachelor[\w\s]+/i, "")
+            .replace(/Master[\w\s]+/i, "")
+            .replace(/of|in|and|,/g, "")
+            .trim();
+          if (institution.length > 3) {
+            education.push({
+              institution,
+              studyType,
+              area: area || "Education",
+              startDate: "",
+              endDate: year,
+              location,
+            });
+          }
+        }
+        return education;
+      }
+
+      function parseSkills(text) {
+        if (!text) return [];
+        const skills = [];
+        const lines = text
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l.length > 0 && !l.match(/^\s*$/));
+        for (let i = 0; i < lines.length; i++) {
+          let line = lines[i].replace(/\s+/g, " ").trim();
+          if (line.length < 3) continue;
+          const colonIndex = line.indexOf(":");
+          if (colonIndex > 0) {
+            const name = line.substring(0, colonIndex).trim();
+            const keywordsStr = line.substring(colonIndex + 1).trim();
+            const keywords = keywordsStr
+              .split(/[,;•|]/)
+              .map((s) => s.trim())
+              .filter((s) => s.length > 0);
+            if (keywords.length > 0) skills.push({ name, keywords });
+          }
+        }
+        return skills;
+      }
+
+      function parseProjects(text) {
+        if (!text) return [];
+        const projects = [];
+        const projectTitleRegex =
+          /([A-Z][A-Za-z0-9\s]+(?:[A-Z][A-Za-z0-9\s]+)*)\s*\|\s*([^•]+?)(?=•|(?:[A-Z][A-Za-z0-9\s]+(?:[A-Z][A-Za-z0-9\s]+)*\s*\|)|$)/g;
+        let match;
+        const matches = [];
+        while ((match = projectTitleRegex.exec(text)) !== null) {
+          matches.push({
+            title: match[1].trim(),
+            tech: match[2].trim(),
+            index: match.index,
+            length: match[0].length,
+          });
+        }
+        for (let i = 0; i < matches.length; i++) {
+          const currentMatch = matches[i];
+          const nextMatch = matches[i + 1];
+          let descStart = currentMatch.index + currentMatch.length;
+          let descEnd = nextMatch ? nextMatch.index : text.length;
+          let description = text
+            .substring(descStart, descEnd)
+            .trim()
+            .replace(/^•\s*/gm, "")
+            .replace(/\s+/g, " ")
+            .trim();
+          projects.push({
+            name: currentMatch.title,
+            keywords: currentMatch.tech
+              .split(/[,;]/)
+              .map((s) => s.trim())
+              .filter((s) => s.length > 0),
+            summary: description,
+          });
+        }
+        return projects;
+      }
+    </script>
+  </body>
+</html>

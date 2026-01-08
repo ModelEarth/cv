@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Extraction Test - Malformed PDF Text</title>
+    <style>
+      body {
+        font-family: Arial;
+        margin: 20px;
+      }
+      .test {
+        margin: 20px 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+      }
+      .pass {
+        background: #d4edda;
+        color: #155724;
+      }
+      .fail {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 10px;
+        overflow-x: auto;
+      }
+      h2 {
+        color: #333;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>📊 PDF Extraction Test with Malformed Text</h1>
+    <div id="results"></div>
+
+    <script>
+      // Include the cleaning function from app.js
+      function cleanAndNormalizeText(text) {
+        if (!text) return "";
+        let cleaned = text
+          .replace(/[ \t]+/g, " ")
+          .replace(/([A-Z])\s+([A-Z])\s+([A-Z])/g, (match) => {
+            const parts = match.split(/\s+/);
+            if (parts.length >= 3 && parts.every((p) => /^[A-Z]$/.test(p))) {
+              return parts.join("");
+            }
+            return match;
+          })
+          .replace(/([A-Z])\s+(?=[a-z](?:\s+[a-z])*(?:\s+[A-Z]|$))/g, "$1")
+          .replace(/\n\s*\n+/g, "\n\n")
+          .trim();
+        return cleaned;
+      }
+
+      function identifySections(text) {
+        const sections = {};
+        const sectionPatterns = {
+          summary:
+            /^(professional\s+summary|summary|objective|profile|overview|about)$/i,
+          experience:
+            /^(professional\s+experience|work\s+experience|employment|career|experience|work\s+history)$/i,
+          education:
+            /^(education|academic|qualifications|degrees|academic\s+background)$/i,
+          skills:
+            /^(skills|competencies|technical\s+skills|core\s+competencies)$/i,
+          projects: /^(projects|portfolio|key\s+projects|notable\s+projects)$/i,
+        };
+
+        const lines = text.split("\n").map((l) => l.trim());
+        let currentSection = null;
+        let currentContent = [];
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          const lineLower = line.toLowerCase();
+
+          let foundSection = null;
+          for (const [sectionName, pattern] of Object.entries(
+            sectionPatterns
+          )) {
+            if (pattern.test(lineLower)) {
+              foundSection = sectionName;
+              break;
+            }
+          }
+
+          if (foundSection) {
+            if (currentSection) {
+              sections[currentSection] = currentContent.join("\n").trim();
+            }
+            currentSection = foundSection;
+            currentContent = [];
+          } else if (currentSection && line.length > 0) {
+            currentContent.push(line);
+          } else if (currentSection && currentContent.length > 0) {
+            currentContent.push(line);
+          }
+        }
+
+        if (currentSection) {
+          sections[currentSection] = currentContent.join("\n").trim();
+        }
+
+        return sections;
+      }
+
+      // Test data - malformed PDF text
+      const malformedText = `Shanmuga   Priya   Kannan  872 - 330 - 3203   |   shanmugapriyakannan019@gmail.com   |   https://www.linkedin.com/in/shanmuga-priya-k-95400a194
+
+PROFESSIONAL SUMMARY
+
+Computer Science graduate student with 3+ years of experience as a ServiceNow Developer at Cognizant Technology Solutions. Proficient in JavaScript, HTML, CSS, Java, Python, and C++.
+
+PROFESSIONAL EXPERIENCE
+
+Senior ServiceNow Developer
+Cognizant Technology Solutions, Troy, Michigan
+June 2020 – August 2023
+• Designed and implemented highly scalable ServiceNow solutions using JavaScript and Java
+• Led a team of 4 developers in developing customized workflows and business rules
+
+EDUCATION
+
+Master of Science in Computer Science
+DePaul University, Chicago, Illinois
+Expected Graduation: December 2024
+GPA: 3.8/4.0
+
+Bachelor of Science in Information Technology
+Velammal Engineering College, Chennai, India
+Graduated: May 2018
+
+SKILLS
+
+Programming Languages: C/C++, Java, Python, JavaScript, HTML, CSS, SQL
+Platforms: ServiceNow, Salesforce, Windows, Linux
+Tools & Technologies: Eclipse, Visual Studio Code, Git, Jenkins, Docker`;
+
+      // Run tests
+      let results = "<h2>Test Results</h2>";
+
+      // Test 1: Text Cleaning
+      const cleanedText = cleanAndNormalizeText(malformedText);
+      const pass1 =
+        cleanedText.includes("Shanmuga Priya Kannan 872") &&
+        !cleanedText.includes("S h a n m u g a");
+      results += `<div class="test ${pass1 ? "pass" : "fail"}">
+            <strong>✓ Text Cleaning:</strong> ${pass1 ? "PASS" : "FAIL"}<br/>
+            Cleaned excessive spacing correctly
+        </div>`;
+
+      // Test 2: Section Detection
+      const sections = identifySections(cleanedText);
+      const sectionsFound = [
+        sections.summary && sections.summary.length > 0,
+        sections.experience && sections.experience.length > 0,
+        sections.education && sections.education.length > 0,
+        sections.skills && sections.skills.length > 0,
+      ].filter((x) => x).length;
+
+      const pass2 = sectionsFound === 4;
+      results += `<div class="test ${pass2 ? "pass" : "fail"}">
+            <strong>✓ Section Detection:</strong> ${
+              pass2 ? "PASS" : "FAIL"
+            }<br/>
+            Found ${sectionsFound}/4 sections correctly
+        </div>`;
+
+      // Test 3: Content Extraction
+      results += `<div class="test">
+            <strong>Extracted Sections:</strong><br/>
+            • Summary: ${
+              sections.summary
+                ? "✓ " + sections.summary.substring(0, 60) + "..."
+                : "✗ EMPTY"
+            }<br/>
+            • Experience: ${sections.experience ? "✓ Found" : "✗ EMPTY"}<br/>
+            • Education: ${sections.education ? "✓ Found" : "✗ EMPTY"}<br/>
+            • Skills: ${sections.skills ? "✓ Found" : "✗ EMPTY"}
+        </div>`;
+
+      // Overall score
+      const overallPass = pass1 && pass2;
+      const passMessage = overallPass
+        ? "✨ EXCELLENT! Extraction working correctly."
+        : "⚠️ Some issues detected.";
+      results += `<div class="test ${overallPass ? "pass" : "fail"}">
+            <strong>Overall Status:</strong> ${
+              overallPass ? "PASS ✓" : "FAIL ✗"
+            }<br/>
+            ${passMessage}
+        </div>`;
+
+      document.getElementById("results").innerHTML = results;
+    </script>
+  </body>
+</html>
