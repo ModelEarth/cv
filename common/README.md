@@ -14,7 +14,7 @@ This project extends the Model.Earth portfolio system to display resume data par
 ### Local Setup
 1. Run a local server (e.g., VS Code Live Server).
 2. Open in browser:  
-   `http://127.0.0.1:5500/portfolio/shanmuga/index.html`
+   `http://127.0.0.1:5500/cv/ShanmugaPriyaKannanindex.html`
 
 ### Next Steps (optional)
 - Improve PDF text extraction accuracy (detect sections dynamically).

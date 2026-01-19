@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Local Resume Theme</title>
+
+  <!-- Base structure styling shared by all themes -->
+  <style>
+    :root {
+      --bg-page: #f5f5f7;
+      --bg-card: #ffffff;
+      --accent: #2563eb;
+      --accent-soft: #eff6ff;
+      --text-main: #111827;
+      --text-muted: #4b5563;
+      --border-subtle: #e5e7eb;
+      --chip-bg: #e5f0ff;
+      --chip-text: #1d4ed8;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg-page);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      color: var(--text-main);
+    }
+
+    #resumeContainer {
+      max-width: 960px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      padding: 32px 36px;
+      box-sizing: border-box;
+      min-height: 400px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 18px;
+      margin-bottom: 28px;
+    }
+    .name {
+      font-size: 30px;
+      font-weight: 700;
+      margin: 0 0 4px 0;
+    }
+    .label {
+      font-size: 15px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .contact {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .layout {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .col-main { flex: 2; }
+    .col-side { flex: 1; }
+
+    @media (min-width: 900px) {
+      .layout { flex-direction: row; align-items:flex-start; }
+    }
+
+    .section {
+      margin-bottom: 4px;
+    }
+    .section-title {
+      font-size: 13px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .item {
+      margin-bottom: 10px;
+    }
+    .item-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .item-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .item-summary {
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--text-main);
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .chip {
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: var(--chip-bg);
+      color: var(--chip-text);
+      border: 1px solid rgba(0,0,0,0.02);
+    }
+
+    .summary-text {
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-main);
+    }
+
+    .pill-section {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(0,0,0,0.03);
+    }
+  </style>
+
+  <!-- Theme-specific stylesheet -->
+  <link id="themeStylesheet" rel="stylesheet" href="">
+</head>
+
+<body>
+  <div id="resumeContainer">Loading theme…</div>
+
+  <script>
+    function getParam(name, fallback) {
+      return new URLSearchParams(location.search).get(name) ?? fallback;
+    }
+
+    const jsonFile  = getParam("resume", "detailed.json");
+    const themeName = getParam("theme", "elegant");
+
+    // load CSS for the selected theme folder
+    (function loadThemeStyles() {
+      const link = document.getElementById("themeStylesheet");
+      link.href = "themes/" + encodeURIComponent(themeName) + "/style.css";
+    })();
+  </script>
+
+  <!-- shared renderer for all themes -->
+  <script src="index.js"></script>
+</body>
+</html>

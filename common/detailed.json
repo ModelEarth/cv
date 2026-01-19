@@ -1,0 +1,117 @@
+{
+  "basics": {
+    "name": "Yash Gondkar",
+    "label": "936 N 15th Street, Milwaukee, WI 53233 | +1 (602) 539 - 1439 | yashgondkar@gmail.com | linkedin.com/in/yash - gondkar | github.com/Yash - G",
+    "email": "yashgondkar@gmail.com",
+    "phone": "",
+    "url": "linkedin.com/in/yash",
+    "location": "Lambda, EC",
+    "summary": "Machine Learning Engineer and researcher with 4+ years of industry experience. Expertise in transformer architectures,\n MLOps, and production AI systems. Published researcher in group activity recognition with linear - time transformer\n optimization. Experienc ed in building end - to - end ML pipelines, RAG systems, and scalable backend services."
+  },
+  "work": [
+    {
+      "position": "Model Earth / DreamStudio, Machine Learning Engineer",
+      "company": "",
+      "startDate": "July 2025",
+      "endDate": "Present",
+      "summary": "• Built scikit - learn - compatible Random Bits Forest wrapper achieving top performance on Blinks - 2016: 95.36%\n accuracy, 98.92% ROC - AUC, 95.00% F1 score - endorsed as 'major' update by supervisor.\n • Shipped first working Vector DB sync for CodeChat RAG system using Pinecone + GitHub Actions + Tree - sitter,\n handling add/modify/delete/rename operations with robust error handling and retry logic.\n • Built AWS Lambda deployment automation with boto3 for one - step backend deployment including Function URL\n permissions; integrated dynamic parameter handling in UI with graceful edit - conflict resolution.\n Mobiuso Technologies, Backend Engineer, Mumbai"
+    },
+    {
+      "position": "permissions; integrated dynamic parameter handling in UI with graceful edit - conflict resolution.",
+      "company": "Mobiuso Technologies, Backend Engineer, Mumbai",
+      "startDate": "April 2021",
+      "endDate": "August 2023",
+      "summary": "• Developed dynamic service generating/modifying JPA entities from JSON via Java reflection, reducing new entity setup\n from 7 days to under 1 hour - saving 40+ hours per entity type.\n • Built filtering engine for on - the - fly JPQL query generation supporting nested attributes, pagination, and custom response\n types; created Angular frontend library improving UI development time by similar margins.\n • Deployed AWS ECS stack and managed PostgreSQL migrations for B2B hospital management CMS serving multiple\n healthcare facilities.\n Nvizion Solutions, Backend Engineer, Mumbai"
+    },
+    {
+      "position": "healthcare facilities.",
+      "company": "Nvizion Solutions, Backend Engineer, Mumbai",
+      "startDate": "September 2018",
+      "endDate": "March 2021",
+      "summary": "• Implemented efficient BigQuery solutions achieving 10x cost reduction for queries scanning 5TB/minute using\n advanced techniques (aggregate functions, cross joins, nested queries).\n • Built recursive algorithms for Firestore data retrieval reducing GET call time from 20s to 0.3s while eliminating per - chart\n storage costs through on - the - fly result generation.\n • Configured and managed ELK stack analytics engine using Elasticsearch REST API, created watches for alerting with\n Painless DSL, built Kibana dashboards with KQL/Lucene queries, and deployed Java/JavaScript APM agents for\n application monitoring.\n RESEARCH EXPERIENCE\n SUGAR: Sequence Unfolding Transformer for Group Activity Recognition | Published Paper\n First Author, University of Massachusetts Boston ( Master's Thesis ) January - August 2025\n • Developed novel technique linearizing transformer performance for Group Activity Recognition, outperforming state -\n of - the - art Bi - Causal model and competing methods (Lightning Attention - 2, Mamba SSM).\n • Validated on AnimalKingdom dataset achieving superior accuracy; published in Transactions on Artificial Intelligence.\n Evaluated using precision, recall, precision@k, AUROC, and PR curves.\n Additional Research Projects - UMass Boston\n • Ensemble Learning with Std Dev as Signal: Implemented CUDA - optimized training pipeline with test - time adaptation\n (TENT framework), achieving high accuracy on ImageNet with dynamic logging of ensemble diversity metrics.\n • LLM Watermarking: Modified beam search with temperature scaling and top - k/top - p filtering for StarCoder/LLaMA;\n implemented KV caching and GPU - optimized batching with AUROC and Pass@K evaluation on HumanEval/MBPP.\n Teaching Assistant, UMass Boston - ENGIN 241, ENGIN 246, CS 109"
+    },
+    {
+      "position": "implemented KV caching and GPU - optimized batching with AUROC and Pass@K evaluation on HumanEval/MBPP.",
+      "company": "Teaching Assistant, UMass Boston - ENGIN 241, ENGIN 246, CS 109",
+      "startDate": "September 2024",
+      "endDate": "May 2025",
+      "summary": ""
+    }
+  ],
+  "education": [
+    {
+      "institution": "Mumbai University",
+      "studyType": "Bachelor's",
+      "area": "Computer Engineering",
+      "startDate": "June 2014",
+      "endDate": "June 2018",
+      "location": ""
+    }
+  ],
+  "skills": [
+    {
+      "name": "Skills",
+      "keywords": [
+        "Languages - Python (3 yrs)",
+        "Java (4 yrs)",
+        "JavaScript",
+        "TypeScript",
+        "C",
+        "C++",
+        "Bash",
+        "PowerShell",
+        "Golang (1 yr )",
+        "SQL (4 yrs)"
+      ]
+    },
+    {
+      "name": "Skills",
+      "keywords": [
+        "ML/AI (2.5 yrs) - PyTorch (2 yrs)",
+        "scikit - learn",
+        "Transformers",
+        "CUDA",
+        "LlamaIndex",
+        "LangChain",
+        "MCP",
+        "RAG",
+        "MLOps"
+      ]
+    },
+    {
+      "name": "Skills",
+      "keywords": [
+        "Frameworks/Tools - Spring Boot (4 yrs)",
+        "Spring Data JPA (4 yrs)",
+        "Angular (2 yrs)",
+        "AWS (Lambda",
+        "ECS)",
+        "PostgreSQL"
+      ]
+    },
+    {
+      "name": "Skills",
+      "keywords": [
+        "(2 yrs)",
+        "MySQL (2 yrs)",
+        "BigQuery",
+        "Docker",
+        "Git",
+        "CI/CD"
+      ]
+    },
+    {
+      "name": "Skills",
+      "keywords": [
+        "Specialized - Vector DBs (Pinecone)",
+        "GitHub Actions",
+        "Pandas",
+        "NumPy",
+        "Matplotlib",
+        "Google Colab",
+        "ELK Stack"
+      ]
+    }
+  ],
+  "projects": []
+}

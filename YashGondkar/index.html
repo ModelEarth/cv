@@ -49,7 +49,7 @@
     <div class="row">
       <label>Data:</label>
       <select id="jsonSelect">
-        <option value="simple.json">simple.json</option>
+        <!--option value="simple.json">simple.json</option>-->
         <option value="detailed.json">detailed.json</option>
       </select>
 
@@ -122,7 +122,7 @@
     }
 
     function loadTheme(jsonFile, theme) {
-      const url = `theme.html?resume=${encodeURIComponent(jsonFile)}&theme=${encodeURIComponent(theme)}`;
+      const url = `../common/theme.html?resume=${encodeURIComponent(jsonFile)}&theme=${encodeURIComponent(theme)}`;
       const start = performance.now();
 
       previewFrame.onload = () => {
@@ -140,7 +140,7 @@
 
     async function loadReadme() {
       try {
-        const res = await fetch("../common/README.md", { cache: "no-store" });
+        const res = await fetch("./README.md", { cache: "no-store" });
         if (!res.ok) throw new Error();
         const text = await res.text();
         document.getElementById("readmeContent").innerHTML =
