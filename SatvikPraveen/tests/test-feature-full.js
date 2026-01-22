@@ -309,7 +309,7 @@ function parseProjects(text) {
 
 // Test data
 const sampleResume = `Shanmuga Priya Kannan
-872 - 330 - 3203 | shanmugapriyakannan019@gmail.com | https://www.linkedin.com/in/shanmuga-priya-k-95400a194
+872 - 330 - 3203 | shanmugapriyakannan019@gmail.com | shanmuga-priya-k-95400a194
 
 B.Tech Computer Science
 Chicago, US

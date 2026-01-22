@@ -12,7 +12,7 @@ function cleanAndNormalizeText(text) {
 }
 
 const rawText = `Shanmuga Priya Kannan
-872-330-3203 | shanmugapriyakannan019@gmail.com | https://www.linkedin.com/in/shanmuga-priya-k-95400a194
+872-330-3203 | shanmugapriyakannan019@gmail.com | shanmuga-priya-k-95400a194
 Computer Science graduate student with 3+ years of experience as a ServiceNow Developer specializing in ITSM,
 integrations, and workflow automation. Skilled in Java, Python, cloud platforms, and data analytics with hands-on
 project experience in machine learning and market analysis.

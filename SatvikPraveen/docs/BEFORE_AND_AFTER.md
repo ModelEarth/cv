@@ -107,7 +107,7 @@ function parseResumeText(text) {
     "label": "",
     "email": "shanmugapriyakannan019@gmail.com",
     "phone": "",
-    "url": "https://www.linkedin.com/in/shanmuga-priya-k-95400a194",
+    "url": "shanmuga-priya-k-95400a194",
     "location": "",
     "summary": "Computer Science graduate student with 3+ years of experience as a ServiceNow Developer specializing in ITSM, integrations, and workflow automation. Skilled in Java, Python, cloud platforms, and data analytics..."
   },

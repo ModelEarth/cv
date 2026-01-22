@@ -239,10 +239,10 @@ With:
     "label": "Senior ServiceNow Developer",
     "email": "shanmugapriyakannan019@gmail.com",
     "phone": "+1-555-0000",
-    "url": "https://linkedin.com/in/shanmuga",
+    "url": "shanmuga-priya-k-95400a194",
     "location": { "city": "Chicago", "region": "USA" },
     "profiles": [
-      { "network": "LinkedIn", "url": "https://linkedin.com/in/shanmuga" },
+      { "network": "LinkedIn", "url": "shanmuga-priya-k-95400a194" },
       { "network": "GitHub", "url": "https://github.com/shan-789" }
     ]
   },

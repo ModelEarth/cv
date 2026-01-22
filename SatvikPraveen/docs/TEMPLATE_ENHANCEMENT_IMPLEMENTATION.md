@@ -512,7 +512,7 @@ CANDIDATE INFORMATION
 Name: Shanmuga Priya Kannan
 Email: shanmugapriyakannan019@gmail.com
 Phone: 872-330-3203
-LinkedIn: https://www.linkedin.com/in/shanmuga-priya-k-95400a194
+LinkedIn: shanmuga-priya-k-95400a194
 
 PROFESSIONAL SUMMARY
 

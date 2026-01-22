@@ -25,4 +25,4 @@ This project extends the Model.Earth portfolio system to display resume data par
 
 **Author:** Shanmuga Priya Kannan  
 **Email:** shanmugapriyakannan019@gmail.com  
-**LinkedIn:** [linkedin.com/in/shanmuga](https://linkedin.com/in/shanmuga)
+**LinkedIn:** [linkedin.com/in/shanmuga](shanmuga-priya-k-95400a194)

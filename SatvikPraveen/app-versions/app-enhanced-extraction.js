@@ -29,7 +29,7 @@ const SAMPLE_DATA = {
     image: "",
     email: "shanmugapriyakannan019@gmail.com",
     phone: "",
-    url: "https://linkedin.com/in/shanmuga",
+    url: "shanmuga-priya-k-95400a194",
     summary:
       "ServiceNow Developer specializing in ITSM, integrations, and workflow automation. Skilled in Java, Python, cloud platforms, and data analytics with hands-on project experience in machine learning and market analysis.",
     location: {
@@ -43,7 +43,7 @@ const SAMPLE_DATA = {
       {
         network: "LinkedIn",
         username: "shanmuga",
-        url: "https://linkedin.com/in/shanmuga",
+        url: "shanmuga-priya-k-95400a194",
       },
       {
         network: "GitHub",
