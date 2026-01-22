@@ -1,7 +1,7 @@
-# Guidance
+# CV Dev
 
-[Drag to parse resume PDF into json](SatvikPraveen/) - [Sample of Resume Themes](ShanmugaPriyaKannan)
+[Drag to parse resume PDF into json](SatvikPraveen/)
 
-A chronological creations.md within an individual's folder can list a summary of their PRs with links and embedded examples.
+[Sample of Resume Themes](YashGondkar)
 
-The [team list page](/team/projects/#list=modelteam&showrepos=true) could potentially be used to generate the individual's creations.md file.
+The [team list page](/team/projects/#list=modelteam&showrepos=true) now lists PRs - Thanks Sugandha!
