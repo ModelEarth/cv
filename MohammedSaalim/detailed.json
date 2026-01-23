@@ -1,0 +1,105 @@
+{
+  "basics": {
+    "name": "Mohammed Saalim K",
+    "label": "Full-Stack Developer | USEEIO Lead | Environmental Data Visualization Specialist",
+    "email": "mohammed.saalim.k@gmail.com",
+    "phone": "",
+    "url": "https://mohammed-saalim.vercel.app/",
+    "location": "Chicago, Illinois",
+    "summary": "Full-stack developer with 3+ years of professional experience specializing in React, TypeScript, and data visualization. As Lead Developer for USEEIO updates at Model.Earth, I have implemented v2 model integration, built interactive D3.js bubble charts, and developed matrix-based job quantity calculations. Passionate about environmental data science and always excited to work on meaningful projects that make a difference."
+  },
+  "work": [
+    {
+      "position": "Lead Software Developer",
+      "company": "DreamStudio (Model.Earth - EPA USEEIO Project)",
+      "startDate": "2025-09",
+      "endDate": "Present",
+      "summary": "• Lead USEEIO widget development integrating EPA's v2 state economic models into interactive visualizations\n• Fixed critical retention bug in React TypeScript widgets using URLSearchParams API, eliminating navigation state loss\n• Built D3.js bubble charts with RESTful JSON API integration, real-time animations, and event-driven state filtering\n• Developed automated data processing pipelines with NAICS sector mapping algorithm using React hooks and Papa Parse\n• Migrated bubble chart from hardcoded v1 data to dynamic v2 JSON API integration supporting all US states with 73 sectors per state\n• Implemented D matrix × q vector calculation for actual job quantities display with smart decimal formatting and comprehensive UX interaction overhaul"
+    },
+    {
+      "position": "ASP.NET Developer",
+      "company": "Tata Consultancy Services (Humana Healthcare)",
+      "startDate": "2022-02",
+      "endDate": "2023-09",
+      "summary": "• Designed RESTful Web APIs using .NET Minimal API for wellness rewards platform serving 500K+ users\n• Implemented Confluent Kafka event-driven microservices (40% efficiency improvement, 25% less downtime)\n• Built SOA-compliant .NET API with MongoDB Atlas handling 10M+ records (sub-200ms response times)\n• Achieved 90% test coverage using XUnit and MOQ (reduced production defects by 45%)"
+    },
+    {
+      "position": "Full Stack Developer",
+      "company": "Newgen Software Technologies",
+      "startDate": "2021-02",
+      "endDate": "2022-02",
+      "summary": "• Enhanced OCR/ICR document processing app using .NET (C#) and ReactJS with gRPC microservices (35% lower latency)\n• Developed partial data masking feature for sensitive documents using Python/OpenCV (saved 20+ manual hours/month)\n• Refactored legacy Document Identification API to microservices (60% faster processing, 25% fewer errors)\n• Optimized multi-database operations across MSSQL, PostgreSQL, Oracle with EF Core and Dapper (30% less DB latency)"
+    }
+  ],
+  "education": [
+    {
+      "institution": "DePaul University",
+      "studyType": "Master's",
+      "area": "Computer Science",
+      "startDate": "",
+      "endDate": "",
+      "location": "Chicago, USA"
+    }
+  ],
+  "skills": [
+    {
+      "name": "Frontend & Data Visualization",
+      "keywords": ["React.js", "TypeScript", "JavaScript (ES6+)", "D3.js", "Redux", "Material-UI", "Responsive Design", "Data Visualization", "Interactive Charts"]
+    },
+    {
+      "name": "USEEIO & Environmental Data",
+      "keywords": ["USEEIO Model Integration", "Environmental Data Analysis", "Matrix Mathematics", "NAICS Sector Mapping", "EPA Data Processing", "Economic Impact Modeling", "State-Level Data Analysis", "JSON API Integration"]
+    },
+    {
+      "name": "Backend & APIs",
+      "keywords": ["RESTful APIs", "API Integration", ".NET Core", "C#", "Python", "PostgreSQL", "MongoDB", "Entity Framework Core"]
+    },
+    {
+      "name": "Development & Performance",
+      "keywords": ["Performance Optimization", "Lazy Loading", "Event-Driven Architecture", "Git", "GitHub", "Docker", "CI/CD", "Unit Testing"]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Interactive Bubble Chart",
+      "summary": "Dynamic environmental impact visualization with real-time data loading, state-specific filtering, and actual job quantity calculations.",
+      "keywords": ["D3.js", "React", "Data Visualization", "USEEIO"]
+    },
+    {
+      "name": "USEEIO v2 Integration",
+      "summary": "Seamless integration with GitHub-based JSON API supporting all US states with 73 sectors per state.",
+      "keywords": ["API Integration", "React", "JSON", "USEEIO"]
+    },
+    {
+      "name": "Hash Retention Fix",
+      "summary": "Production-level bug fix ensuring URL state preservation across widget interactions.",
+      "keywords": ["React", "TypeScript", "URL Management", "Bug Fix"]
+    },
+    {
+      "name": "Microsoft PowerToys Contribution",
+      "summary": "Built 'No leading spaces' option for WPF-based Hosts File Editor (PR #41206).",
+      "keywords": ["C#", "WPF", "Open Source"]
+    },
+    {
+      "name": "Polly .NET Contribution",
+      "summary": "Designed high-performance HybridCache strategy for Polly.Caching (PR #2709).",
+      "keywords": ["C#", ".NET", "Open Source", "Caching"]
+    }
+  ],
+  "certifications": [],
+  "languages": [],
+  "profiles": [
+    {
+      "network": "LinkedIn",
+      "url": "https://www.linkedin.com/in/mohammed-saalim/"
+    },
+    {
+      "network": "GitHub",
+      "url": "https://github.com/mohammed-saalim"
+    },
+    {
+      "network": "Portfolio",
+      "url": "https://mohammed-saalim.vercel.app/"
+    }
+  ]
+}
