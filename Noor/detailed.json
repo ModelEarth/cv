@@ -1,0 +1,63 @@
+{
+  "basics": {
+    "name": "Noor",
+    "label": "Software Developer / Data Engineer",
+    "email": "",
+    "phone": "",
+    "url": "",
+    "location": "",
+    "summary": "Software Developer and Data Engineer specializing in environmental data processing, API integration, and data pipeline automation. Built comprehensive EPD (Environmental Product Declaration) data pipelines, integrated BuildingTransparency.org APIs (EC3 and openEPD), and developed Flask-based admin interfaces for data management at ModelEarth/DreamStudio."
+  },
+  "work": [
+    {
+      "position": "Software Developer / Data Engineer",
+      "company": "ModelEarth / DreamStudio",
+      "startDate": "2024",
+      "endDate": "Present",
+      "summary": "• Built comprehensive data pipeline for fetching and processing 184,614+ EPD (Environmental Product Declaration) products from BuildingTransparency.org APIs\n• Integrated EC3 API and openEPD API to combine carbon emissions (GWP) and LCIA impact categories (ozone depletion, acidification, eutrophication, photochemical ozone creation, abiotic resource depletion)\n• Implemented transportation impact calculations allowing frontend to adjust impacts based on actual vs. default travel distances\n• Developed Flask server with REST API endpoints for running data pipeline nodes from web admin interface\n• Created automated data update workflow with fork repository management and PR creation\n• Built data analysis tools for emissions data coverage and impact parameter documentation\n• Implemented robust authentication token refresh mechanism for long-running API data pulls\n• Processed EPD data for all US states (50 states + DC) and 7 additional countries (India, Great Britain, Germany, Netherlands, Canada, Mexico, China)"
+    }
+  ],
+  "education": [],
+  "skills": [
+    {
+      "name": "Programming Languages",
+      "keywords": ["Python", "JavaScript", "TypeScript", "Bash", "SQL", "YAML", "JSON"]
+    },
+    {
+      "name": "Frameworks & Tools",
+      "keywords": ["Flask", "Next.js", "React", "REST APIs", "Git", "GitHub Actions"]
+    },
+    {
+      "name": "Data Processing",
+      "keywords": ["API Integration", "Data Pipelines", "EPD Data", "Environmental Data", "YAML Processing", "CSV Processing"]
+    },
+    {
+      "name": "Technologies",
+      "keywords": ["BuildingTransparency.org APIs", "EC3 API", "openEPD API", "Life Cycle Assessment (LCA)", "GWP", "LCIA Impact Categories"]
+    }
+  ],
+  "projects": [
+    {
+      "name": "EPD Data Pipeline",
+      "summary": "Comprehensive data pipeline for fetching and processing Environmental Product Declaration (EPD) data from BuildingTransparency.org. Handles 184,614+ products across multiple countries and states, with intelligent data merging from multiple API sources.",
+      "keywords": ["Python", "API Integration", "Data Processing", "EPD", "BuildingTransparency"]
+    },
+    {
+      "name": "Flask Admin Interface",
+      "summary": "Flask-based REST API server for managing data pipeline nodes from web admin interface. Includes health checks, node execution, status monitoring, and automated commit/PR workflow.",
+      "keywords": ["Flask", "REST API", "Python", "Web Admin", "Data Pipeline Management"]
+    },
+    {
+      "name": "Transportation Impact Calculator",
+      "summary": "Utility functions for calculating transportation impacts (A4 stage) and adjusting GWP values based on actual vs. default travel distances. Implements formulas for CO2e calculations.",
+      "keywords": ["Python", "Environmental Impact", "Transportation", "GWP Calculations"]
+    },
+    {
+      "name": "Emissions Data Analysis",
+      "summary": "Analysis tools for documenting carbon emissions and impact parameters in EPD data. Reports on GWP coverage, LCIA impact categories, and resource use indicators across 184,614+ products.",
+      "keywords": ["Data Analysis", "Python", "Environmental Metrics", "Documentation"]
+    }
+  ],
+  "certifications": [],
+  "languages": []
+}
