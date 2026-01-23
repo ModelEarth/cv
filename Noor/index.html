@@ -122,7 +122,9 @@
     }
 
     function loadTheme(jsonFile, theme) {
-      const url = `../common/theme.html?resume=${encodeURIComponent(jsonFile)}&theme=${encodeURIComponent(theme)}`;
+      // Convert local path to path relative to common folder for iframe
+      const iframeJsonPath = jsonFile.startsWith('../') ? jsonFile : `../Noor/${jsonFile}`;
+      const url = `../common/theme.html?resume=${encodeURIComponent(iframeJsonPath)}&theme=${encodeURIComponent(theme)}`;
       const start = performance.now();
 
       previewFrame.onload = () => {

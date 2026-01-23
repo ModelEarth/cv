@@ -5,6 +5,8 @@ CV generator in progress:
 [Satvik Praveen](SatvikPraveen)
 [Thanmayi Sai](ThanmayiSai)
 [Rekha Chimpiri](RekhaChimpiri)
+[Noor](Noor)
+[Mohammed Saalim](MohammedSaalim)
 </div><br>
 
 
