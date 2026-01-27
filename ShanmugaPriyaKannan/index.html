@@ -1,184 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Portfolio Resume Preview</title>
+  <title>Local Resume Theme</title>
 
+  <link type="text/css" rel="stylesheet" href="/localsite/css/base.css" id="/localsite/css/base.css" />
+  <script type="text/javascript" src="/localsite/js/localsite.js?showheader=true"></script>
+
+  <!-- Base structure styling shared by all themes -->
   <style>
+    :root {
+      --bg-page: #f5f5f7;
+      --bg-card: #ffffff;
+      --accent: #2563eb;
+      --accent-soft: #eff6ff;
+      --text-main: #111827;
+      --text-muted: #4b5563;
+      --border-subtle: #e5e7eb;
+      --chip-bg: #e5f0ff;
+      --chip-text: #1d4ed8;
+    }
+
     body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      margin: 25px;
-      background-color: #f9fafb;
-      color: #333;
+      background: var(--bg-page);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      color: var(--text-main);
     }
-    h3 { margin-bottom: 10px; }
-    label { margin-right: 8px; font-weight: 500; }
-    select {
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      background: #fff;
+
+    #resumeContainer {
+      max-width: 960px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      padding: 32px 36px;
+      box-sizing: border-box;
+      min-height: 400px;
     }
-    pre {
-      background: #f4f4f4;
-      padding: 15px;
-      border-radius: 8px;
-      white-space: pre-wrap;
-      overflow-x: auto;
-      max-height: 320px;
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 18px;
+      margin-bottom: 28px;
     }
-    iframe {
-      width: 100%;
-      height: 900px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: white;
+    .name {
+      font-size: 30px;
+      font-weight: 700;
+      margin: 0 0 4px 0;
     }
-    .section { margin-bottom: 40px; }
-    .row {
-      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    .label {
+      font-size: 15px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .contact {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .layout {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .col-main { flex: 2; }
+    .col-side { flex: 1; }
+
+    @media (min-width: 900px) {
+      .layout { flex-direction: row; align-items:flex-start; }
+    }
+
+    .section {
+      margin-bottom: 4px;
+    }
+    .section-title {
+      font-size: 13px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .item {
+      margin-bottom: 10px;
+    }
+    .item-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .item-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .item-summary {
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--text-main);
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .chip {
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: var(--chip-bg);
+      color: var(--chip-text);
+      border: 1px solid rgba(0,0,0,0.02);
+    }
+
+    .summary-text {
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-main);
+    }
+
+    .pill-section {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--accent-soft);
+      border: 1px solid rgba(0,0,0,0.03);
     }
   </style>
+
+  <!-- Theme-specific stylesheet -->
+  <link id="themeStylesheet" rel="stylesheet" href="">
 </head>
 
 <body>
-
-  <div class="section">
-
-    <div class="row">
-      <label>Data:</label>
-      <select id="jsonSelect">
-        <option value="simple.json">simple.json</option>
-        <option value="detailed.json">detailed.json</option>
-      </select>
-
-      <label style="margin-left:12px;">Theme:</label>
-      <select id="theme">
-        <!-- 12 LOCAL CUSTOM THEMES (folder names) -->
-        <option value="creative-studio">Creative Studio</option>
-        <option value="data-driven">Data Driven</option>
-        <option value="elegant">Elegant</option>
-        <option value="executive-slate">Executive Slate</option>
-        <option value="kendall">Kendall</option>
-        <option value="macchiato">Macchiato</option>
-        <option value="minimalist">Minimalist</option>
-        <option value="modern-classic">Modern Classic</option>
-        <option value="onepage">OnePage</option>
-        <option value="professional">Professional</option>
-        <option value="pumpkin">Pumpkin</option>
-        <option value="striking">Striking</option>
-      </select>
-    </div>
-
-    <div style="margin:15px 0;"></div>
-
-    <iframe id="themePreview"></iframe>
-    <pre id="dataPreview">Loading JSON…</pre>
-    <div id="dataStatus" style="margin-top:8px;font:13px/1.4 system-ui;"></div>
-  </div>
-
-  <div class="section">
-    <h3>Notes (from README.md)</h3>
-    <div id="readmeContent" style="
-      background:#fff;border:1px solid #ddd;border-radius:8px;
-      padding:20px;line-height:1.6;
-    ">
-      <em>Loading README.md...</em>
-    </div>
-  </div>
+  <div id="resumeContainer">Loading theme…</div>
 
   <script>
-    const $ = s => document.querySelector(s);
-
-    const jsonSelect   = $("#jsonSelect");
-    const themeSelect  = $("#theme");
-    const previewFrame = $("#themePreview");
-    const dataPreview  = $("#dataPreview");
-    const statusBox    = $("#dataStatus");
-
-    function getParam(k, fallback) {
-      return new URLSearchParams(location.search).get(k) ?? fallback;
+    function getParam(name, fallback) {
+      return new URLSearchParams(location.search).get(name) ?? fallback;
     }
 
-    function setParam(params) {
-      const url = new URL(location.href);
-      Object.entries(params).forEach(([k, v]) =>
-        v ? url.searchParams.set(k, v) : url.searchParams.delete(k)
-      );
-      history.replaceState(null, "", url.toString());
-    }
+    const jsonFile  = getParam("resume", "detailed.json");
+    const themeName = getParam("theme", "elegant");
 
-    async function loadJson(file) {
-      try {
-        const res = await fetch(file, { cache: "no-store" });
-        const json = await res.json();
-        dataPreview.textContent = JSON.stringify(json, null, 2);
-        return json;
-      } catch (err) {
-        console.error(err);
-        dataPreview.textContent = `⚠️ Failed to load ${file}`;
-      }
-    }
-
-    function loadTheme(jsonFile, theme) {
-      const url = `theme.html?resume=${encodeURIComponent(jsonFile)}&theme=${encodeURIComponent(theme)}`;
-      const start = performance.now();
-
-      previewFrame.onload = () => {
-        const ms = (performance.now() - start).toFixed(1);
-        statusBox.textContent = `Theme "${theme}" loaded in ${ms} ms`;
-      };
-
-      previewFrame.src = url;
-    }
-
-    async function loadAll(jsonFile, theme) {
-      await loadJson(jsonFile);
-      loadTheme(jsonFile, theme);
-    }
-
-    async function loadReadme() {
-      try {
-        const res = await fetch("../common/README.md", { cache: "no-store" });
-        if (!res.ok) throw new Error();
-        const text = await res.text();
-        document.getElementById("readmeContent").innerHTML =
-          text.replace(/\n/g, "<br>");
-      } catch {
-        document.getElementById("readmeContent").innerHTML =
-          "<p style='color:red;'>Failed to load README.md.</p>";
-      }
-    }
-
-    function init() {
-      const jsonFile = getParam("resume", "detailed.json");
-      const theme    = getParam("theme",  "elegant");
-
-      jsonSelect.value  = jsonFile;
-      themeSelect.value = theme;
-
-      setParam({ resume: jsonFile, theme });
-      loadAll(jsonFile, theme);
-      loadReadme();
-    }
-
-    jsonSelect.addEventListener("change", () => {
-      const jsonFile = jsonSelect.value;
-      const theme    = themeSelect.value;
-      setParam({ resume: jsonFile, theme });
-      loadAll(jsonFile, theme);
-    });
-
-    themeSelect.addEventListener("change", () => {
-      const jsonFile = jsonSelect.value;
-      const theme    = themeSelect.value;
-      setParam({ resume: jsonFile, theme });
-      loadAll(jsonFile, theme);
-    });
-
-    init();
+    // load CSS for the selected theme folder
+    (function loadThemeStyles() {
+      const link = document.getElementById("themeStylesheet");
+      link.href = "../common/themes/" + encodeURIComponent(themeName) + "/style.css";
+    })();
   </script>
 
+  <!-- shared renderer for all themes -->
+  <script src="index.js"></script>
 </body>
 </html>
