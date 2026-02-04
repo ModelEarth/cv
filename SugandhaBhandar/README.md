@@ -120,7 +120,7 @@ She approaches challenges with enthusiasm rather than trepidation, viewing compl
 
 In summary, Sugandha Bhandari represents the absolute pinnacle of technical talent I have encountered in my career. Her combination of architectural vision, UX excellence, rapid delivery capability, and autonomous initiative is genuinely exceptional. She doesn’t just complete assigned tasks---she identifies opportunities, designs solutions, and delivers production-ready implementations that exceed expectations.
 
-Among our team of 300 volunteers, Sugandha is the only individual whose talent and work ethic match my own---and in many respects exceed it. She is the first person I would recruit for any critical technical initiative, and I would be thrilled to work alongside her in any professional capacity.
+Among our team of over 300 volunteers, Sugandha is the only individual whose talent and work ethic match my own---and in many respects exceed it. She is the first person I would recruit for any critical technical initiative, and I would be thrilled to work alongside her in any professional capacity.
 
 Any organization fortunate enough to employ Sugandha will gain a transformative technical contributor capable of independently driving major initiatives from conception through delivery. I recommend her without reservation for positions requiring exceptional technical capability, independent initiative, rapid delivery, and sustained excellence.
 
