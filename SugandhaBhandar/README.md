@@ -4,11 +4,7 @@
 
 *Environmental Data Modeling & Visualization*
 
-February 3, 2026
-
-**To Whom It May Concern:**
-
-It is with tremendous enthusiasm and without reservation that I recommend Sugandha Bhandari for any position requiring exceptional technical talent, independent initiative, and extraordinary delivery capability. In my twenty years leading technical teams and managing hundreds of volunteers across open-source environmental data projects, Sugandha stands out as the single most talented and industrious contributor I have worked with---a developer whose skill and drive match my own, and in many ways, exceed it.
+It is with great enthusiasm that I recommend Sugandha Bhandari for any position requiring exceptional technical talent, independent initiative, and extraordinary delivery capability. In my twenty years leading technical teams and managing hundreds of volunteers across open-source environmental data projects, Sugandha stands out as the single most talented and industrious contributor I have worked with---a developer whose skill and drive match my own, and in many ways, exceed it.
 
 Among our team of over 300 volunteers at DreamStudio ModelEarth, Sugandha is the only individual I would select first and foremost for any critical initiative. Her combination of rapid development capability, architectural vision, user experience excellence, and autonomous problem-solving represents the pinnacle of what I seek in a technical professional.
 
