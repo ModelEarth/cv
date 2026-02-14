@@ -83,6 +83,9 @@
         .cv-filters-section {
           margin-bottom: 40px;
         }
+        .cv-filters-section h3 {
+          margin-bottom: 10px;
+        }
         .cv-filters-row {
           padding: 8px;
           display: flex;
@@ -186,11 +189,8 @@
           margin-right: 8px;
           font-weight: 500;
         }
-        .cv-filters-row select {
-          padding: 6px 10px;
-          border-radius: 6px;
-          border: 1px solid #ccc;
-          background: #fff;
+        #cvFiltersContainer select {
+          border: 1px solid #d9d9d9;
         }
         .cv-iframe-preview {
           width: 100%;
@@ -221,6 +221,16 @@
           border-radius: 8px;
           padding: 20px;
           line-height: 1.6;
+        }
+        .dark .pdf-info {
+          background: #1e2c36;
+          color: #d8e8f5;
+        }
+        .dark .pdf-info a {
+          color: #7fc0ff;
+        }
+        .dark .pdf-info a:hover {
+          color: #a8d6ff;
         }
       </style>
       
