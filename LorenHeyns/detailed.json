@@ -10,8 +10,8 @@
   },
   "work": [
     {
-      "position": "Lead Engineer for data science teams",
       "company": "DreamStudio Model.Earth – Collaborative Data Science",
+      "position": "Lead Engineer for Data Science Teams",
       "startDate": "2020-01",
       "endDate": "2026-02",
       "summary": "• Lead Engineer for data science teams visualizing industry impact supply-chains with location comparison tools\n• LLM chat interfaces using Rust and NodeJS\n• Google Data Commons API timeline data\n• Cloudflare and AWS hosting\n• International trade flow analysis combining Python Colabs, Azure SQL, Tabulator, Chart.js, D3 and Leaflet Maps"

@@ -13,7 +13,9 @@ CV Automation:
 </div><br>
 
 
-Our bios list (upcoming):
+# Our Bios
+
+Example of upcoming list format
 
 ![Akhila Guska](AkhilaGuska/AkhilaGuska.jpg)
 <div class="bioText" markdown="1">
