@@ -1,0 +1,236 @@
+{
+  "basics": {
+    "name": "Loren Kevin Heyns",
+    "label": "Project Director and Lead Engineer | AI Insights Integration Expert | Full Stack Developer",
+    "email": "loren@dreamstudio.com",
+    "phone": "678-468-1000",
+    "url": "https://dreamstudio.com/about/loren-heyns/",
+    "location": "Atlanta, GA",
+    "summary": "Project Director and Lead Engineer with 25 years experience leading teams and automating customer experiences. AI Insights Integration Expert, Full Stack Developer, Data Visualization Designer, Python Machine Learning Analytics. Broad experience with Energy, Aerospace, Product Lifecycles & Manufacturing Supply Chains. AI Vibe Coding Trainer."
+  },
+  "work": [
+    {
+      "position": "Lead Engineer for data science teams",
+      "company": "DreamStudio Model.Earth – Collaborative Data Science",
+      "startDate": "2020-01",
+      "endDate": "2026-02",
+      "summary": "• Lead Engineer for data science teams visualizing industry impact supply-chains with location comparison tools\n• LLM chat interfaces using Rust and NodeJS\n• Google Data Commons API timeline data\n• Cloudflare and AWS hosting\n• International trade flow analysis combining Python Colabs, Azure SQL, Tabulator, Chart.js, D3 and Leaflet Maps"
+    },
+    {
+      "position": "Programmer Analyst and Lead Web Developer",
+      "company": "Georgia Department of Economic Development",
+      "startDate": "2015-01",
+      "endDate": "2026-02",
+      "summary": "• Programmer Analyst and Lead Web Developer, Azure, SharePoint, Salesforce, Cognito Forms and CartoDB\n• Developed directories for Georgia Film, Aerospace, Trade and Recycling using jQuery, MapBox and Google Maps"
+    },
+    {
+      "position": "AWS Developer and Researcher",
+      "company": "Network Dynamics Lab at Georgia Tech",
+      "startDate": "2018-01",
+      "endDate": "2019-12",
+      "summary": "• AWS Aurora PostgreSQL app for analysis of mobility changes during hurricanes using X.com data\n• Focus on construction apps, transportation, logistics and aerospace\n• Research CV at dreamstudio.com/research"
+    },
+    {
+      "position": "CEO and Lead Software Engineer",
+      "company": "DreamStudio Interactive – .NET Partner Admin Tools",
+      "startDate": "2000-01",
+      "endDate": "2016-12",
+      "summary": "• CEO and Lead Software Engineer, UX Design, SQL Database Admin, Rackspace and AWS Hosting\n• Developed .NET Content Management Systems for membership management, payments, news and scheduling"
+    },
+    {
+      "position": "Website Developer and Consultant",
+      "company": "Neighborhood.org, Seaside Institute, Glenwood Park",
+      "startDate": "2000-01",
+      "endDate": "2015-12",
+      "summary": "• News and directory services for neighborhood development projects, realtors and foundations\n• Websites for eight neighborhood associations including Midtown, West End and Grant Park"
+    },
+    {
+      "position": "Website CMS Developer and Database Admin",
+      "company": "Georgia State Parks and Historic Sites",
+      "startDate": "2000-01",
+      "endDate": "2015-12",
+      "summary": "• Website CMS development and hosting for state park news, events, golf courses and lodge sites\n• Campground Host management and background check system using C# and Microsoft .NET\n• Wireless ticketing for excursion trains, programming of calendar system and SQL database admin"
+    },
+    {
+      "position": "Lead Programmer and UI Designer",
+      "company": "Interactive Planet, Inc. – Southern Company",
+      "startDate": "1995-01",
+      "endDate": "2000-12",
+      "summary": "• Lead Programmer and UI Designer developing web apps for power companies, banks and restaurants\n• Developed content system for Southern Company and seven state affiliates\n• Home energy apps and news sites"
+    }
+  ],
+  "education": [
+    {
+      "institution": "Georgia Institute of Technology",
+      "studyType": "PhD Coursework (2 semesters)",
+      "area": "Computer Science CSE",
+      "startDate": "",
+      "endDate": "",
+      "location": "Atlanta, GA",
+      "courses": [
+        "Software engineering",
+        "Energy impacts data visualization",
+        "SQL",
+        "Python machine learning models",
+        "jQuery",
+        "3D design"
+      ]
+    },
+    {
+      "institution": "Michigan State University",
+      "studyType": "Master's Coursework (1.5 years)",
+      "area": "Telecommunications, UX Design",
+      "startDate": "",
+      "endDate": "",
+      "location": "East Lansing, MI",
+      "courses": [
+        "Comm Tech Lab",
+        "MITN Satellite Network",
+        "Internet Guide"
+      ]
+    },
+    {
+      "institution": "University of California Santa Barbara",
+      "studyType": "BA",
+      "area": "Business Economics, Communication Studies",
+      "startDate": "",
+      "endDate": "",
+      "location": "Santa Barbara, CA",
+      "courses": [
+        "Financial Accounting",
+        "Art History",
+        "Environmental Economics",
+        "C+/Unix",
+        "Photography",
+        "Screenwriting",
+        "Film Studies"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "name": "Business Solutions / Platforms",
+      "keywords": [
+        "Vibe Coding with Claude and OpenAI Codex",
+        "Rust and .NET Partner Admin",
+        "LibreOffice",
+        "Microsoft Azure Postgres SQL",
+        "AWS Hosting",
+        "SharePoint Intranet Setup",
+        "Cloudflare CDN",
+        "Google Cloud Platform",
+        "GitHub Pages",
+        "MailChimp",
+        "Mailtrap",
+        "ChatGPT API",
+        "MS Office/Copilot",
+        "DNS Management",
+        "Google Analytics",
+        "SketchUp",
+        "Apache eCharts",
+        "D3 Data Visualizations",
+        "Cognito Forms",
+        "Wix",
+        "Squarespace",
+        "Drupal",
+        "WordPress",
+        "Zapier",
+        "Jira",
+        "Trello",
+        "Basecamp"
+      ]
+    },
+    {
+      "name": "Programming / Development Tools",
+      "keywords": [
+        "JAM Stack with Sublime Text",
+        "VS Code",
+        "Cursor",
+        "Firebase Studio",
+        "WebStorm",
+        "YAML",
+        "JSON APIs",
+        "JavaScript",
+        "jQuery",
+        "Leaflet",
+        "MapBox",
+        "React",
+        "NodeJS",
+        "NextJS",
+        "CartoDB",
+        "DuckDB",
+        "CSS3",
+        "HTML5",
+        "Python",
+        "Flask",
+        "PyTorch",
+        "NLP",
+        "XGBoost and Random Forest ML",
+        "Streamlit",
+        "Vite",
+        "Bun",
+        "DBeaver",
+        "C# .NET Core",
+        "IIS Admin",
+        "Microsoft SQL",
+        "Supabase",
+        "MariaDB",
+        "PostgreSQL",
+        "SQLite"
+      ]
+    },
+    {
+      "name": "Generative AI and UX Design Tools",
+      "keywords": [
+        "Claude Code CLI",
+        "Adobe Premiere",
+        "Photoshop",
+        "Illustrator",
+        "InDesign",
+        "Vercel and Langchain interfaces",
+        "OpenAI Codex",
+        "Hugging Face",
+        "Voyage AI",
+        "Pinecone RAG",
+        "OpenWebUI Llama",
+        "React API FeedPlayer",
+        "AI video generation with Runway",
+        "Luma Dream Machine",
+        "Pika Labs",
+        "CapCut",
+        "ComfyUI",
+        "FloraFauna",
+        "AI image generation with Midjourney",
+        "Gemini API",
+        "Stable Diffusion",
+        "Grok",
+        "Meta",
+        "GetImg and Leonardo"
+      ]
+    },
+    {
+      "name": "Expertise in Outreach and Training Facilitation",
+      "keywords": [
+        "AI-integrated learning experiences",
+        "Team collaboration and orchestration",
+        "Shared reporting and processes",
+        "Business process streamlining",
+        "University and technical college partnerships",
+        "Industry talent development",
+        "Innovation and marketing strategy"
+      ]
+    }
+  ],
+  "certifications": [],
+  "languages": [],
+  "profiles": [
+    {
+      "network": "Website",
+      "url": "https://dreamstudio.com/about/loren-heyns/"
+    },
+    {
+      "network": "Research CV",
+      "url": "https://dreamstudio.com/research"
+    }
+  ]
+}
