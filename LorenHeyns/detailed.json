@@ -1,10 +1,10 @@
 {
   "basics": {
     "name": "Loren Kevin Heyns",
-    "label": "Project Director and Lead Engineer | AI Insights Integration Expert | Full Stack Developer",
+    "label": "Project Director and Lead Engineer | AI Integration Expert",
     "email": "loren@dreamstudio.com",
     "phone": "678-468-1000",
-    "url": "https://dreamstudio.com/about/loren-heyns/",
+    "url": "dreamstudio.com/loren",
     "location": "Atlanta, GA",
     "summary": "Project Director and Lead Engineer with 25 years experience leading teams and automating customer experiences. AI Insights Integration Expert, Full Stack Developer, Data Visualization Designer, Python Machine Learning Analytics. Broad experience with Energy, Aerospace, Product Lifecycles & Manufacturing Supply Chains. Vibe Coding Trainer."
   },
@@ -223,7 +223,7 @@
   ],
   "certifications": [],
   "languages": [],
-  "profiles": [
+  "profilesX": [
     {
       "network": "Website",
       "url": "https://dreamstudio.com/about/loren-heyns/"
