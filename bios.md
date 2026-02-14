@@ -1,12 +1,15 @@
 <div markdown="1">
-CV generator in progress:
+CV Automation:
 [Yash Gondkar](YashGondkar)
+[Loren Heyns](LorenHeyns)
+[Mohammed Saalim](MohammedSaalim)
+
 [Shanmuga Priya Kannan](ShanmugaPriyaKannan)
 [Satvik Praveen](SatvikPraveen)
 [Thanmayi Sai](ThanmayiSai)
 [Rekha Chimpiri](RekhaChimpiri)
 [Noor](Noor)
-[Mohammed Saalim](MohammedSaalim)
+
 </div><br>
 
 
