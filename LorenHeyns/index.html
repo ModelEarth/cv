@@ -1,33 +1,58 @@
 <!DOCTYPE html>
-<html lang="en-us">
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<title>Loren Heyns - Portfolio</title>
-<link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loren Heyns - Resume & Portfolio</title>
 
-<!--
-  To host your site, fork the localsite repo and turn on GitHub Pages.
-  View your site at https://[your account].github.io
--->
-<script>
-if(typeof param=='undefined'){ var param={}; }
-param.resume = "https://dreamstudio.com/about/loren-heyns/Loren-Heyns-Resume.pdf";
-</script>
+  <link type="text/css" rel="stylesheet" href="/localsite/css/base.css" id="/localsite/css/base.css" />
+  <script type="text/javascript" src="/localsite/js/localsite.js?showheader=true"></script>
 
-<link type="text/css" rel="stylesheet" href="/localsite/css/base.css" id="/localsite/css/base.css" />
-<script type="text/javascript" src="/localsite/js/localsite.js?showheader=true&showsearch=true"></script>
+  <!-- Include team common.css for tab styling -->
+  <link rel="stylesheet" href="../team/css/common.css" />
 
-<script>
-loadMarkdown("README.md", "readmeDiv", "_parent");
-</script>
-
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background-color: #f9fafb;
+      color: #333;
+    }
+    h3 { margin-bottom: 10px; }
+    .pdf-info {
+      background: #e3f2fd;
+      padding: 10px;
+      border-radius: 6px;
+      margin: 10px 0;
+      font-size: 13px;
+    }
+    .pdf-info a {
+      color: #1976d2;
+      text-decoration: none;
+    }
+    .pdf-info a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 
 <body>
-<div class="content contentpadding large-list">
-  <div id="readmeDiv"></div>
-</div>
+
+  <div class="pdf-info" style="margin: 0 25px;">
+    📄 <strong>Resume PDF:</strong> <a href="https://dreamstudio.com/about/loren-heyns/Loren-Heyns-Resume.pdf" target="_blank">View/Download PDF Resume</a>
+    <br><small>Note: JSON version below is for testing different formats and themes. Original PDF maintained at dreamstudio.com</small>
+  </div>
+
+  <div id="cvFiltersContainer"></div>
+
+  <script src="../common/filters.js"></script>
+  <script>
+    // Initialize filters to load from detailed.json
+    CVFilters.init({
+      personFolder: 'LorenHeyns',
+      defaultJson: 'detailed.json',
+      defaultTheme: 'elegant'
+    });
+  </script>
+
 </body>
 </html>

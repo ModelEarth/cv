@@ -44,46 +44,221 @@
   "skills": [
     {
       "name": "Frontend & Data Visualization",
-      "keywords": ["React.js", "TypeScript", "JavaScript (ES6+)", "D3.js", "Redux", "Material-UI", "Responsive Design", "Data Visualization", "Interactive Charts"]
+      "keywords": [
+        "React.js",
+        "TypeScript",
+        "JavaScript (ES6+)",
+        "D3.js",
+        "Redux",
+        "Material-UI",
+        "Responsive Design",
+        "Data Visualization",
+        "Interactive Charts"
+      ]
     },
     {
       "name": "USEEIO & Environmental Data",
-      "keywords": ["USEEIO Model Integration", "Environmental Data Analysis", "Matrix Mathematics", "NAICS Sector Mapping", "EPA Data Processing", "Economic Impact Modeling", "State-Level Data Analysis", "JSON API Integration"]
+      "keywords": [
+        "USEEIO Model Integration",
+        "Environmental Data Analysis",
+        "Matrix Mathematics",
+        "NAICS Sector Mapping",
+        "EPA Data Processing",
+        "Economic Impact Modeling",
+        "State-Level Data Analysis",
+        "JSON API Integration"
+      ]
     },
     {
       "name": "Backend & APIs",
-      "keywords": ["RESTful APIs", "API Integration", ".NET Core", "C#", "Python", "PostgreSQL", "MongoDB", "Entity Framework Core"]
+      "keywords": [
+        "RESTful APIs",
+        "API Integration",
+        ".NET Core",
+        "C#",
+        "Python",
+        "PostgreSQL",
+        "MongoDB",
+        "Entity Framework Core"
+      ]
     },
     {
       "name": "Development & Performance",
-      "keywords": ["Performance Optimization", "Lazy Loading", "Event-Driven Architecture", "Git", "GitHub", "Docker", "CI/CD", "Unit Testing"]
+      "keywords": [
+        "Performance Optimization",
+        "Lazy Loading",
+        "Event-Driven Architecture",
+        "Git",
+        "GitHub",
+        "Docker",
+        "CI/CD",
+        "Unit Testing"
+      ]
     }
   ],
   "projects": [
     {
       "name": "Interactive Bubble Chart",
       "summary": "Dynamic environmental impact visualization with real-time data loading, state-specific filtering, and actual job quantity calculations.",
-      "keywords": ["D3.js", "React", "Data Visualization", "USEEIO"]
+      "keywords": [
+        "D3.js",
+        "React",
+        "Data Visualization",
+        "USEEIO"
+      ]
     },
     {
       "name": "USEEIO v2 Integration",
       "summary": "Seamless integration with GitHub-based JSON API supporting all US states with 73 sectors per state.",
-      "keywords": ["API Integration", "React", "JSON", "USEEIO"]
+      "keywords": [
+        "API Integration",
+        "React",
+        "JSON",
+        "USEEIO"
+      ]
     },
     {
       "name": "Hash Retention Fix",
       "summary": "Production-level bug fix ensuring URL state preservation across widget interactions.",
-      "keywords": ["React", "TypeScript", "URL Management", "Bug Fix"]
+      "keywords": [
+        "React",
+        "TypeScript",
+        "URL Management",
+        "Bug Fix"
+      ]
     },
     {
-      "name": "Microsoft PowerToys Contribution",
-      "summary": "Built 'No leading spaces' option for WPF-based Hosts File Editor (PR #41206).",
-      "keywords": ["C#", "WPF", "Open Source"]
+      "name": "PyTorch ExecuTorch - QNN LLM Quantization Fix",
+      "summary": "Fixed critical KeyError in InsertIOQDQ pass blocking SmolLM2 deployment to Snapdragon XR2+ Gen2. Enabled Qualcomm's on-device AI pipeline (PR #17194, merged).",
+      "keywords": [
+        "Python",
+        "PyTorch",
+        "ExecuTorch",
+        "Qualcomm QNN",
+        "LLM Quantization",
+        "Open Source"
+      ],
+      "url": "https://github.com/pytorch/executorch/pull/17194"
     },
     {
-      "name": "Polly .NET Contribution",
-      "summary": "Designed high-performance HybridCache strategy for Polly.Caching (PR #2709).",
-      "keywords": ["C#", ".NET", "Open Source", "Caching"]
+      "name": "PyTorch ExecuTorch - Vulkan Shader Addition",
+      "summary": "Added missing float_int32 Vulkan shader variant to fix shader compilation errors for Android deployment (PR #17382, merged).",
+      "keywords": [
+        "C++",
+        "Vulkan",
+        "PyTorch",
+        "ExecuTorch",
+        "Mobile AI",
+        "Open Source"
+      ],
+      "url": "https://github.com/pytorch/executorch/pull/17382"
+    },
+    {
+      "name": "PyTorch ExecuTorch - Schema Synchronization",
+      "summary": "Synced out-of-sync scalar_type.fbs files and added regression test to prevent future schema drift (PR #17085, merged).",
+      "keywords": [
+        "Python",
+        "FlatBuffers",
+        "PyTorch",
+        "ExecuTorch",
+        "Schema Management",
+        "Open Source"
+      ],
+      "url": "https://github.com/pytorch/executorch/pull/17085"
+    },
+    {
+      "name": "PyTorch ExecuTorch - CoreML Deprecation Warning",
+      "summary": "Added deprecation warning for legacy to_edge + to_backend workflow in CoreMLPartitioner (PR #17082, merged).",
+      "keywords": [
+        "Python",
+        "PyTorch",
+        "ExecuTorch",
+        "CoreML",
+        "API Design",
+        "Open Source"
+      ],
+      "url": "https://github.com/pytorch/executorch/pull/17082"
+    },
+    {
+      "name": "PyTorch AO - Quantization API Cleanup",
+      "summary": "Cleaned up arglist for choose_qparams_affine_with_min_max to improve maintainability and API consistency (PR #3808, merged).",
+      "keywords": [
+        "Python",
+        "PyTorch",
+        "Quantization",
+        "API Design",
+        "Open Source"
+      ],
+      "url": "https://github.com/pytorch/ao/pull/3808"
+    },
+    {
+      "name": "Ansible - Deb822 Repository Name Validation",
+      "summary": "Fixed over-normalization bug in deb822_repository module by adding proper name parameter validation (PR #86494, merged).",
+      "keywords": [
+        "Python",
+        "Ansible",
+        "Linux",
+        "Package Management",
+        "Open Source"
+      ],
+      "url": "https://github.com/ansible/ansible/pull/86494"
+    },
+    {
+      "name": "Serilog - Configuration Level Alias Support",
+      "summary": "Added support for LevelAlias names (Off, Minimum, Maximum) in configuration parsing (PR #465, merged).",
+      "keywords": [
+        "C#",
+        ".NET",
+        "Serilog",
+        "Logging",
+        "Open Source"
+      ],
+      "url": "https://github.com/serilog/serilog-settings-configuration/pull/465"
+    },
+    {
+      "name": "Microsoft PowerToys - Hosts File Editor Setting",
+      "summary": "Added 'No leading spaces' setting that prevents prepending spaces to active lines when saving the hosts file. Default is Off to preserve current behavior (PR #41206, merged).",
+      "keywords": [
+        "C#",
+        "WPF",
+        "Open Source",
+        "PowerToys"
+      ],
+      "url": "https://github.com/microsoft/PowerToys/pull/41206"
+    },
+    {
+      "name": "Microsoft PowerToys - CmdPal Calculator Unit Tests",
+      "summary": "Added unit tests for Calculator 'Close on Enter' behavior to ensure CloseOnEnter=true makes Copy primary (Save in More), and CloseOnEnter=false makes Save primary (Copy in More) (PR #41202, merged).",
+      "keywords": [
+        "C#",
+        "Unit Testing",
+        "Open Source",
+        "PowerToys"
+      ],
+      "url": "https://github.com/microsoft/PowerToys/pull/41202"
+    },
+    {
+      "name": "Polly - HybridCache Resilience Strategy",
+      "summary": "Implemented HybridCache-based caching resilience strategy for Polly v8 in new Polly.Caching package. Uses async-first HybridCache instead of IMemoryCache (PR #2709, merged).",
+      "keywords": [
+        "C#",
+        ".NET",
+        "Open Source",
+        "Caching",
+        "Async"
+      ],
+      "url": "https://github.com/App-vNext/Polly/pull/2709"
+    },
+    {
+      "name": "Polly - RateLimiting Unit Tests",
+      "summary": "Added focused unit tests for RateLimiting to increase code coverage. No product code changes (PR #2711, merged).",
+      "keywords": [
+        "C#",
+        ".NET",
+        "Unit Testing",
+        "Open Source"
+      ],
+      "url": "https://github.com/App-vNext/Polly/pull/2711"
     }
   ],
   "certifications": [],
