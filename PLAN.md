@@ -52,7 +52,7 @@ A jQuery-compatible filter module that:
 - ✅ Ready for Model.Earth header/footer integration
 
 
-## jQuery Conflict Resolution
+## jQuery Inclusion - Conflict Resolution
 
 ### Before Refactoring
 ```javascript
@@ -72,7 +72,7 @@ function select(selector) {
 ```
 
 ### Verification
-- ✅ No console errors when localsite.js loads jQuery - but do we know if this occurs AFTER select runs?  Add a delay for when localhost.js is loaded into the page, which inturn loads jQuery.
+- No console errors when localsite.js loads jQuery - but do we know if this occurs AFTER select runs?  Add a delay for when localhost.js is loaded into the page, which inturn loads jQuery.
 
 ---
 
