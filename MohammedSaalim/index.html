@@ -611,8 +611,8 @@
 
             // Auto-switch to Resume tab when URL has ?resume= param
             // Using a timeout to ensure initial loading is complete
-            setTimeout(function() {
-              w URParams(location.search).has('resume')) {
+            setTimeout(function () {
+                if (new URLSearchParams(location.search).has('resume')) {
                     showTab('resume');
                 }
             }, 100);
