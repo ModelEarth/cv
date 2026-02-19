@@ -10,7 +10,7 @@
  *   });
  */
 
-(function(window) {
+(function (window) {
   'use strict';
 
   // jQuery-safe selector function
@@ -243,9 +243,9 @@
 
           <label style="margin-left:12px;">Theme:</label>
           <select id="cvThemeSelect">
-            ${THEMES.map(theme => 
-              `<option value="${theme.value}">${theme.label}</option>`
-            ).join('\n            ')}
+            ${THEMES.map(theme =>
+      `<option value="${theme.value}">${theme.label}</option>`
+    ).join('\n            ')}
           </select>
 
           <div class="cv-filters-spacer"></div>
@@ -269,7 +269,7 @@
   // Load JSON data
   async function loadJson(file) {
     const dataPreview = select('#cvDataPreview');
-    
+
     try {
       const res = await fetch(file, { cache: 'no-store' });
       const json = await res.json();
@@ -288,12 +288,12 @@
   function loadTheme(jsonFile, theme) {
     const previewFrame = select('#cvThemePreview');
     const statusBox = select('#cvDataStatus');
-    
+
     // Convert local path to path relative to common folder for iframe
-    const iframeJsonPath = jsonFile.startsWith('../') 
-      ? jsonFile 
+    const iframeJsonPath = jsonFile.startsWith('../')
+      ? jsonFile
       : `../${config.personFolder}/${jsonFile}`;
-    
+
     const url = `../common/theme.html?resume=${encodeURIComponent(iframeJsonPath)}&theme=${encodeURIComponent(theme)}`;
     const start = performance.now();
 
@@ -546,11 +546,11 @@
   // Load README.md
   async function loadReadme() {
     const readmeContent = select('#cvReadmeContent');
-    
+
     try {
       const res = await fetch('./README.md', { cache: 'no-store' });
       if (!res.ok) throw new Error('README not found');
-      
+
       const text = await res.text();
       readmeContent.innerHTML = text.replace(/\n/g, '<br>');
     } catch {
@@ -619,7 +619,7 @@
     // Set dropdown values
     const jsonSelect = select('#cvJsonSelect');
     const themeSelect = select('#cvThemeSelect');
-    
+
     if (jsonSelect) jsonSelect.value = jsonFile;
     if (themeSelect) themeSelect.value = theme;
 
@@ -632,9 +632,34 @@
 
     // Load initial content
     loadAll(jsonFile, theme);
-    
+
     if (config.showReadme) {
       loadReadme();
+    }
+
+    // Auto-detect available JSON files and populate dropdown
+    autoDetectJsonFiles(jsonFile);
+  }
+
+  // Probe for common JSON filenames and populate the Data dropdown
+  async function autoDetectJsonFiles(currentFile) {
+    const candidates = ['detailed.json', 'summary.json', 'resume.json', 'brief.json'];
+    const jsonSelect = select('#cvJsonSelect');
+    if (!jsonSelect) return;
+
+    const found = [];
+    await Promise.all(candidates.map(async (file) => {
+      try {
+        const res = await fetch(file, { method: 'HEAD', cache: 'no-store' });
+        if (res.ok) found.push(file);
+      } catch { /* ignore */ }
+    }));
+
+    // Only update if we found more than the default
+    if (found.length > 1) {
+      jsonSelect.innerHTML = found
+        .map(f => `<option value="${f}"${f === currentFile ? ' selected' : ''}>${f}</option>`)
+        .join('\n');
     }
   }
 
