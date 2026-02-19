@@ -602,20 +602,22 @@
                 }
             }
 
+            // Auto-switch to Resume tab when URL has ?resume= param
+            // Call immediately + again after localsite.js finishes async setup
+            (function applyTabFromUrl() {
+                if (new URLSearchParams(location.search).has('resume')) {
+                    showTab('resume');
+                    // Backup: re-apply after localsite.js async initialization completes
+                    setTimeout(function () { showTab('resume'); }, 600);
+                }
+            })();
+
             // Initialize filters
             CVFilters.init({
                 personFolder: 'MohammedSaalim',
                 defaultJson: 'detailed.json',
                 defaultTheme: 'elegant'
             });
-
-            // Auto-switch to Resume tab when URL has ?resume= param
-            // Using a timeout to ensure initial loading is complete
-            setTimeout(function () {
-                if (new URLSearchParams(location.search).has('resume')) {
-                    showTab('resume');
-                }
-            }, 100);
         </script>
 
 </body>
