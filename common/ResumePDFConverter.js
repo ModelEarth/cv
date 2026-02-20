@@ -1,30 +1,30 @@
 /**
- * CVFilters - Modular PDF-to-JSON Resume Converter
+ * ResumePDFConverter - Modular PDF-to-JSON Resume Converter
  * 
  * Converts PDF resumes to JSON Resume format in real-time.
  * Can load PDFs from external URLs or local file uploads.
  * 
  * Usage:
  *   // From external URL:
- *   CVFilters.init({ 
+ *   ResumePDFConverter.init({ 
  *     pdfUrl: "https://example.com/resume.pdf",
  *     onSuccess: (jsonData) => { console.log(jsonData); },
  *     onError: (error) => { console.error(error); }
  *   })
  * 
  *   // From file input:
- *   CVFilters.init({ 
+ *   ResumePDFConverter.init({ 
  *     pdfFile: fileInputElement.files[0],
  *     onSuccess: (jsonData) => { console.log(jsonData); }
  *   })
  * 
  * Integration with SatvikPraveen page:
- *   The CVFilters module can be used alongside SatvikPraveen's existing
- *   PDF parsing. Simply include CVFilters.js and use it for external URL
+ *   The ResumePDFConverter module can be used alongside SatvikPraveen's existing
+ *   PDF parsing. Simply include ResumePDFConverter.js and use it for external URL
  *   loading while keeping the existing file upload functionality.
  */
 
-const CVFilters = {
+const ResumePDFConverter = {
   pdfjsLib: null,
   isInitialized: false,
 
@@ -423,5 +423,5 @@ const CVFilters = {
 
 // Export for use in modules
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = CVFilters;
+  module.exports = ResumePDFConverter;
 }

@@ -2,346 +2,114 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Portfolio Resume Preview</title>
+
+  <link type="text/css" rel="stylesheet" href="/localsite/css/base.css" id="/localsite/css/base.css" />
+  <script type="text/javascript" src="/localsite/js/localsite.js?showheader=true"></script>
 
   <style>
     body {
       font-family: "Segoe UI", Arial, sans-serif;
-      margin: 25px;
       background-color: #f9fafb;
       color: #333;
     }
-    h3 { margin-bottom: 10px; }
-    label { margin-right: 8px; font-weight: 500; }
-    select {
-      padding: 6px 10px;
+    .pdf-status {
+      padding: 10px;
       border-radius: 6px;
-      border: 1px solid #ccc;
-      background: #fff;
-    }
-    pre {
-      background: #f4f4f4;
-      padding: 15px;
-      border-radius: 8px;
-      white-space: pre-wrap;
-      overflow-x: auto;
-      max-height: 320px;
-    }
-    iframe {
-      width: 100%;
-      height: 900px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: white;
-    }
-    .section { margin-bottom: 40px; }
-    .row {
-      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+      margin: 10px 0;
+      font-size: 13px;
     }
     .pdf-loading {
       background: #fff3cd;
-      padding: 10px;
-      border-radius: 6px;
-      margin: 10px 0;
-      font-size: 13px;
-    }
-    .pdf-error {
-      background: #f8d7da;
-      padding: 10px;
-      border-radius: 6px;
-      margin: 10px 0;
-      font-size: 13px;
-      color: #721c24;
+      color: #856404;
     }
     .pdf-success {
       background: #d4edda;
-      padding: 10px;
-      border-radius: 6px;
-      margin: 10px 0;
-      font-size: 13px;
       color: #155724;
+    }
+    .pdf-error {
+      background: #f8d7da;
+      color: #721c24;
     }
   </style>
 
   <!-- PDF.js Library -->
   <script type="module">
-    // Import pdf.mjs from SatvikPraveen's vendor folder
     import * as pdfModule from "../SatvikPraveen/vendor/pdf.mjs";
     window.pdfjsLib = pdfModule;
-    
     if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
       window.pdfjsLib.GlobalWorkerOptions.workerSrc = "../SatvikPraveen/vendor/pdf.worker.mjs";
     }
-    
     window._pdfModuleReady = true;
     window.dispatchEvent(new Event("pdfjs-ready"));
   </script>
 
-  <!-- CVFilters - Modular PDF-to-JSON converter -->
-  <script src="../common/CVFilters.js"></script>
+  <!-- ResumePDFConverter - PDF-to-JSON converter -->
+  <script src="../common/ResumePDFConverter.js"></script>
 </head>
 
 <body>
 
-  <div class="section">
+  <div id="cvFiltersContainer"></div>
+  <div id="pdfStatusContainer"></div>
 
-    <div class="row">
-      <label>Data:</label>
-      <select id="jsonSelect">
-        <!--option value="simple.json">simple.json</option>-->
-        <option value="detailed.json">detailed.json</option>
-      </select>
-
-      <label style="margin-left:12px;">Theme:</label>
-      <select id="theme">
-        <!-- 12 LOCAL CUSTOM THEMES (folder names) -->
-        <option value="creative-studio">Creative Studio</option>
-        <option value="data-driven">Data Driven</option>
-        <option value="elegant">Elegant</option>
-        <option value="executive-slate">Executive Slate</option>
-        <option value="kendall">Kendall</option>
-        <option value="macchiato">Macchiato</option>
-        <option value="minimalist">Minimalist</option>
-        <option value="modern-classic">Modern Classic</option>
-        <option value="onepage">OnePage</option>
-        <option value="professional">Professional</option>
-        <option value="pumpkin">Pumpkin</option>
-        <option value="striking">Striking</option>
-      </select>
-    </div>
-
-    <div style="margin:15px 0;"></div>
-
-    <iframe id="themePreview"></iframe>
-    <pre id="dataPreview">Loading JSON…</pre>
-    <div id="dataStatus" style="margin-top:8px;font:13px/1.4 system-ui;"></div>
-  </div>
-
-  <div class="section">
-    <h3>Notes (from README.md)</h3>
-    <div id="readmeContent" style="
-      background:#fff;border:1px solid #ddd;border-radius:8px;
-      padding:20px;line-height:1.6;
-    ">
-      <em>Loading README.md...</em>
-    </div>
-  </div>
-
+  <script src="../common/filters.js"></script>
   <script>
-    const $ = s => document.querySelector(s);
-
-    const jsonSelect   = $("#jsonSelect");
-    const themeSelect  = $("#theme");
-    const previewFrame = $("#themePreview");
-    const dataPreview  = $("#dataPreview");
-    const statusBox    = $("#dataStatus");
-
-    let currentResumeData = null;
-    let pdfJsonData = null;
-
-    // CVFilters configuration - Set your PDF URL here
-    // Use local file: "./Noor_Res.pdf" or external URL: "https://example.com/resume.pdf"
-    const CVFiltersConfig = {
-      pdfUrl: "./Noor_Res.pdf" // Using local PDF file in Noor folder
+    // PDF configuration - Set your PDF URL here
+    const PDF_CONFIG = {
+      pdfUrl: "./Noor_Res.pdf" // Use local PDF file or external URL
     };
 
-    function getParam(k, fallback) {
-      return new URLSearchParams(location.search).get(k) ?? fallback;
-    }
+    // Initialize CVFilters (theme/JSON management)
+    CVFilters.init({
+      personFolder: 'Noor',
+      defaultJson: 'detailed.json',
+      defaultTheme: 'elegant'
+    });
 
-    function setParam(params) {
-      const url = new URL(location.href);
-      Object.entries(params).forEach(([k, v]) =>
-        v ? url.searchParams.set(k, v) : url.searchParams.delete(k)
-      );
-      history.replaceState(null, "", url.toString());
-    }
-
-    async function loadJson(file) {
-      try {
-        // If relative path, resolve from current page location
-        let resolvedFile = file;
-        if (file.startsWith("./") || (!file.startsWith("http") && !file.startsWith("/") && !file.startsWith("../"))) {
-          // Resolve relative to current page (Noor/index.html)
-          resolvedFile = new URL(file, window.location.href).href;
-        } else if (!file.startsWith("http") && !file.startsWith("data:")) {
-          // Relative path - fetch from current directory
-          resolvedFile = file;
-        }
-        
-        console.log("[loadJson] Loading:", file, "→", resolvedFile);
-        const res = await fetch(resolvedFile, { cache: "no-store" });
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        const json = await res.json();
-        console.log("[loadJson] Loaded JSON, name:", json.basics?.name);
-        dataPreview.textContent = JSON.stringify(json, null, 2);
-        return json;
-      } catch (err) {
-        console.error("[loadJson] Error loading", file, ":", err);
-        dataPreview.textContent = `⚠️ Failed to load ${file}: ${err.message}`;
-        return null;
-      }
-    }
-
-    function loadThemeFromData(data, theme) {
-      // Create a data URL with the JSON data
-      const jsonString = JSON.stringify(data);
-      const dataUrl = `data:application/json;charset=utf-8,${encodeURIComponent(jsonString)}`;
-      
-      const url = `../common/theme.html?resume=${encodeURIComponent(dataUrl)}&theme=${encodeURIComponent(theme)}`;
-      const start = performance.now();
-
-      previewFrame.onload = () => {
-        const ms = (performance.now() - start).toFixed(1);
-        statusBox.textContent = `Theme "${theme}" loaded in ${ms} ms`;
-        if (data && data.basics && data.basics.name) {
-          statusBox.textContent += ` • Name: ${data.basics.name}`;
-        }
-      };
-
-      previewFrame.src = url;
-    }
-
-    function loadTheme(jsonFile, theme) {
-      const url = `../common/theme.html?resume=${encodeURIComponent(jsonFile)}&theme=${encodeURIComponent(theme)}`;
-      const start = performance.now();
-
-      previewFrame.onload = () => {
-        const ms = (performance.now() - start).toFixed(1);
-        statusBox.textContent = `Theme "${theme}" loaded in ${ms} ms`;
-      };
-
-      previewFrame.src = url;
-    }
-
-    async function loadAll(jsonFile, theme) {
-      const json = await loadJson(jsonFile);
-      if (json) {
-        currentResumeData = json;
-        loadTheme(jsonFile, theme);
-      }
-    }
-
-    async function loadAllFromData(data, theme) {
-      currentResumeData = data;
-      dataPreview.textContent = JSON.stringify(data, null, 2);
-      loadThemeFromData(data, theme);
-    }
-
-    async function loadReadme() {
-      try {
-        const res = await fetch("./README.md", { cache: "no-store" });
-        if (!res.ok) throw new Error();
-        const text = await res.text();
-        document.getElementById("readmeContent").innerHTML =
-          text.replace(/\n/g, "<br>");
-      } catch {
-        document.getElementById("readmeContent").innerHTML =
-          "<p style='color:red;'>Failed to load README.md.</p>";
-      }
-    }
-
+    // Load PDF resume if configured
     async function loadPdfResume() {
-      if (!CVFiltersConfig.pdfUrl) {
-        // No PDF URL configured, use fallback JSON
-        console.log("[CVFilters] No PDF URL configured, using fallback");
+      if (!PDF_CONFIG.pdfUrl) {
         return null;
       }
 
       const statusDiv = document.createElement("div");
-      statusDiv.id = "pdfStatusDiv";
-      statusDiv.className = "pdf-loading";
-      statusDiv.textContent = `📄 Loading PDF resume: ${CVFiltersConfig.pdfUrl}...`;
-      statusBox.parentElement.insertBefore(statusDiv, statusBox);
+      statusDiv.className = "pdf-status pdf-loading";
+      statusDiv.textContent = `📄 Loading PDF resume: ${PDF_CONFIG.pdfUrl}...`;
+      const container = document.getElementById("pdfStatusContainer");
+      if (container) {
+        container.appendChild(statusDiv);
+      }
 
       try {
-        console.log("[CVFilters] Starting PDF load from:", CVFiltersConfig.pdfUrl);
+        await new Promise(resolve => setTimeout(resolve, 500)); // Wait for PDF.js
         
-        // Wait a bit for PDF.js to be ready
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        const jsonData = await CVFilters.init({
-          pdfUrl: CVFiltersConfig.pdfUrl,
+        const jsonData = await ResumePDFConverter.init({
+          pdfUrl: PDF_CONFIG.pdfUrl,
           onSuccess: (data) => {
-            console.log("[CVFilters] PDF loaded successfully:", data);
-            statusDiv.className = "pdf-success";
+            statusDiv.className = "pdf-status pdf-success";
             statusDiv.textContent = `✅ PDF loaded successfully! Name: ${data.basics.name || "Resume"}`;
-            pdfJsonData = data;
+            console.log("[ResumePDFConverter] PDF loaded, name:", data.basics.name);
           },
           onError: (error) => {
-            console.error("[CVFilters] PDF load error:", error);
-            statusDiv.className = "pdf-error";
+            statusDiv.className = "pdf-status pdf-error";
             statusDiv.textContent = `❌ Failed to load PDF: ${error.message}`;
+            console.error("[ResumePDFConverter] Error:", error);
           }
         });
 
-        if (jsonData && jsonData.basics && jsonData.basics.name) {
-          console.log("[CVFilters] PDF parsed successfully, name:", jsonData.basics.name);
-        }
-
         return jsonData;
       } catch (error) {
-        console.error("[CVFilters] Exception during PDF load:", error);
-        statusDiv.className = "pdf-error";
+        statusDiv.className = "pdf-status pdf-error";
         statusDiv.textContent = `❌ Error: ${error.message}`;
         return null;
       }
     }
 
-    async function init() {
-      await loadReadme();
-
-      // Wait a moment for PDF.js and CVFilters to be ready
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Try to load PDF resume first (if URL is configured)
-      const pdfData = await loadPdfResume();
-      
-      if (pdfData && pdfData.basics && pdfData.basics.name) {
-        // Use PDF data
-        console.log("[Init] Using PDF data, name:", pdfData.basics.name);
-        const theme = getParam("theme", "elegant");
-        themeSelect.value = theme;
-        setParam({ theme });
-        await loadAllFromData(pdfData, theme);
-      } else {
-        // Fallback to JSON file - use local detailed.json in Noor folder
-        console.log("[Init] Falling back to JSON file");
-        // Use absolute path from common/ folder perspective: ../Noor/detailed.json
-        const jsonFile = "../Noor/detailed.json"; // Path relative to common/theme.html
-        const theme    = getParam("theme",  "elegant");
-
-        jsonSelect.value  = jsonFile;
-        themeSelect.value = theme;
-
-        setParam({ resume: jsonFile, theme });
-        await loadAll(jsonFile, theme);
-      }
-    }
-
-    jsonSelect.addEventListener("change", async () => {
-      const jsonFile = jsonSelect.value;
-      const theme    = themeSelect.value;
-      setParam({ resume: jsonFile, theme });
-      await loadAll(jsonFile, theme);
-    });
-
-    themeSelect.addEventListener("change", () => {
-      const theme = themeSelect.value;
-      setParam({ theme });
-      
-      if (pdfJsonData) {
-        loadThemeFromData(pdfJsonData, theme);
-      } else {
-        const jsonFile = jsonSelect.value;
-        loadTheme(jsonFile, theme);
-      }
-    });
-
-    init();
+    // Try to load PDF resume
+    loadPdfResume();
   </script>
 
 </body>
