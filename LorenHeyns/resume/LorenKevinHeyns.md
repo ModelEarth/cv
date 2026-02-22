@@ -22,7 +22,7 @@ Neighborhood.org sites for eight neighborhood associations including Midtown, We
 
 **Project Director / Lead Engineer**
 Model.earth – Atlanta, GA
-2018 – Present
+2020 – Present
 Project Director for volunteer data science teams combining AI with industry impact supply-chains for product analysis and location comparison. Arts Engine for video generation, LLM chat interfaces, Python Data Pipelines, RealityStream ML Forecasting, Google Data Commons API timelines and FeedPlayer React video interface. Cloudflare and AWS hosting. International trade flow analysis combining Python Colabs, Azure SQL, Tabulator, Chart.js, D3 and Leaflet Maps.
 
 **Site Parks Website Developer**
@@ -43,14 +43,14 @@ Developed content system for Southern Company and seven state power companies. H
 
 **Georgia Institute of Technology**
 Computer Science CSE, 2 semesters toward PhD. Focused on infrastructure, aerospace and construction apps.
-Software engineering, energy impacts data visualization, SQL, Python machine learning models, JQuery, 3D design.
+Software engineering, energy impacts, data visualization, SQL, Python machine learning models, JQuery, 3D design.
 
 **Michigan State University**
 Telecommunications, UX Design, Comm Tech Lab, MITN Satellite Network, Internet Guide. 1.5 years toward master's.
 
 **University of California Santa Barbara**
 BA Business Economics, BA Communication Studies, Honors Newsletter Editor, Arts & Lectures Publications.
-Financial Accounting, Art History, Environmental Economics, C+/Unix, Photography, Screenwriting, Film Studies.
+Financial Accounting, Art History, Environmental Economics, Programmming, Photography, Screenwriting, Film Studies.
 
 ---
 
