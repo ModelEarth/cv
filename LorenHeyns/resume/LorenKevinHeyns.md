@@ -15,7 +15,7 @@ Lead Engineer, Full Stack Developer, UX Designer, AI Integration, Data Visualiza
 
 **Project Director / Lead Engineer**
 Model.earth – Atlanta, GA
-2019 – Present
+2020 – Present
 Project Director for volunteer data science teams combining AI with industry impact supply-chains for product analysis and location comparison. Arts Engine for video generation, LLM chat interfaces, Python Data Pipelines, RealityStream ML Forecasting, Google Data Commons API timelines and FeedPlayer React video interface. Cloudflare and AWS hosting. International trade flow analysis combining Python Colabs, Azure SQL, Tabulator, Chart.js, D3 and Leaflet Maps.
 
 **Founder and CEO**

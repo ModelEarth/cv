@@ -13,12 +13,20 @@ Georgia Department of Economic Development – Atlanta, GA
 
 - Created Leaflet map directories for Georgia film locations, aerospace, and B2B recycling programs.
 - Expanded EPA Life Cycle Assessment tools to support local environmental impact modeling.
-- Developed an exporter business directory backed by Salesforce.
-- Mapped lodging availability and mobility patterns during hurricanes for Georgia Visitor Information Centers.
+- Developed exporter business directory integrated with Salesforce API.
+- Mapped lodging availability during hurricanes for Georgia Visitor Information Centers.
+
+**Project Director / Lead Engineer**
+Model.earth – Atlanta, GA
+2020 – Present
+- Project Director for volunteer data science teams combining AI with industry impact supply-chains for product analysis and location comparison.
+- Arts Engine for video generation, LLM chat interfaces, Python Data Pipelines, RealityStream ML Forecasting
+- Google Data Commons API timelines and FeedPlayer React video interface.
+- Cloudflare and AWS hosting. International trade flow analysis combining Python Colabs, Azure SQL, Tabulator, Chart.js, D3 and Leaflet Maps.
 
 **Co‑founder and CEO**
-DreamStudio Interactive – Atlanta, GA
-2000 – 2015
+DreamStudio – Atlanta, GA
+2000 – Present
 
 - Managed client accounts focused on membership websites and event calendars.
 - Built news and directory applications for state parks, travel destinations, and new urban communities including the Seaside Institute and Glenwood Park.
