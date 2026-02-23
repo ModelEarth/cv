@@ -3,7 +3,7 @@ Atlanta, GA 30315 · 678-468-1000 · loren@dreamstudio.com
 
 ## Summary
 
-Full stack developer, technical project manager, and **UX/UI** designer with twenty years of experience building data‑driven web applications with JavaScript, jQuery, SQL, and AWS cloud hosting. Developed embeddable maps and data visualizations for WordPress, Drupal, and Wix sites across government, corporate, and non‑profit clients.
+Full stack developer, technical project manager, and UX/UI designer with twenty-five years of experience building data‑driven web applications with JavaScript, jQuery, SQL, and AWS cloud hosting. Developed embeddable maps and data visualizations for WordPress, Drupal, and Wix sites across government, corporate, and non‑profit clients.
 
 ## Work Experience
 
