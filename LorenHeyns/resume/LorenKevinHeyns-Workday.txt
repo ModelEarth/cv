@@ -5,7 +5,7 @@ loren@dreamstudio.com | 678-468-1000 | Atlanta, GA
 
 Work Experience
 
-Lead Developer / Programmer Analyst
+Programmer Analyst / Web App Developer
 Georgia Department of Economic Development - Atlanta, GA
 2015 - Present
 
@@ -30,16 +30,16 @@ Interactive Planet / Southern Company - Atlanta, GA
 Education
 
 Georgia Institute of Technology
-Doctorate Degree
+Doctorate Degree (2 semesters)
 Computer Science CSE
-4.0 GPA (2 semesters)
+4.0 GPA
 Emphasis: Software engineering, energy impacts, data visualization, multi-model transit, infrastructure, aerospace, construction apps, SQL, Python machine learning models, JQuery, 3D design.  2 semesters toward PhD
 
 Michigan State University
-Master's Degree
+Master's Degree (1.5 years toward master's)
 Telecommunications
-4.0 GPA (4 semesters)
-Emphasis: UX Design, Comm Tech Lab, MITN Satellite Network, Internet Guide. 1.5 years toward master's
+4.0 GPA
+Emphasis: UX Design, Comm Tech Lab, MITN Satellite Network, Internet Guide.
 
 University of California-Santa Barbara
 Bachelor's Degrees
