@@ -202,9 +202,10 @@
     <!-- Tab buttons above filters -->
     <div style="margin: 25px 25px 0 25px;">
         <div class="page-tab-container">
-            <button class="page-tab active" id="tabHighlights" onclick="showTab('highlights')">Highlights</button>
-            <button class="page-tab" id="tabResume" onclick="showTab('resume')">Resume</button>
-            <button class="page-tab" id="tabAll" onclick="showTab('all')">All</button>
+            <button class="page-tab active" id="tabHighlights"
+                onclick="event.stopPropagation(); showTab('highlights')">Highlights</button>
+            <button class="page-tab" id="tabResume" onclick="event.stopPropagation(); showTab('resume')">Resume</button>
+            <button class="page-tab" id="tabAll" onclick="event.stopPropagation(); showTab('all')">All</button>
         </div>
         <div class="page-tab-line"></div>
     </div>
@@ -576,11 +577,19 @@
         <script>
             // Tab switching function
             function showTab(tab) {
-                const highlightsContent = document.getElementById('highlightsContent');
-                const resumeContent = document.getElementById('resumeContent');
-                const tabAll = document.getElementById('tabAll');
-                const tabHighlights = document.getElementById('tabHighlights');
-                const tabResume = document.getElementById('tabResume');
+                // Ensure elements are at #main-content level (localsite.js nests them)
+                var mainContent = document.getElementById('main-content');
+                var highlightsContent = document.getElementById('highlightsContent');
+                var resumeContent = document.getElementById('resumeContent');
+                var container = document.getElementById('cvFiltersContainer');
+                if (mainContent) {
+                    if (resumeContent && resumeContent.parentElement !== mainContent) mainContent.appendChild(resumeContent);
+                    if (container && container.parentElement !== mainContent) mainContent.appendChild(container);
+                }
+
+                var tabAll = document.getElementById('tabAll');
+                var tabHighlights = document.getElementById('tabHighlights');
+                var tabResume = document.getElementById('tabResume');
 
                 tabAll.classList.remove('active');
                 tabHighlights.classList.remove('active');
