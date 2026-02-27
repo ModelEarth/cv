@@ -582,9 +582,10 @@
                 var highlightsContent = document.getElementById('highlightsContent');
                 var resumeContent = document.getElementById('resumeContent');
                 var container = document.getElementById('cvFiltersContainer');
-                if (mainContent) {
-                    if (resumeContent && resumeContent.parentElement !== mainContent) mainContent.appendChild(resumeContent);
-                    if (container && container.parentElement !== mainContent) mainContent.appendChild(container);
+                if (mainContent && typeof insertBeforeFooter === 'function') {
+                    if (highlightsContent) insertBeforeFooter(highlightsContent);
+                    if (resumeContent) insertBeforeFooter(resumeContent);
+                    if (container) insertBeforeFooter(container);
                 }
 
                 var tabAll = document.getElementById('tabAll');
@@ -620,23 +621,42 @@
                 defaultTheme: 'elegant'
             });
 
-            // localsite.js nests all body children under #main-content,
-            // causing our sections to nest inside each other.
-            // After template loads, un-nest them so tab switching works.
-            function relocateFilters() {
-                var mainContent = document.getElementById('main-content');
-                if (!mainContent) return;
+            // Helper: find the localsite footer in #main-content
+            function getFooter() {
+                var mc = document.getElementById('main-content');
+                if (!mc) return null;
+                // localsite footer has class "main-footer" or is a FOOTER element
+                return mc.querySelector('.main-footer') ||
+                    mc.querySelector('footer') ||
+                    mc.querySelector('#main-footer');
+            }
 
+            // Move element before the footer (or append if no footer found)
+            function insertBeforeFooter(el) {
+                var mc = document.getElementById('main-content');
+                if (!mc || !el) return;
+                var footer = getFooter();
+                if (footer) {
+                    mc.insertBefore(el, footer);
+                } else {
+                    // No footer found — just append
+                    mc.appendChild(el);
+                }
+            }
+
+            // After localsite template loads, un-nest and reposition elements
+            function relocateFilters() {
+                var mc = document.getElementById('main-content');
+                if (!mc) return;
+
+                var highlights = document.getElementById('highlightsContent');
                 var resume = document.getElementById('resumeContent');
                 var container = document.getElementById('cvFiltersContainer');
 
-                // Un-nest: move resumeContent and cvFiltersContainer to #main-content
-                if (resume && resume.parentElement !== mainContent) {
-                    mainContent.appendChild(resume);
-                }
-                if (container && container.parentElement !== mainContent) {
-                    mainContent.appendChild(container);
-                }
+                // Place elements BEFORE the footer so they appear above it
+                if (highlights) insertBeforeFooter(highlights);
+                if (resume) insertBeforeFooter(resume);
+                if (container) insertBeforeFooter(container);
 
                 // Only auto-switch if user explicitly navigated with ?resume=
                 if (userRequestedResume) {
