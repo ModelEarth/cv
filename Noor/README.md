@@ -13,4 +13,8 @@ Noor is a Software Developer and Data Engineer specializing in environmental dat
 
 ## Resume
 
-Resume data is stored in `detailed.json` and can be viewed with various themes using the theme selector above.
+Resume data can be loaded from:
+- **PDF URL**: Set `CVFiltersConfig.pdfUrl` in `index.html` to pull resume from external URL in real-time
+- **JSON File**: Fallback to `detailed.json` if no PDF URL is configured
+
+The PDF-to-JSON conversion happens automatically using the modular CVFilters system, which extracts text from PDF and converts it to JSON Resume format. When the PDF loads successfully, the full name will be displayed in the status message.

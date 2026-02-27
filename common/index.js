@@ -7,6 +7,16 @@
 
   async function loadResume() {
     try {
+      // Handle data URLs (data:application/json;charset=utf-8,...)
+      if (jsonFile.startsWith("data:")) {
+        const base64Match = jsonFile.match(/data:application\/json[^,]*,(.+)/);
+        if (base64Match) {
+          const jsonString = decodeURIComponent(base64Match[1]);
+          return JSON.parse(jsonString);
+        }
+      }
+      
+      // Handle regular file URLs
       const res = await fetch(jsonFile, { cache: "no-store" });
       if (!res.ok) throw new Error("JSON not found");
       return await res.json();
