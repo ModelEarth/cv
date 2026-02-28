@@ -17,6 +17,28 @@ loadMarkdown("README.md", "readmeDiv", "_parent");
 h2 {
   border: 0px;
 }
+#topDiv span {
+  font-size: .9em;
+  line-heightX: .9em;
+  margin-top: 15px;
+  display: block;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+.page-break {
+  display: none;
+}
+@media print {
+  .page-break {
+    display: block;
+    break-before: page;
+  }
+  .hide-print {
+    display: none;
+  }
+}
+
 </style>
 </head>
 
@@ -24,9 +46,9 @@ h2 {
 <div class="content contentpadding large-list">
   <div id="topDiv"></div>
 
-  <br>
-  <hr>
-  Detail Version
+  <div class="page-break"></div>
+  <div class="hide-print" style="height:32px"></div>
+  Detailed Version
   <hr>
 
   <div id="readmeDiv"></div>

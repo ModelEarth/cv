@@ -11,33 +11,36 @@ AI Integration Expert, Full Stack Developer, Maps and Data Visualizations, Pytho
 **Lead Developer / Programmer Analyst**
 Georgia.org Dept of Economic Development – Atlanta, GA
 2015 – Present
-Lead Engineer, Full Stack Developer, UX Designer, AI Integration, Data Visualization, Machine Learning, Cognito Forms, Technical Project Manager. Developed directories for Georgia Film, International Trade, Manufacturing, Recycling and Aerospace. SQL Admin, Sharepoint Setup and Design, Salesforce Admin and Integrations.
+<span>Full Stack Developer, UX Designer, AI Integration, Data Visualization, Machine Learning, Cognito Forms, Technical Project Manager. Developed directories for Georgia Film, International Trade, Manufacturing, Recycling and Aerospace. SQL Admin, Sharepoint Setup and Design, Salesforce Admin and Integrations.</span>
 
 **Project Director / Lead Engineer**
 Model.earth – Atlanta, GA
 2020 – Present
-Project Director for volunteer data science teams combining AI with industry impact supply-chains for product analysis and location comparison. Arts Engine for video generation, LLM chat interfaces, Python Data Pipelines, RealityStream ML Forecasting, Google Data Commons API timelines and FeedPlayer React video interface. Cloudflare and AWS hosting. International trade flow analysis combining Python Colabs, Azure SQL, Tabulator, Chart.js, D3 and Leaflet Maps.
+
+<span>Project Director for volunteer data science teams combining AI with industry impact supply-chains for product analysis and location comparison. Arts Engine for video generation, LLM chat interfaces, Python Data Pipelines, RealityStream ML Forecasting, Google Data Commons API timelines and FeedPlayer React video interface. Cloudflare and AWS hosting. International trade flow analysis combining Python Colabs, Azure SQL, Tabulator, Chart.js, D3 and Leaflet Maps.</span>
 
 **Founder and CEO**
 DreamStudio.com – Atlanta, GA
 2000 – Present
-Programmed SQL Content Management System for membership, payments, enews and scheduling.
+
+<span>Programmed SQL Content Management System for membership, payments, enews and scheduling.
 Directory and Project Reporting tools for neighborhood development projects, realtors and foundations.
-Neighborhood.org sites for eight neighborhood associations including Midtown, West End and Grant Park.
+Neighborhood.org sites for eight neighborhood associations including Midtown, West End and Grant Park.</span>
 
 **State Parks Website Developer**
 Georgia State Parks and Historic Sites – Atlanta, GA
 2000 to 2015
-Designed and hosted state park web system for collaborative editing, enews, golf courses and lodge sites.
+
+<span>Designed and hosted state park web system for collaborative editing, enews, golf courses and lodge sites.
 Campground Host management and background check system using C# and Microsoft .NET.
-Wireless ticketing for excursion trains integrating Microsoft point-of-sale with online availability.
+Wireless ticketing for excursion trains integrating Microsoft point-of-sale with online availability.</span>
 
 **Lead Programmer and Web Designer**
 Interactive Planet / Southern Company – Atlanta, GA
 1995 to 2000
-Developed content system for Southern Company and seven state power companies. Home energy apps and news sites. Applications for telcos, banks and restaurants. Olympic websites and Hands On Atlanta volunteer management and calendar system.
 
----
+<span>Developed content system for Southern Company and seven state power companies. Home energy apps and news sites. Applications for telcos, banks and restaurants. Olympic websites and Hands On Atlanta volunteer management and calendar system.</span>
+
 
 ## Education
 
