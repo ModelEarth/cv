@@ -3,9 +3,20 @@ Atlanta, GA 30315 · 678-468-1000 · loren@dreamstudio.com
 
 ## Summary
 
-Full stack developer, technical project manager, and UX/UI designer with twenty-five years of experience building data‑driven web applications with JavaScript, jQuery, SQL, and AWS cloud hosting. Developed embeddable maps and data visualizations for WordPress, Drupal, and Wix sites across government, corporate, and non‑profit clients.
+AI Integration Expert, Full Stack Developer, Python Machine Learning Analytics, Vibe Code Trainer, Technical Project Manager. Awesome UX/UI designer with 25 years experience building data‑driven web applications with JavaScript, jQuery, SQL, AWS and Google Cloud Hosting with robust maps and beutiful data visualizations. 
 
 ## Work Experience
+
+
+**Project Director / Lead Engineer**
+Model.Earth – Atlanta, GA
+2020 – Present
+- [Lead Engineer](https://dreamstudio.com/loren/) for volunteer data science teams using Rust and Python to analyze supply-chains for product analysis and industry impact comparisons.
+- [AI Agent APIs](https://dreamstudio.com/requests/engine/rust-api/src/providers/) Art Engine for prompt driven storyboard development using Claude Code CLI, OpenAI Codex and xAI Grok Video generation.
+- [International trade analysis](https://model.earth/profile/trade/) combining Python Colabs, Azure SQL, Tabulator, Chart.js, D3 and Leaflet Maps. Cloudflare and AWS&nbsp;hosting. 
+- [Arts Engine for video](https://dreamstudio.com/requests/engine/) generation, LLM chat interfaces, Python Data Pipelines, RealityStream ML Forecasting
+- [UN Goal Timelines](https://model.earth/localsite/timeline/) using Google Data Commons and FeedPlayer API lists in our [Tools for Teaching](https://dreamstudio.com/projects/about/teaching/) and [Environmental Impact Research](https://model.earth/io/learn/).
+
 
 **Lead Developer / Programmer Analyst / Project Lead**
 Georgia Department of Economic Development – Atlanta, GA
@@ -16,13 +27,6 @@ Georgia Department of Economic Development – Atlanta, GA
 - Developed exporter business directory integrated with Salesforce API.
 - Mapped lodging availability during hurricanes for Georgia Visitor Information Centers.
 
-**Project Director / Lead Engineer**
-Model.earth – Atlanta, GA
-2020 – Present
-- Project Director and Lead Engineer for volunteer data science teams using Rust and Python to combine [AI Agent APIs](../../../requests/engine/rust-api/src/providers/)  with industry impact supply-chains for product analysis and location comparison.
-- [Arts Engine for video](../../../requests/engine/) generation, LLM chat interfaces, Python Data Pipelines, RealityStream ML Forecasting
-- Google Data Commons [API timelines](../../../localsite/timeline/) and FeedPlayer React video interface.
-- [International trade flow analysis](../../../profile/trade/) combining Python Colabs, Azure SQL, Tabulator, Chart.js, D3 and Leaflet Maps. Cloudflare and AWS&nbsp;hosting. 
 
 **Co‑founder and CEO**
 DreamStudio – Atlanta, GA
@@ -37,7 +41,7 @@ DreamStudio – Atlanta, GA
 CNN and Time Warner – Atlanta, GA
 2002 – 2005
 
-- Created applications to manage CNN FuturesDesk satellite news feeds using the DreamStudio content management system.
+- Created CMS SQL application to manage CNN FuturesDesk satellite news feeds using the DreamStudio content management system.
 - Built a scheduling tool for Time Warner’s AtlantaCares volunteer calendar integrated with Hands On Atlanta project management tools.
 
 **Web App Developer / Database Administrator**
@@ -93,7 +97,7 @@ Georgia Tech – Network Dynamics Lab – Atlanta, GA
 
 ## Generative AI
 
-- [Mentor for 300+](../../../community/members/) Claude Code CLI and Open Codex OPT data science grads
+- [Mentor for 300+](https://dreamstudio.com/community/members/) Claude Code CLI and Open Codex OPT data science grads
 - Interface design for agent APIs including Claude, xAI, Gemini, OpenAI
 - Vercel and Langchain interfaces, Hugging Face, Voyage AI, Pinecone
 - Runway, Luma Dream Machine, Pika Labs, CapCut, ComfyUI, FloraFauna
@@ -103,5 +107,5 @@ Georgia Tech – Network Dynamics Lab – Atlanta, GA
 
 - AWS, Google Cloud, Salesforce Admin, Sharepoint Admin, Azure PostgreSQL
 - GitHub Hosting with Cloudflare, Cognito Forms, Microsoft Power BI, Tableau, Zapier
-- Wix, Squarespace, Jira, Trello, WordPress, Drupal, [Vibe coded Github Projects Hub and more!](../../../projects/)
+- Wix, Squarespace, Jira, Trello, WordPress, Drupal, [Vibe coded Github Projects Hub and more!](https://dreamstudio.com/projects/)
 
