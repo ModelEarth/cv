@@ -4,7 +4,18 @@
 
 A powerful, locally-run web application that extracts data from PDF resumes and renders them through multiple distinct template designs. No data leaves your device—all processing happens in your browser.
 
-> 🚀 **[Live Demo - Try it now!](https://satvikpraveen.github.io/resume-template-generator/)**
+<!-- Rename SatvikPraveen to "extract" -->
+
+## 🎓 Resources / Theme Source
+
+- [JSON Resume Standard](https://jsonresume.org/) - [docs.jsonresume.org/](https://docs.jsonresume.org/)
+- [Resume Best Practices](https://www.indeed.com/career-advice/resumes)
+
+### We've added PDF parsing
+
+- [PDF.js Documentation](https://mozilla.github.io/pdf.js/)
+- [GitHub Pages Guide](https://pages.github.com/)
+- [CSS Grid Reference](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout)
 
 ---
 
@@ -79,35 +90,7 @@ Professional standard layout. Always reliable.
 
 ---
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Modern web browser (Chrome, Firefox, Safari, Edge)
-- Python 3.7+ (for local server)
-
-### Installation & Local Development
-
-1. **Clone the repository**
-
-```bash
-git clone https://github.com/SatvikPraveen/resume-template-generator.git
-cd resume-template-generator
-```
-
-2. **Start local server**
-
-```bash
-python -m http.server 8000
-```
-
-3. **Open in browser**
-
-```
-http://localhost:8000
-```
-
-4. **Upload your resume**
+**Upload your resume**
 
 - Click "Upload PDF Resume"
 - Select your PDF file
@@ -303,21 +286,6 @@ Extracted data follows this structure:
   ]
 }
 ```
-
----
-
-## 🎓 Learning Resources
-
-### For Users
-
-- [JSON Resume Standard](https://jsonresume.org/)
-- [Resume Best Practices](https://www.indeed.com/career-advice/resumes)
-
-### For Developers
-
-- [PDF.js Documentation](https://mozilla.github.io/pdf.js/)
-- [GitHub Pages Guide](https://pages.github.com/)
-- [CSS Grid Reference](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Grid_Layout)
 
 ---
 
