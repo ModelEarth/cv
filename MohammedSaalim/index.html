@@ -13,6 +13,44 @@
     <link type="text/css" rel="stylesheet" href="/localsite/css/base.css" id="/localsite/css/base.css" />
     <script type="text/javascript" src="/localsite/js/localsite.js?showheader=true"></script>
 
+    <style>
+        .pdf-status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 25px;
+            font-size: 13px;
+        }
+
+        .pdf-loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .pdf-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .pdf-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+
+    <!-- PDF.js Library -->
+    <script type="module">
+        import * as pdfModule from "../extract/vendor/pdf.mjs";
+        window.pdfjsLib = pdfModule;
+        if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = "../extract/vendor/pdf.worker.mjs";
+        }
+        window._pdfModuleReady = true;
+        window.dispatchEvent(new Event("pdfjs-ready"));
+    </script>
+
+    <!-- ResumePDFConverter - PDF-to-JSON converter -->
+    <script src="../common/ResumePDFConverter.js"></script>
+
 
 
     <style>
@@ -575,6 +613,7 @@
 
         <!-- CV Filters always visible at body level (localsite.js rearranges DOM children) -->
         <div id="cvFiltersContainer"></div>
+        <div id="pdfStatusContainer"></div>
 
         <script src="../common/filters.js"></script>
         <script>
@@ -617,12 +656,103 @@
             // Capture original URL params BEFORE CVFilters.init modifies the URL
             var userRequestedResume = new URLSearchParams(location.search).has('resume');
 
+            // PDF configuration - external resume PDF URL
+            var PDF_CONFIG = {
+                pdfUrl: 'https://depauledu-my.sharepoint.com/:b:/g/personal/mkartapi_depaul_edu/IQCdpkI3bxV0Rr-wv-7Z-DHMAff0bao2qMSQwmCTf4DDjPk?e=vAt6BE&download=1'
+            };
+
+            // Load PDF resume if configured
+            async function loadPdfResume() {
+                if (!PDF_CONFIG.pdfUrl) return null;
+
+                var pdfStatusContainer = document.getElementById('pdfStatusContainer');
+                if (!pdfStatusContainer) return null;
+
+                var statusDiv = document.createElement('div');
+                statusDiv.className = 'pdf-status pdf-loading';
+                statusDiv.textContent = '📄 Loading PDF resume...';
+                pdfStatusContainer.appendChild(statusDiv);
+
+                try {
+                    // Wait for PDF.js to be ready
+                    await new Promise(function (resolve) {
+                        if (window._pdfModuleReady) {
+                            resolve();
+                        } else {
+                            window.addEventListener('pdfjs-ready', resolve, { once: true });
+                        }
+                    });
+
+                    // Additional delay to ensure everything is loaded
+                    await new Promise(function (resolve) { setTimeout(resolve, 300); });
+
+                    var jsonData = await ResumePDFConverter.init({
+                        pdfUrl: PDF_CONFIG.pdfUrl,
+                        onSuccess: function (data) {
+                            statusDiv.className = 'pdf-status pdf-success';
+                            statusDiv.textContent = '✅ PDF loaded successfully! Name: ' + (data.basics.name || 'Resume');
+                            console.log('[ResumePDFConverter] PDF loaded, name:', data.basics.name);
+                        },
+                        onError: function (error) {
+                            statusDiv.className = 'pdf-status pdf-error';
+                            statusDiv.textContent = '❌ PDF unavailable, using JSON data instead';
+                            console.warn('[ResumePDFConverter] Error:', error);
+                        }
+                    });
+
+                    return jsonData;
+                } catch (error) {
+                    statusDiv.className = 'pdf-status pdf-error';
+                    statusDiv.textContent = '❌ PDF unavailable, using JSON data instead';
+                    console.warn('[loadPdfResume] Error:', error);
+                    return null;
+                }
+            }
+
+            // Override CVFilters.loadJson to support PDF data
+            var originalLoadJson = CVFilters.loadJson;
+            CVFilters.loadJson = async function (jsonFile) {
+                if (window._currentPdfData) {
+                    var dataPreview = CVFilters.select('#cvDataPreview');
+                    if (dataPreview) {
+                        dataPreview.textContent = JSON.stringify(window._currentPdfData, null, 2);
+                    }
+                    return window._currentPdfData;
+                }
+                return originalLoadJson.call(this, jsonFile);
+            };
+
+            // Override CVFilters.loadTheme to support PDF data URLs
+            var originalLoadTheme = CVFilters.loadTheme;
+            CVFilters.loadTheme = function (jsonFile, theme) {
+                if (window._currentPdfData) {
+                    var jsonString = JSON.stringify(window._currentPdfData);
+                    var dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonString);
+                    jsonFile = dataUrl;
+                }
+                return originalLoadTheme.call(this, jsonFile, theme);
+            };
+
             // Initialize filters immediately (populates cvFiltersContainer)
             CVFilters.init({
                 personFolder: 'MohammedSaalim',
                 defaultJson: 'detailed.json',
                 defaultTheme: 'elegant'
             });
+
+            // Try to load PDF resume after CVFilters is initialized
+            (async function () {
+                var pdfData = await loadPdfResume();
+                if (pdfData && pdfData.basics && pdfData.basics.name) {
+                    window._currentPdfData = pdfData;
+                    console.log('[Init] Using PDF data, name:', pdfData.basics.name);
+                    var theme = CVFilters.getParam('theme', 'elegant');
+                    CVFilters.loadJson('');
+                    CVFilters.loadTheme('', theme);
+                } else {
+                    console.log('[Init] Using JSON file fallback');
+                }
+            })();
 
             // Helper: find the localsite footer in #main-content
             function getFooter() {

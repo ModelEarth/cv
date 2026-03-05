@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
@@ -15,20 +16,24 @@
       background-color: #f9fafb;
       color: #333;
     }
+
     .pdf-status {
       padding: 10px;
       border-radius: 6px;
       margin: 10px 0;
       font-size: 13px;
     }
+
     .pdf-loading {
       background: #fff3cd;
       color: #856404;
     }
+
     .pdf-success {
       background: #d4edda;
       color: #155724;
     }
+
     .pdf-error {
       background: #f8d7da;
       color: #721c24;
@@ -37,10 +42,10 @@
 
   <!-- PDF.js Library -->
   <script type="module">
-    import * as pdfModule from "../SatvikPraveen/vendor/pdf.mjs";
+    import * as pdfModule from "../extract/vendor/pdf.mjs";
     window.pdfjsLib = pdfModule;
     if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "../SatvikPraveen/vendor/pdf.worker.mjs";
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "../extract/vendor/pdf.worker.mjs";
     }
     window._pdfModuleReady = true;
     window.dispatchEvent(new Event("pdfjs-ready"));
@@ -85,10 +90,10 @@
             window.addEventListener("pdfjs-ready", resolve, { once: true });
           }
         });
-        
+
         // Additional delay to ensure everything is loaded
         await new Promise(resolve => setTimeout(resolve, 300));
-        
+
         const jsonData = await ResumePDFConverter.init({
           pdfUrl: PDF_CONFIG.pdfUrl,
           onSuccess: (data) => {
@@ -114,7 +119,7 @@
 
     // Override CVFilters.loadJson to support PDF data
     const originalLoadJson = CVFilters.loadJson;
-    CVFilters.loadJson = async function(jsonFile) {
+    CVFilters.loadJson = async function (jsonFile) {
       // If we have PDF data, use it instead
       if (window._currentPdfData) {
         const dataPreview = CVFilters.select('#cvDataPreview');
@@ -129,7 +134,7 @@
 
     // Override CVFilters.loadTheme to support PDF data URLs
     const originalLoadTheme = CVFilters.loadTheme;
-    CVFilters.loadTheme = function(jsonFile, theme) {
+    CVFilters.loadTheme = function (jsonFile, theme) {
       // If we have PDF data, create data URL
       if (window._currentPdfData) {
         const jsonString = JSON.stringify(window._currentPdfData);
@@ -147,13 +152,13 @@
     });
 
     // Try to load PDF resume after CVFilters is initialized
-    (async function() {
+    (async function () {
       const pdfData = await loadPdfResume();
       if (pdfData && pdfData.basics && pdfData.basics.name) {
         // Store PDF data for use by CVFilters
         window._currentPdfData = pdfData;
         console.log("[Init] Using PDF data, name:", pdfData.basics.name);
-        
+
         // Reload with PDF data
         const theme = CVFilters.getParam('theme', 'elegant');
         CVFilters.loadJson(''); // Trigger load with PDF data
@@ -165,4 +170,5 @@
   </script>
 
 </body>
+
 </html>
