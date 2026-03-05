@@ -1,11 +1,20 @@
 # Loren Heyns
 Atlanta, GA 30315 · 678-468-1000 · loren@dreamstudio.com
 
-## Summary
-
-Full stack developer, technical project manager, and UX/UI designer with twenty-five years of experience building data‑driven web applications with JavaScript, jQuery, SQL, and AWS cloud hosting. Developed embeddable maps and data visualizations for WordPress, Drupal, and Wix sites across government, corporate, and non‑profit clients.
+AI Integration Expert, Full Stack Developer, Python Machine Learning Analytics, Vibe Code Trainer, Technical Project Manager. Awesome UX/UI designer with 25 years experience building data‑driven web applications with JavaScript, jQuery, SQL, AWS and Google Cloud Hosting with robust maps and beutiful data visualizations. 
 
 ## Work Experience
+
+**Project Director / Lead Engineer**
+Model.Earth – Atlanta, GA
+2020 – Present
+- [Lead Engineer](https://dreamstudio.com/loren/) for volunteer data science teams using Rust and Python to analyze supply-chains for product analysis and industry impact comparisons
+- [AI Agent APIs](https://dreamstudio.com/requests/engine/rust-api/src/providers/) for prompt driven storyboard development using Claude Code CLI, OpenAI Codex, Google Gemini and xAI Grok video generation
+- [International trade analysis](https://model.earth/profile/trade/) combining Python Colabs, Azure SQL, Tabulator, Chart.js and Leaflet Maps
+- [Arts Engine for video](https://dreamstudio.com/requests/engine/) generation, LLM chat interfaces, Python data pipelines and PostgreSQL databases
+- [UN Goal Timelines](https://model.earth/localsite/timeline/) combining Google Data Commons with  RealityStream ML forecasting
+- [Tools for Teaching](https://dreamstudio.com/projects/about/teaching/) and [Environmental Impact Research](https://model.earth/io/learn/)
+
 
 **Lead Developer / Programmer Analyst / Project Lead**
 Georgia Department of Economic Development – Atlanta, GA
@@ -16,35 +25,28 @@ Georgia Department of Economic Development – Atlanta, GA
 - Developed exporter business directory integrated with Salesforce API.
 - Mapped lodging availability during hurricanes for Georgia Visitor Information Centers.
 
-**Project Director / Lead Engineer**
-Model.earth – Atlanta, GA
-2020 – Present
-- Project Director for volunteer data science teams combining AI with industry impact supply-chains for product analysis and location comparison.
-- Arts Engine for video generation, LLM chat interfaces, Python Data Pipelines, RealityStream ML Forecasting
-- Google Data Commons API timelines and FeedPlayer React video interface.
-- Cloudflare and AWS hosting. International trade flow analysis combining Python Colabs, Azure SQL, Tabulator, Chart.js, D3 and Leaflet Maps.
 
 **Co‑founder and CEO**
 DreamStudio – Atlanta, GA
 2000 – Present
 
-- Managed client accounts focused on membership websites and event calendars.
+- Managed client accounts and developed .NET SQL websites focused on membership management, enews and event calendars.
 - Built news and directory applications for state parks, travel destinations, and new urban communities including the Seaside Institute and Glenwood Park.
-- Developed a content management system for a ten‑state environmental education alliance, multiple Atlanta realtors, and eight neighborhood associations (Midtown, Grant Park, SAND, West End, Glenwood Park).
+- Developed ontent management system for ten‑state environmental education alliance, multiple Atlanta realtors, and eight neighborhood associations (Midtown, Grant Park, SAND, West End, Glenwood Park).
 - Implemented event registration and donation systems integrating Authorize.net and PayPal.
 
 **Web Technology Consultant**
 CNN and Time Warner – Atlanta, GA
 2002 – 2005
 
-- Created applications to manage CNN FuturesDesk satellite news feeds using the DreamStudio content management system.
+- Created CMS SQL application to manage CNN FuturesDesk satellite news feeds using the DreamStudio content management system.
 - Built a scheduling tool for Time Warner’s AtlantaCares volunteer calendar integrated with Hands On Atlanta project management tools.
 
 **Web App Developer / Database Administrator**
 Georgia State Parks and Historic Sites – Georgia
 2003 – 2015
 
-- Developed a .NET content system to manage twelve state park and historic site websites.
+- Developed .NET content system to manage twelve domains for 63 Georgia state park and historic sites.
 - Designed calendar and news systems for park events, golf courses, and lodge properties.
 - Built account management tools supporting campground host volunteer background checks.
 - Created wireless ticketing for Sam Shortline excursion trains.
@@ -53,8 +55,8 @@ Georgia State Parks and Historic Sites – Georgia
 Interactive Planet, Inc. (Southern Company) – Atlanta, GA
 1995 – 2000
 
-- Developed a news management system used by seven Southern Company affiliates to syndicate content across power company websites.
-- Served as the first full‑time employee and helped grow the company to 30 employees prior to founding DreamStudio.
+- Developed news management system used by seven Southern Company affiliates to syndicate content across power company websites.
+- Served as the first full‑time employee at Interactive Planet, which grew to 30 employees prior to forming my own company, DreamStudio.
 
 **Computational Science Research Developer**
 Georgia Tech – Network Dynamics Lab – Atlanta, GA
@@ -64,38 +66,47 @@ Georgia Tech – Network Dynamics Lab – Atlanta, GA
 - Supported research on multimodal transportation, construction applications, and mixed‑reality apps for HoloLens.
 - Built D3‑based visual analytics and mapping for machine learning–driven community trend forecasting.
 
+<br>
 
-## Education
+<div class="pagebreak"></div>
 
-**Georgia Institute of Technology** – Atlanta, GA
-2018 – 2019
+# Education
 
-- Coursework: Data and Visual Analytics, Network Dynamics Lab, Urban Planning, Smart Cities, BIM Construction Apps, Mobility Infrastructure.
+**Georgia Institute of Technology** – Atlanta, GA – 2018 to 2019
 
-**Michigan State University**
+- Coursework during 2 semesters toward PhD: Machine Learning and Visual Data Analytics, Network Dynamics Lab storm impact study, Urban Planning, Smart Cities, BIM Construction Apps, Mobility Infrastructure. - [CV](http://dreamstudio.com/research/)
 
-- Telecommunications.: UX Design, CommTech Lab, MITN Satellite Distance Learning Network, 
+**Michigan State University** – Lansing, MI – 1993 to 1994
 
-**University of California, Santa Barbara**
+- Telecommunications: UX Design, CommTech Lab, MITN Satellite Distance Learning Network (1.5 years toward Master's) 
 
-- Coursework: Business Economics and Communication Studies, Financial Accounting, Programming, Environmental Economics, Screenwriting, Photography.
+**University of California UCSB** – Santa Barbara, CA - 1986 to 1991
 
+- Two bachelor's degrees: Business Economics and Communication Studies, Financial Accounting, Programming, Environmental Economics, Screenwriting, Photography.
 
-## Programming and Development
+<br>
 
-- Languages \& Frameworks: JavaScript, jQuery, C\# .NET, HTML5, CSS3.
-- Mapping \& Data: Leaflet Maps, Google API, CartoDB, D3 data visualizations.
-- Databases \& Servers: MS SQL, PostgreSQL, MySQL, IIS.
-- Tools: WebStorm, VS Code, Sublime Text, Cloudflare, GitHub, JAM Stack.
+# Skills
 
+## Programming and UX Design
 
-## UX and Design
+- Languages: JavaScript, jQuery, Python, Rust, React, NextJS, C\# .NET, HTML5, CSS3
+- Mapping &amp; Data: Leaflet Maps, Google Data Commons API, CartoDB, D3 data visualizations
+- Databases &amp; Servers: MS SQL, PostgreSQL, MySQL, IIS, Flask, Rust
+- Tools: Sublime Text, WebStorm, VS Code, Cloudflare, GitHub, JAM Stack
+- Adobe Creative Suite: Photoshop, InDesign, Illustrator, Premiere. Tailwind, Figma, SketchUp
 
-- Adobe Creative Suite (Photoshop, Illustrator, InDesign, Premiere), Lit, Tailwind, Prisma, Figma, SketchUp.
+## Generative AI
 
+- [Mentor for 300+](https://dreamstudio.com/community/members/) Claude Code CLI and Open Codex OPT data science grads
+- Interface design for agent APIs including Claude, xAI, Gemini, OpenAI
+- Vercel and Langchain interfaces, Hugging Face, Voyage AI, Pinecone
+- Runway, Luma Dream Machine, Pika Labs, CapCut, ComfyUI, FloraFauna
+- Midjourney, Stable Diffusion, GetImg, Leonardo, Adobe Firefly
 
 ## Business Platforms
 
-- AWS, Salesforce, Azure, WordPress, Drupal, Cognito Forms, Google Cloud, Zapier, MS Power BI, Tableau, GitHub hosting, Wix, Squarespace, Jira, Trello.
-
+- AWS, Google Cloud, Salesforce Admin, Sharepoint Admin, Azure PostgreSQL
+- GitHub Hosting with Cloudflare, Cognito Forms, Microsoft Power BI, Tableau, Zapier
+- Wix, Squarespace, Jira, Trello, WordPress, Drupal, [Vibe coded our own Github Projects Hub and more!](https://dreamstudio.com/projects/)
 

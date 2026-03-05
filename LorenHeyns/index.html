@@ -33,6 +33,18 @@
       text-decoration: underline;
     }
   </style>
+
+  <script type="module">
+    import * as pdfModule from "../extract/vendor/pdf.mjs";
+    window.pdfjsLib = pdfModule;
+    if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "../extract/vendor/pdf.worker.mjs";
+    }
+    window._pdfModuleReady = true;
+    window.dispatchEvent(new Event("pdfjs-ready"));
+  </script>
+
+  <script src="../common/ResumePDFConverter.js"></script>
 </head>
 
 <body>
@@ -47,11 +59,13 @@
 
   <script src="../common/filters.js"></script>
   <script>
-    // Initialize filters to load from detailed.json
     CVFilters.init({
       personFolder: 'LorenHeyns',
-      defaultJson: 'detailed.json',
-      defaultTheme: 'elegant'
+      defaultJson: 'detailed-hidden.json',
+      defaultPDF_OMIT: 'https://dreamstudio.com/about/loren-heyns/Loren-Heyns-Resume.pdf',
+      defaultTheme: 'elegant',
+      syncResumeParam: false,
+      autoDetectJsonFiles: false
     });
   </script>
 

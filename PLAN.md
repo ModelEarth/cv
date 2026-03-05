@@ -2,17 +2,17 @@
 
 ## TO DO
 
-1. **Document the source repo** which was forked for the theme display and modified for the theme process. Clues might be in the SatvikPraveen folder. Or modifications (if not easily mergeable) could potentially be pushed as a new "view" folder within their source repo.
+1. **Find theme source repo Github link** initially copied for our theme display process. Clues might be in the "extract" folder.
 
-2. **Add an input field for pasting an external resume .PDF URLs** on the SatvikPraveen/index.html page. We'll use this to confirm that resumes can be pulled from .PDF files and converted to .json for display in templates without the need to place the resume on the same server as the templates.
+2. **Add an input field for pasting an external resume .PDF URLs** on the extract/index.html page. We'll use this to confirm that resumes can be pulled from .PDF files and converted to .json for display in templates without the need to place the resume on the same server as the templates.
 
-3. **Move the input from SatvikPraveen** to its own "add" folder - and attempt to be in sync with any repos we've forked to changes can be pushed to the source. This may involve have a fork reside outside the cv folder, or as a submodule in the cv folder.
+3. **Move SatvikPraveen** resume to his own folder. Remove/move references to SatvikPraveen in the "extract" folder.
 
 4. **Add filters to other CV pages** that don't currently have them
 
 5. **In the "work" node of the detailed.json file**, use the order of the fields to set the bold title for each work (job) listed. The Harvard standard is "organization" first. Include support for the term "organization" as an alternative to "company".
 
-6. **Implement the use of .dark css which is provided by toggle in header** how can we be compatible with the source to send a PR with our changes? The SatvikPraveen folder may have clues.
+6. **Test use of .dark css which is provided by toggle in header**
 
 7. **Auto-detect JSON files** per person folder
 

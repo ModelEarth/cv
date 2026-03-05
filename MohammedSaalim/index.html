@@ -4,14 +4,16 @@
 <head>
     <meta charset="utf-8" />
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>Mohammed Saalim K - Portfolio & Resume</title>
 
     <link type="text/css" rel="stylesheet" href="/localsite/css/base.css" id="/localsite/css/base.css" />
     <script type="text/javascript" src="/localsite/js/localsite.js?showheader=true"></script>
 
-    <!-- Include team common.css for tab styling -->
-    <link rel="stylesheet" href="../../team/css/common.css" />
+
 
     <style>
         body {
@@ -203,9 +205,10 @@
     <!-- Tab buttons above filters -->
     <div style="margin: 25px 25px 0 25px;">
         <div class="page-tab-container">
-            <button class="page-tab active" id="tabHighlights" onclick="showTab('highlights')">Highlights</button>
-            <button class="page-tab" id="tabResume" onclick="showTab('resume')">Resume</button>
-            <button class="page-tab" id="tabAll" onclick="showTab('all')">All</button>
+            <button class="page-tab active" id="tabHighlights"
+                onclick="event.stopPropagation(); showTab('highlights')">Highlights</button>
+            <button class="page-tab" id="tabResume" onclick="event.stopPropagation(); showTab('resume')">Resume</button>
+            <button class="page-tab" id="tabAll" onclick="event.stopPropagation(); showTab('all')">All</button>
         </div>
         <div class="page-tab-line"></div>
     </div>
@@ -559,7 +562,7 @@
             </div>
         </div>
 
-        <!-- Resume Section -->
+        <!-- Resume Section (PDF link) -->
         <div id="resumeContent" class="content-section">
             <div class="pdf-info" style="margin: 0 25px;">
                 📄 <strong>Resume PDF:</strong> <a
@@ -568,21 +571,30 @@
                 <br><small>Note: PDF is pulled from external SharePoint link and should be kept in sync with
                     detailed.json</small>
             </div>
-
-            <div id="cvFiltersContainer"></div>
         </div>
+
+        <!-- CV Filters always visible at body level (localsite.js rearranges DOM children) -->
+        <div id="cvFiltersContainer"></div>
 
         <script src="../common/filters.js"></script>
         <script>
-            // Tab switching function (preserved from original)
+            // Tab switching function
             function showTab(tab) {
-                const highlightsContent = document.getElementById('highlightsContent');
-                const resumeContent = document.getElementById('resumeContent');
-                const tabAll = document.getElementById('tabAll');
-                const tabHighlights = document.getElementById('tabHighlights');
-                const tabResume = document.getElementById('tabResume');
+                // Ensure elements are at #main-content level (localsite.js nests them)
+                var mainContent = document.getElementById('main-content');
+                var highlightsContent = document.getElementById('highlightsContent');
+                var resumeContent = document.getElementById('resumeContent');
+                var container = document.getElementById('cvFiltersContainer');
+                if (mainContent && typeof insertBeforeFooter === 'function') {
+                    if (highlightsContent) insertBeforeFooter(highlightsContent);
+                    if (resumeContent) insertBeforeFooter(resumeContent);
+                    if (container) insertBeforeFooter(container);
+                }
 
-                // Remove active class from all tabs
+                var tabAll = document.getElementById('tabAll');
+                var tabHighlights = document.getElementById('tabHighlights');
+                var tabResume = document.getElementById('tabResume');
+
                 tabAll.classList.remove('active');
                 tabHighlights.classList.remove('active');
                 tabResume.classList.remove('active');
@@ -602,12 +614,69 @@
                 }
             }
 
-            // Initialize filters (only when Resume tab is active)
+            // Capture original URL params BEFORE CVFilters.init modifies the URL
+            var userRequestedResume = new URLSearchParams(location.search).has('resume');
+
+            // Initialize filters immediately (populates cvFiltersContainer)
             CVFilters.init({
                 personFolder: 'MohammedSaalim',
                 defaultJson: 'detailed.json',
                 defaultTheme: 'elegant'
             });
+
+            // Helper: find the localsite footer in #main-content
+            function getFooter() {
+                var mc = document.getElementById('main-content');
+                if (!mc) return null;
+                // localsite footer has class "main-footer" or is a FOOTER element
+                return mc.querySelector('.main-footer') ||
+                    mc.querySelector('footer') ||
+                    mc.querySelector('#main-footer');
+            }
+
+            // Move element before the footer (or append if no footer found)
+            function insertBeforeFooter(el) {
+                var mc = document.getElementById('main-content');
+                if (!mc || !el) return;
+                var footer = getFooter();
+                if (footer) {
+                    mc.insertBefore(el, footer);
+                } else {
+                    // No footer found — just append
+                    mc.appendChild(el);
+                }
+            }
+
+            // After localsite template loads, un-nest and reposition elements
+            function relocateFilters() {
+                var mc = document.getElementById('main-content');
+                if (!mc) return;
+
+                var highlights = document.getElementById('highlightsContent');
+                var resume = document.getElementById('resumeContent');
+                var container = document.getElementById('cvFiltersContainer');
+
+                // Place elements BEFORE the footer so they appear above it
+                if (highlights) insertBeforeFooter(highlights);
+                if (resume) insertBeforeFooter(resume);
+                if (container) insertBeforeFooter(container);
+
+                // Only auto-switch if user explicitly navigated with ?resume=
+                if (userRequestedResume) {
+                    showTab('resume');
+                }
+            }
+
+            // Poll until localsite template is done (indicated by #main-container)
+            function waitForTemplate() {
+                if (document.getElementById('main-container')) {
+                    // Template loaded — give it 150ms to finish reparenting, then relocate
+                    setTimeout(relocateFilters, 200);
+                } else {
+                    setTimeout(waitForTemplate, 50);
+                }
+            }
+            waitForTemplate();
         </script>
 
 </body>

@@ -32,20 +32,20 @@
   }
 
   function renderResume(data) {
-    const b          = data.basics       || {};
-    const work       = data.work         || [];
-    const edu        = data.education    || [];
-    const skills     = data.skills       || [];
-    const projects   = data.projects     || [];
-    const certs      = data.certifications || [];
-    const langs      = data.languages    || [];
-    const profiles   = data.profiles     || [];
+    const b = data.basics || {};
+    const work = data.work || [];
+    const edu = data.education || [];
+    const skills = data.skills || [];
+    const projects = data.projects || [];
+    const certs = data.certifications || [];
+    const langs = data.languages || [];
+    const profiles = data.profiles || [];
 
     const c = document.getElementById("resumeContainer");
 
     const contactLines = [];
     if (b.email) contactLines.push(b.email);
-    if (b.url)   contactLines.push(b.url);
+    if (b.url) contactLines.push(b.url);
     profiles.forEach(p => {
       if (p.url) contactLines.push(p.network + ": " + p.url);
     });
@@ -70,13 +70,20 @@
 
           <section class="section">
             <h2 class="section-title">Experience</h2>
-            ${work.map(w => `
+            ${work.map(w => {
+      const org = esc(w.organization || w.company);
+      const dates = w.startDate ? ` · ${esc(w.startDate)} – ${esc(w.endDate || 'Present')}` : '';
+      const highlights = (w.highlights || []).length
+        ? `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--text-main);">${w.highlights.map(h => `<li>${esc(h)}</li>`).join('')}</ul>`
+        : '';
+      return `
               <div class="item">
                 <div class="item-title">${esc(w.position)}</div>
-                <div class="item-sub">${esc(w.company)}</div>
+                <div class="item-sub">${org}${dates}</div>
                 <div class="item-summary">${esc(w.summary)}</div>
+                ${highlights}
               </div>
-            `).join("")}
+            `}).join("")}
           </section>
 
           <section class="section">
