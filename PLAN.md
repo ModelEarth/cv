@@ -2,7 +2,7 @@
 
 ## TO DO
 
-1. **Document theme source repo** which was forked for the theme display and modified for the theme process. Clues might be in the "extract" folder.
+1. **Find theme source repo Github link** initially copied for our theme display process. Clues might be in the "extract" folder.
 
 2. **Add an input field for pasting an external resume .PDF URLs** on the extract/index.html page. We'll use this to confirm that resumes can be pulled from .PDF files and converted to .json for display in templates without the need to place the resume on the same server as the templates.
 

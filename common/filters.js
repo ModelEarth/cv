@@ -6,7 +6,9 @@
  *   CVFilters.init({
  *     personFolder: 'YashGondkar',
  *     defaultJson: 'detailed.json',
- *     defaultTheme: 'elegant'
+ *     defaultTheme: 'elegant',
+ *     defaultPDF: 'https://example.com/resume.pdf',
+ *     syncResumeParam: false
  *   });
  */
 
@@ -36,12 +38,17 @@
     personFolder: '',
     defaultJson: 'detailed.json',
     defaultTheme: 'elegant',
+    defaultPDF: '',
+    syncResumeParam: true,
+    autoDetectJsonFiles: true,
     showReadme: true,
     showDataPreview: true
   };
   let currentResumeData = null;
   let currentJsonFile = '';
   let currentTheme = '';
+  let currentPdfData = null;
+  let currentPdfBlobUrl = '';
 
   // Theme options (12 local custom themes)
   const THEMES = [
@@ -74,6 +81,43 @@
       }
     });
     history.replaceState(null, '', url.toString());
+  }
+
+  function setFilterParams(jsonFile, theme) {
+    const params = { theme };
+    if (config.syncResumeParam) {
+      params.resume = jsonFile;
+    } else {
+      params.resume = '';
+    }
+    setParam(params);
+  }
+
+  function revokePdfBlobUrl() {
+    if (currentPdfBlobUrl) {
+      URL.revokeObjectURL(currentPdfBlobUrl);
+      currentPdfBlobUrl = '';
+    }
+  }
+
+  function getPdfBlobUrl() {
+    if (!currentPdfData) return '';
+    if (currentPdfBlobUrl) return currentPdfBlobUrl;
+    const blob = new Blob([JSON.stringify(currentPdfData)], {
+      type: 'application/json;charset=utf-8'
+    });
+    currentPdfBlobUrl = URL.createObjectURL(blob);
+    return currentPdfBlobUrl;
+  }
+
+  function getResumePdfConverter() {
+    if (window.ResumePDFConverter && typeof window.ResumePDFConverter.init === 'function') {
+      return window.ResumePDFConverter;
+    }
+    if (typeof ResumePDFConverter !== 'undefined' && typeof ResumePDFConverter.init === 'function') {
+      return ResumePDFConverter;
+    }
+    return null;
   }
 
   // Generate filter HTML
@@ -270,6 +314,14 @@
   async function loadJson(file) {
     const dataPreview = select('#cvDataPreview');
 
+    if (currentPdfData) {
+      if (dataPreview) {
+        dataPreview.textContent = JSON.stringify(currentPdfData, null, 2);
+      }
+      currentResumeData = currentPdfData;
+      return currentPdfData;
+    }
+
     try {
       const res = await fetch(file, { cache: 'no-store' });
       const json = await res.json();
@@ -288,11 +340,15 @@
   function loadTheme(jsonFile, theme) {
     const previewFrame = select('#cvThemePreview');
     const statusBox = select('#cvDataStatus');
-
-    // Convert local path to path relative to common folder for iframe
-    const iframeJsonPath = jsonFile.startsWith('../')
-      ? jsonFile
-      : `../${config.personFolder}/${jsonFile}`;
+    let iframeJsonPath = '';
+    if (currentPdfData) {
+      iframeJsonPath = getPdfBlobUrl();
+    } else {
+      // Convert local path to path relative to common folder for iframe
+      iframeJsonPath = jsonFile.startsWith('../')
+        ? jsonFile
+        : `../${config.personFolder}/${jsonFile}`;
+    }
 
     const url = `../common/theme.html?resume=${encodeURIComponent(iframeJsonPath)}&theme=${encodeURIComponent(theme)}`;
     const start = performance.now();
@@ -311,6 +367,48 @@
     currentTheme = theme;
     await loadJson(jsonFile);
     loadTheme(jsonFile, theme);
+  }
+
+  async function loadDefaultPdfResume() {
+    if (!config.defaultPDF) return false;
+
+    const statusBox = select('#cvDataStatus');
+    if (statusBox) {
+      statusBox.textContent = `Loading external PDF: ${config.defaultPDF}`;
+    }
+
+    const converter = getResumePdfConverter();
+    if (!converter) {
+      if (statusBox) {
+        statusBox.textContent = 'ResumePDFConverter is not available; using JSON fallback.';
+      }
+      return false;
+    }
+
+    try {
+      const parsed = await converter.init({
+        pdfUrl: config.defaultPDF
+      });
+      currentPdfData = parsed;
+      currentResumeData = parsed;
+      revokePdfBlobUrl();
+      const dataPreview = select('#cvDataPreview');
+      if (dataPreview) {
+        dataPreview.textContent = JSON.stringify(parsed, null, 2);
+      }
+      if (statusBox) {
+        statusBox.textContent = 'External PDF loaded and parsed successfully.';
+      }
+      return true;
+    } catch (err) {
+      console.error('Failed to parse external PDF:', err);
+      currentPdfData = null;
+      revokePdfBlobUrl();
+      if (statusBox) {
+        statusBox.textContent = `Failed to parse external PDF (${err.message}); using JSON fallback.`;
+      }
+      return false;
+    }
   }
 
   function sanitizeFilename(text) {
@@ -567,7 +665,9 @@
       jsonSelect.addEventListener('change', () => {
         const jsonFile = jsonSelect.value;
         const theme = themeSelect.value;
-        setParam({ resume: jsonFile, theme });
+        currentPdfData = null;
+        revokePdfBlobUrl();
+        setFilterParams(jsonFile, theme);
         loadAll(jsonFile, theme);
       });
     }
@@ -576,16 +676,19 @@
       themeSelect.addEventListener('change', () => {
         const jsonFile = jsonSelect.value;
         const theme = themeSelect.value;
-        setParam({ resume: jsonFile, theme });
+        setFilterParams(jsonFile, theme);
         loadAll(jsonFile, theme);
       });
     }
   }
 
   // Initialize filters
-  function init(options) {
+  function init(options = {}) {
     // Merge config
     config = Object.assign({}, config, options);
+    if (config.defaultPDF && typeof options.syncResumeParam === 'undefined') {
+      config.syncResumeParam = false;
+    }
 
     // Find or create container
     let container = select('#cvFiltersContainer');
@@ -613,7 +716,9 @@
     }
 
     // Get initial values from URL or use defaults
-    const jsonFile = getParam('resume', config.defaultJson);
+    const jsonFile = config.syncResumeParam
+      ? getParam('resume', config.defaultJson)
+      : config.defaultJson;
     const theme = getParam('theme', config.defaultTheme);
 
     // Set dropdown values
@@ -624,21 +729,32 @@
     if (themeSelect) themeSelect.value = theme;
 
     // Update URL with current params
-    setParam({ resume: jsonFile, theme });
+    setFilterParams(jsonFile, theme);
 
     // Setup event listeners
     setupEventListeners();
     setupPrintDownloadIcons();
 
     // Load initial content
-    loadAll(jsonFile, theme);
+    (async () => {
+      const loadedPdf = await loadDefaultPdfResume();
+      if (loadedPdf) {
+        currentJsonFile = jsonFile;
+        currentTheme = theme;
+        loadTheme(jsonFile, theme);
+      } else {
+        await loadAll(jsonFile, theme);
+      }
 
-    if (config.showReadme) {
-      loadReadme();
-    }
+      if (config.showReadme) {
+        loadReadme();
+      }
 
-    // Auto-detect available JSON files and populate dropdown
-    autoDetectJsonFiles(jsonFile);
+      // Auto-detect available JSON files only for JSON mode
+      if (!loadedPdf && config.autoDetectJsonFiles) {
+        autoDetectJsonFiles(jsonFile);
+      }
+    })();
   }
 
   // Probe for common JSON filenames and populate the Data dropdown
@@ -672,7 +788,10 @@
     setParam: setParam,
     loadJson: loadJson,
     loadTheme: loadTheme,
-    loadReadme: loadReadme
+    loadReadme: loadReadme,
+    revokePdfBlobUrl: revokePdfBlobUrl
   };
+
+  window.addEventListener('beforeunload', revokePdfBlobUrl);
 
 })(window);

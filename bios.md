@@ -4,8 +4,8 @@
 [Loren Heyns](LorenHeyns)
 [Mohammed Saalim](MohammedSaalim)
 [Shanmuga Priya Kannan](ShanmugaPriyaKannan)
-[Satvik Praveen](extract)
-[Thanmayi Sai](ThanmayiSai)
+[Satvik Praveen](extract)<!--
+[Thanmayi Sai](ThanmayiSai)-->
 [Rekha Chimpiri](RekhaChimpiri)
 [Noor](Noor)
 </div>
