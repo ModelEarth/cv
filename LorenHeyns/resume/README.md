@@ -9,19 +9,18 @@ AI Integration Expert, Full Stack Developer, Python Machine Learning Analytics, 
 DreamStudio Model.Earth – Atlanta, GA
 2020 – Present
 
-Primary developer for our open source AI integrated web apps:
+Primary developer for our open source, AI integrated web apps:
 
-- [Arts Engine for Video](https://dreamstudio.com/requests/engine/) - Storyboard generation, LLM chat interfaces, Python data pipelines and PostgreSQL databases.
-- [API Provider Architecture](https://dreamstudio.com/requests/engine/rust-api/src/providers/)  - Model Context Protocol UX using Claude Code CLI, OpenAI Codex, Google Gemini and xAI Grok.
-- [Webroot Manager](https://dreamstudio.com/team/setup/) - Automation for Rust and Python deployments for interstate trade flow and industry impact comparisons.
-- [International and Interstate](https://dreamstudio.com/profile/footprint/) - Trade flow analysis combining Python Colabs, Azure SQL, Tabulator, Chart.js and Leaflet Maps.
-- [Product Profiles](https://dreamstudio.com/profile/item/#layout=product&cat=Carpet) - BuildingTransparency API frontend comparing residential and commercial construction products.
-- [Goal Timelines](https://dreamstudio.com/localsite/timeline/) - Data Visualization combining Google Data Commons with RealityStream ML forecasting.
-- [Team Projects Hub](https://dreamstudio.com/projects/) - Workflow management system developed for data science team project tracking.
-- [Vibe Coding Mentor](https://dreamstudio.com/projects/about/) - Training using real-world data and open source systems with opportunities for integration.
+- [Arts Engine](https://dreamstudio.com/requests/engine/) - Storyboard generation, LLM chat interfaces, Python data pipelines and PostgreSQL databases
+- [Webroot Manager](https://dreamstudio.com/team/setup/) - Automation for Rust and Python deployments for open source AI modules and industry impact comparisons
+- [Product Profiles](https://dreamstudio.com/profile/item/#layout=product&cat=Carpet) - BuildingTransparency API frontend comparing residential and commercial construction products
+- [International+Interstate Data](https://dreamstudio.com/profile/footprint/) - Trade flow analysis combining Python Colabs, Azure SQL, Tabulator, Chart.js and Leaflet Maps
+- [Goal Timelines](https://dreamstudio.com/localsite/timeline/) - Data Visualization combining Google Data Commons with RealityStream ML forecasting
+- [Team Projects Hub](https://dreamstudio.com/projects/) - Workflow management system developed for data science team project tracking
+- [Vibe Coding Mentor](https://dreamstudio.com/projects/about/) - Training using real-world data and open source systems with opportunities for integration
 
 
-**Lead Developer / Programmer Analyst / Project Lead**
+**Programmer Analyst / Project Lead**
 Georgia Department of Economic Development – Atlanta, GA
 2015 – Present
 
@@ -31,7 +30,7 @@ Georgia Department of Economic Development – Atlanta, GA
 - Mapped lodging availability during hurricanes for Georgia Visitor Information Centers.
 - Created Leaflet map directories for Georgia film locations, aerospace, and B2B recycling programs.
 
-**Co‑founder and CEO**
+**CEO and Lead Engineer**
 DreamStudio – Atlanta, GA
 2000 – Present
 
@@ -57,14 +56,14 @@ Georgia State Parks and Historic Sites – Georgia
 - Built account management tools supporting campground host volunteer background checks.
 - Created wireless ticketing for Sam Shortline excursion trains.
 
-**Project Manager / Lead Software Engineer / UX/UI Designer**
+**Project Manager / Lead Engineer / UX/UI Designer**
 Interactive Planet, Inc. (Southern Company) – Atlanta, GA
 1995 – 2000
 
 - Developed news management system used by seven Southern Company affiliates to syndicate content across power company websites.
 - Served as the first full‑time employee at Interactive Planet, which grew to 30 employees prior to forming my own company, DreamStudio.
 
-**Computational Science Research Developer**
+**Computational Science Research**
 Georgia Tech – Network Dynamics Lab – Atlanta, GA
 2018 – 2019
 
