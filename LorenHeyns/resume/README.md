@@ -32,10 +32,10 @@ Georgia Department of Economic Development – Atlanta, GA
 - Created Leaflet map directories for Georgia film locations, aerospace, and B2B recycling programs.
 
 <!--
-- IT Admin, SharePoint and Salesforce Admin, Help Desk support, Partner Tool app support, Hardware and software support, inventory and procurement workflow forms
-- Management of CognitoForms for hundreds of workflow processes for our staff of 180.
-- GeorgiaTech Smart Communities intern project manager for impact analysis tools, with county job level, energy, land use and value added.
-- Admin and dev for apps supporting Georgia film locations, aerospace, and B2B recycling programs.
+- IT Admin, SharePoint and Salesforce Admin, Help Desk support, Partner Tool app support, Hardware and software support, inventory and procurement workflow automation
+- Management of Cognito Forms for several hundred workflow processes for our staff of 180.
+- GeorgiaTech Smart Communities intern project director for impact analysis tools, with county job level, energy, land use and value added.
+- Admin and programming for apps supporting Georgia film locations, trade, aerospace, and B2B recycling.
 -->
 
 <div class="pagebreak"></div>
