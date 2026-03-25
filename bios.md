@@ -96,6 +96,15 @@ Yogesh is a Data Scientist & Full-Stack Developer on a mission to unlock data's 
 [My Recent Work ~ Get In Touch](https://yogeshgajula.com)
 </div>
 
+---
+![Mohammad Thousif Udayagiri](https://avatars.githubusercontent.com/ThousifMd)
+<div class="bioText" markdown="1">
+## Mohammad Thousif Udayagiri
+Mohammad is a Data Analyst and Full Stack Developer with a Master's in MIS from Oklahoma State University. At DreamStudio Earth he built the interactive Exiobase Sankey diagram and trade flow map now live on model.earth, contributing to the platform's push toward real-time international environmental impact visualization. He is currently a Technology Analyst at Northern Arizona University.
+[CV Page](https://thousifmd.github.io/cv/ThousifMd/)
+</div>
+
 -->
+
 
 

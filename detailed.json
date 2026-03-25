@@ -1,0 +1,156 @@
+{
+  "basics": {
+    "name": "Mohammad Thousif Udayagiri",
+    "label": "Data Analyst & Full Stack Developer",
+    "email": "thousifudayagiri24@gmail.com",
+    "phone": "(405) 269-2515",
+    "url": "https://github.com/ThousifMd",
+    "summary": "Data Analyst and Full Stack Developer with 3+ years of experience spanning environmental data visualization, higher education analytics, business intelligence, and AI tooling. Built interactive trade flow visualizations now live on model.earth using EXIOBASE international data. Strong background in Python automation, JavaScript front-end visualization, LLM integrations, and SQL optimization.",
+    "location": {
+      "city": "Flagstaff",
+      "region": "Arizona",
+      "countryCode": "US"
+    },
+    "profiles": [
+      {
+        "network": "GitHub",
+        "username": "ThousifMd",
+        "url": "https://github.com/ThousifMd"
+      }
+    ]
+  },
+  "work": [
+    {
+      "organization": "DreamStudio Earth / ModelEarth",
+      "position": "Full Stack Developer, Data Science",
+      "url": "https://model.earth",
+      "startDate": "2025-09-06",
+      "endDate": "2026-03-23",
+      "summary": "Contributed to ModelEarth, an open source environmental impact visualization platform built on EXIOBASE international trade flow data and US EPA USEEIO models.",
+      "highlights": [
+        "Built an interactive Apache ECharts Sankey diagram visualizing industry-to-industry embodied CO2, water, and employment flows using live CSV data fetched from the ModelEarth trade-data pipeline. Resolved DAG cycle conflicts through topological sort and bidirectional edge deduplication. Live at model.earth/profile/trade/map/sankey.html.",
+        "Upgraded the Trade Flow Map to pull real bilateral Exiobase import data for five countries, replacing hardcoded dummy data. Added animated flowing arrows with proportional thickness by CO2 value, hover tooltips, click-to-pin interactions, and CSV caching for instant country switching.",
+        "Traced and fixed a broken data pipeline causing four Apache ECharts visualization panels to render empty, identifying incorrect data URLs, missing CSV files, and mismatched column mappings, restoring all four charts with live international trade flow data.",
+        "Implemented on-demand lazy loading for country data on the UN Goal Timeline page, reducing initial load times through JavaScript optimization.",
+        "Built a Python CLI tool automating execution of core machine learning models via YAML parameter files, supporting both file paths and URLs, producing clean output files adopted immediately by the team."
+      ]
+    },
+    {
+      "organization": "Oklahoma State University",
+      "position": "Graduate Research Assistant, Data Analyst",
+      "url": "https://okstate.edu",
+      "startDate": "2023-08-01",
+      "endDate": "2025-05-01",
+      "summary": "Research data analyst supporting K-12 program operations and institutional reporting across 150+ schools serving 13,000+ students.",
+      "highlights": [
+        "Built and maintained datasets for K-12 program operations across 150+ schools serving 13,000+ students, managing data integrity and extractions for institutional analysis and reporting.",
+        "Performed statistical analysis including regression, time series, and classification modeling to answer complex research questions about student enrollment, participation, and completion patterns.",
+        "Created and maintained Tableau and Power BI dashboards for university leadership and program coordinators, developing visualizations that informed strategic decisions.",
+        "Compiled and reported institutional data elements for state compliance reporting and external surveys, collaborating with university reporting teams to ensure accurate and timely submissions.",
+        "Designed observational studies, developed and administered Qualtrics surveys to 10,000+ participants, and evaluated research operations protocol ensuring data collection quality.",
+        "Presented findings to university stakeholders translating complex analytical results into actionable recommendations, analyzed enrollment trends and retention patterns supporting strategic planning."
+      ]
+    },
+    {
+      "organization": "Cognizant Technology Solutions",
+      "position": "Data Analyst",
+      "url": "https://cognizant.com",
+      "startDate": "2022-10-01",
+      "endDate": "2023-06-01",
+      "summary": "Data analyst working on Salesforce IoT device data analysis and business intelligence reporting.",
+      "highlights": [
+        "Analyzed 1TB+ weekly Salesforce IoT device data, delivering usage and engagement insights that drove a 15% increase in device monetization.",
+        "Improved data quality by 25% through cleaning and transforming large datasets in AWS Glue and SQL.",
+        "Partnered with stakeholders to optimize Redshift reporting schemas, reducing dashboard query latency by 40%.",
+        "Delivered interactive Tableau dashboards to track device engagement KPIs, enabling teams to identify underperforming regions and capture $200K in new revenue opportunities."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Oklahoma State University",
+      "area": "Management Information Systems",
+      "studyType": "Master of Science",
+      "startDate": "2023-08-01",
+      "endDate": "2025-05-01",
+      "score": "3.96",
+      "location": "Stillwater, Oklahoma"
+    }
+  ],
+  "skills": [
+    {
+      "name": "Programming and Scripting",
+      "keywords": ["Python", "JavaScript", "SQL", "R", "Bash", "NumPy", "SciPy", "Pandas"]
+    },
+    {
+      "name": "AI and LLM Tools",
+      "keywords": ["OpenAI GPT-4", "Anthropic Claude", "LangChain", "MCP Protocol", "n8n Workflow Automation", "Prompt Engineering", "RAG Pipelines", "Claude Code", "Cursor AI"]
+    },
+    {
+      "name": "Data Visualization",
+      "keywords": ["Apache ECharts", "D3.js", "Leaflet.js", "Power BI", "Tableau", "MS Excel", "Chart.js"]
+    },
+    {
+      "name": "Data Platforms and Warehousing",
+      "keywords": ["AWS S3", "AWS Glue", "Redshift", "Lambda", "CloudWatch", "Snowflake", "SQL Server", "Supabase", "PostgreSQL"]
+    },
+    {
+      "name": "ETL and Orchestration",
+      "keywords": ["Apache Airflow", "AWS Glue", "DBT", "Shell Scripting"]
+    },
+    {
+      "name": "Analytics and Modeling",
+      "keywords": ["Data Cleaning", "Statistical Analysis", "Predictive Modeling", "A/B Testing", "Regression Analysis", "Time Series Analysis"]
+    },
+    {
+      "name": "DevOps and Collaboration",
+      "keywords": ["Git", "GitHub", "CI/CD Pipelines", "Docker", "Jira", "Agile/Scrum"]
+    }
+  ],
+  "projects": [
+    {
+      "name": "AI-Powered Day Trading Agent",
+      "description": "Automated trading analysis workflow using n8n, processing 300+ candlestick data points across three timeframes via 12data API, delivering real-time buy/sell/hold signals through a Telegram bot interface.",
+      "highlights": [
+        "Engineered automated workflow in n8n processing 300+ market data points across 1-min, 15-min, and 1-hour timeframes, reducing analysis time from hours to seconds.",
+        "Integrated NewsAPI for 24-hour news sentiment scoring using OpenAI GPT-4, delivering real-time trading signals with entry price, stop-loss, and target exit points via Telegram bot.",
+        "Built custom JavaScript data transformation logic to optimize JSON structure for AI model ingestion across four integrated APIs."
+      ],
+      "keywords": ["n8n", "JavaScript", "OpenAI GPT-4", "Telegram API", "12data API", "NewsAPI", "Workflow Automation"]
+    },
+    {
+      "name": "API Lens — AI API Analytics Gateway",
+      "description": "Multi-tenant AI API gateway proxying requests to OpenAI and Anthropic with real-time analytics, natural language querying, and role-based access control.",
+      "highlights": [
+        "Designed and built a multi-tenant AI API gateway with real-time logging of costs, tokens, and latency to a Supabase PostgreSQL database with company-based data isolation.",
+        "Implemented a natural language to SQL analytics layer allowing dashboard users to query usage patterns conversationally, with smart chart recommendations rendered via Chart.js.",
+        "Architected JWT and API key dual authentication with role-based access control across admin, cost manager, and developer roles."
+      ],
+      "keywords": ["Python", "FastAPI", "PostgreSQL", "Supabase", "OpenAI", "Anthropic", "Chart.js", "JWT"]
+    },
+    {
+      "name": "MCP Mood Tracking System",
+      "description": "MCP server that classifies mood and topic from AI conversation prompts in parallel using GPT-4o-mini, with PostgreSQL-backed time-series reporting and weekly mood trend analysis.",
+      "highlights": [
+        "Built an MCP server classifying mood and topic from AI conversation prompts in parallel using GPT-4o-mini, storing results in PostgreSQL with sub-3 second end-to-end latency.",
+        "Exposed reporting tools enabling weekly mood trend analysis across topics, generating natural language summaries of emotional patterns across 100+ conversation events.",
+        "Implemented async parallel classification pipeline using asyncio, cutting classification time by 40% compared to sequential processing."
+      ],
+      "keywords": ["Python", "MCP Protocol", "PostgreSQL", "GPT-4o-mini", "asyncio", "FastAPI"]
+    }
+  ],
+  "certificates": [
+    {
+      "name": "Tableau Desktop Specialist",
+      "issuer": "Tableau"
+    },
+    {
+      "name": "Azure AI Fundamentals",
+      "issuer": "Microsoft"
+    },
+    {
+      "name": "AWS Certified Cloud Practitioner",
+      "issuer": "Amazon Web Services"
+    }
+  ]
+}
