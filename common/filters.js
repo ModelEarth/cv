@@ -308,6 +308,19 @@
           padding: 20px;
           line-height: 1.6;
         }
+        .dark .cv-data-preview {
+          background: #1f1f1f;
+          border: 1px solid #3f3f3f;
+          color: #e4e4e4;
+        }
+        .dark .cv-data-status {
+          color: #b8b8b8;
+        }
+        .dark .cv-readme-content {
+          background: #1f1f1f;
+          border-color: #3f3f3f;
+          color: #e4e4e4;
+        }
         .dark .pdf-info {
           background: #1e2c36;
           color: #d8e8f5;
