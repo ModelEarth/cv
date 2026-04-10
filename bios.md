@@ -1,19 +1,20 @@
+## Lead Engineers
+
 <div markdown="1">
-**CV Automation**
 [Yash Gondkar](YashGondkar)
+[Noor Fathima](NoorFathima)
 [Loren Heyns](LorenHeyns)
 [Mohammed Saalim](MohammedSaalim)
-[Shanmuga Priya Kannan](ShanmugaPriyaKannan) - Projects section
-[Satvik Praveen](extract) - JSON drop to convert<!--
+[Shanmuga Priya Kannan](ShanmugaPriyaKannan)<!-- Projects section -->
+
+<!--
+[Satvik Praveen](extract) - JSON drop to convert-->
+<!--
 [Thanmayi Sai](ThanmayiSai)-->
-[Rekha Chimpiri](RekhaChimpiri)
-[Noor](Noor)
-</div>
+<!--[Rekha Chimpiri](RekhaChimpiri) -->
 
+</div><br>
 
-# Our Bios
-
-Example of upcoming list format
 
 ![Sugandha Bhandari](https://dreamstudio.com/earth/img/team/Sugandha-Bhandari.jpg)
 <div class="bioText" markdown="1">

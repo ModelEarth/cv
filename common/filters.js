@@ -4,7 +4,6 @@
  * 
  * Usage:
  *   CVFilters.init({
- *     personFolder: 'YashGondkar',
  *     defaultJson: 'detailed.json',
  *     defaultTheme: 'elegant',
  *     defaultPDF: 'https://example.com/resume.pdf',
@@ -33,14 +32,32 @@
     return Array.from(document.querySelectorAll(selector));
   }
 
+  function detectPersonFolder() {
+    const segments = window.location.pathname.split('/').filter(Boolean);
+    if (!segments.length) return '';
+
+    const lastSegment = segments[segments.length - 1];
+    const folderSegment = lastSegment.includes('.')
+      ? segments[segments.length - 2]
+      : lastSegment;
+
+    if (!folderSegment) return '';
+
+    try {
+      return decodeURIComponent(folderSegment);
+    } catch {
+      return folderSegment;
+    }
+  }
+
   // Configuration
   let config = {
     personFolder: '',
     defaultJson: 'detailed.json',
     defaultTheme: 'elegant',
     defaultPDF: '',
-    syncResumeParam: true,
-    autoDetectJsonFiles: true,
+    syncResumeParam: false,
+    autoDetectJsonFiles: false,
     showReadme: true,
     showDataPreview: true
   };
@@ -87,8 +104,6 @@
     const params = { theme };
     if (config.syncResumeParam) {
       params.resume = jsonFile;
-    } else {
-      params.resume = '';
     }
     setParam(params);
   }
@@ -131,7 +146,7 @@
   }
 
   function renderJsonOptions(selectedFile) {
-    return getJsonCandidates()
+    return Array.from(new Set([selectedFile || config.defaultJson].filter(Boolean)))
       .map((file) => `<option value="${file}"${file === selectedFile ? ' selected' : ''}>${file}</option>`)
       .join('\n');
   }
@@ -324,14 +339,12 @@
         </div>
 
         <iframe id="cvThemePreview" class="cv-iframe-preview"></iframe>
-        <pre id="cvDataPreview" class="cv-data-preview">Loading JSON…</pre>
-        <div id="cvDataStatus" class="cv-data-status"></div>
-      </div>
-
-      <div class="cv-filters-section" id="cvReadmeSection">
-        <h3>Notes (from README.md)</h3>
-        <div id="cvReadmeContent" class="cv-readme-content">
-          <em>Loading README.md...</em>
+        <div class="content contentpadding">
+          <div id="cvReadmeSection">
+            <div id="cvReadmeContent" class="cv-readme-content"></div>
+          </div>
+          <pre id="cvDataPreview" class="cv-data-preview">Loading JSON…</pre>
+          <div id="cvDataStatus" class="cv-data-status"></div>
         </div>
       </div>
     `;
@@ -668,19 +681,17 @@
     target.dataset.ready = 'true';
   }
 
-  // Load README.md
-  async function loadReadme() {
+  // Load README.md into the existing #cvReadmeContent container.
+  function loadReadme() {
     const readmeContent = select('#cvReadmeContent');
+    if (!readmeContent) return;
 
-    try {
-      const res = await fetch('./README.md', { cache: 'no-store' });
-      if (!res.ok) throw new Error('README not found');
-
-      const text = await res.text();
-      readmeContent.innerHTML = text.replace(/\n/g, '<br>');
-    } catch {
-      readmeContent.innerHTML = "<p style='color:red;'>Failed to load README.md.</p>";
+    if (typeof loadMarkdown === 'function') {
+      loadMarkdown('README.md', 'cvReadmeContent', '_parent');
+      return;
     }
+
+    readmeContent.innerHTML = "<p style='color:red;'>Failed to load README.md.</p>";
   }
 
   // Setup event listeners
@@ -713,6 +724,9 @@
   function init(options = {}) {
     // Merge config
     config = Object.assign({}, config, options);
+    if (!config.personFolder) {
+      config.personFolder = detectPersonFolder();
+    }
     if (config.defaultPDF && typeof options.syncResumeParam === 'undefined') {
       config.syncResumeParam = false;
     }
@@ -742,10 +756,9 @@
       if (dataStatus) dataStatus.style.display = 'none';
     }
 
-    // Get initial values from URL or use defaults
-    const jsonFile = config.syncResumeParam
-      ? getParam('resume', config.defaultJson)
-      : config.defaultJson;
+    // Honor explicit ?resume= links, but do not write resume back into the URL
+    // unless the page opts into syncResumeParam.
+    const jsonFile = getParam('resume', config.defaultJson);
     const theme = getParam('theme', config.defaultTheme);
 
     // Set dropdown values

@@ -1,6 +1,4 @@
-# PLAN - CV display from PDF source files
-
-## TO DO
+## PLAN.md
 
 1. **Find theme source repo Github link** initially copied for our theme display process. Clues might be in the "extract" folder.
 
@@ -74,10 +72,9 @@ Only pages from significant contributors are activated, but start working on you
 1. Create folder under `cv/YourName/`
 2. Add `detailed.json` with resume data
 3. Copy index.html template from `YashGondkar/index.html`
-4. Update `personFolder` in initialization:
+4. Initialize `CVFilters`:
    ```javascript
    CVFilters.init({
-     personFolder: 'YourName',
      defaultJson: 'detailed.json',
      defaultTheme: 'elegant'
    });
@@ -86,7 +83,6 @@ Only pages from significant contributors are activated, but start working on you
 ### To Customize Filters:
 ```javascript
 CVFilters.init({
-  personFolder: 'YourName',
   defaultJson: 'detailed.json',
   defaultTheme: 'elegant',
   showReadme: false,        // Hide README section

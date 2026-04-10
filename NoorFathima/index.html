@@ -62,6 +62,16 @@
 
   <script src="../common/filters.js"></script>
   <script>
+    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+
+    function getPdfErrorMessage(error) {
+      const message = error && error.message ? error.message : "";
+      if (isLocalhost) {
+        return message ? `❌ Failed to load PDF: ${message}` : "❌ Failed to load PDF.";
+      }
+      return "❌ PDF unavailable, using JSON data instead";
+    }
+
     // PDF configuration - Set your PDF URL here
     const PDF_CONFIG = {
       pdfUrl: "./Noor_Res.pdf" // Use local PDF file or external URL
@@ -103,7 +113,7 @@
           },
           onError: (error) => {
             statusDiv.className = "pdf-status pdf-error";
-            statusDiv.textContent = `❌ Failed to load PDF: ${error.message}`;
+            statusDiv.textContent = getPdfErrorMessage(error);
             console.error("[ResumePDFConverter] Error:", error);
           }
         });
@@ -111,7 +121,7 @@
         return jsonData;
       } catch (error) {
         statusDiv.className = "pdf-status pdf-error";
-        statusDiv.textContent = `❌ Error: ${error.message}`;
+        statusDiv.textContent = getPdfErrorMessage(error);
         console.error("[loadPdfResume] Error:", error);
         return null;
       }
@@ -146,7 +156,6 @@
 
     // Initialize CVFilters
     CVFilters.init({
-      personFolder: 'Noor',
       defaultJson: 'detailed.json',
       defaultTheme: 'elegant'
     });

@@ -493,8 +493,11 @@ const actualJobs = output * jobCoefficient;
     }
 
     function loadTheme(jsonFile, theme) {
+      const pathParts = window.location.pathname.split('/').filter(Boolean);
+      const lastPart = pathParts[pathParts.length - 1];
+      const folderName = lastPart.includes('.') ? pathParts[pathParts.length - 2] : lastPart;
       // Convert local path to path relative to common folder for iframe
-      const iframeJsonPath = jsonFile.startsWith('../') ? jsonFile : `../MohammedSaalim/${jsonFile}`;
+      const iframeJsonPath = jsonFile.startsWith('../') ? jsonFile : `../${folderName}/${jsonFile}`;
       const url = `../common/theme.html?resume=${encodeURIComponent(iframeJsonPath)}&theme=${encodeURIComponent(theme)}`;
       const start = performance.now();
 
