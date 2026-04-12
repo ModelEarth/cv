@@ -8,8 +8,10 @@
   --border-subtle: #bae6fd;
   --chip-bg: #e0f2fe;
   --chip-text: #0369a1;
+  .dark {
+    --text-muted: #3AA6E8;
+  }
 }
-
 #resumeContainer {
   border: 1px solid var(--border-subtle);
 }
@@ -19,5 +21,5 @@
 }
 
 .section-title {
-  color: var(--text-muted);
+  color: var(--text-muted) !important;
 }

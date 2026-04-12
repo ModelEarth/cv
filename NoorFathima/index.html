@@ -18,8 +18,9 @@
     }
 
     .pdf-status {
+      border: 1px solid #ddd;
       padding: 10px;
-      border-radius: 6px;
+      border-radius: 14px;
       margin: 10px 0;
       font-size: 13px;
     }
@@ -57,7 +58,7 @@
 
 <body>
 
-  <div id="cvFiltersContainer"></div>
+  
   <div id="pdfStatusContainer"></div>
 
   <script src="../common/filters.js"></script>
@@ -74,7 +75,7 @@
 
     // PDF configuration - Set your PDF URL here
     const PDF_CONFIG = {
-      pdfUrl: "./Noor_Res.pdf" // Use local PDF file or external URL
+      pdfUrl: "" // Use local PDF file or external URL
     };
 
     // Load PDF resume if configured
@@ -87,7 +88,7 @@
       if (!pdfStatusContainer) return null;
 
       const statusDiv = document.createElement("div");
-      statusDiv.className = "pdf-status pdf-loading";
+      statusDiv.className = "pdf-status pdf-loading content contentpadding";
       statusDiv.textContent = `📄 Loading PDF resume: ${PDF_CONFIG.pdfUrl}...`;
       pdfStatusContainer.appendChild(statusDiv);
 
@@ -107,12 +108,12 @@
         const jsonData = await ResumePDFConverter.init({
           pdfUrl: PDF_CONFIG.pdfUrl,
           onSuccess: (data) => {
-            statusDiv.className = "pdf-status pdf-success";
+            statusDiv.className = "pdf-status pdf-success content contentpadding";
             statusDiv.textContent = `✅ PDF loaded successfully! Name: ${data.basics.name || "Resume"}`;
             console.log("[ResumePDFConverter] PDF loaded, name:", data.basics.name);
           },
           onError: (error) => {
-            statusDiv.className = "pdf-status pdf-error";
+            statusDiv.className = "pdf-status pdf-error content contentpadding";
             statusDiv.textContent = getPdfErrorMessage(error);
             console.error("[ResumePDFConverter] Error:", error);
           }
@@ -120,7 +121,7 @@
 
         return jsonData;
       } catch (error) {
-        statusDiv.className = "pdf-status pdf-error";
+        statusDiv.className = "pdf-status pdf-error content contentpadding";
         statusDiv.textContent = getPdfErrorMessage(error);
         console.error("[loadPdfResume] Error:", error);
         return null;

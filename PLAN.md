@@ -1,21 +1,14 @@
 ## PLAN.md
 
-1. **Find theme source repo Github link** initially copied for our theme display process. Clues might be in the "extract" folder.
+1. **Add an input field for pasting an external resume .PDF URLs** on the [extract page](extract/). We'll use this to output .json for the AI Builder to place in the their cv folder.
 
-2. **Add an input field for pasting an external resume .PDF URLs** on the extract/index.html page. We'll use this to confirm that resumes can be pulled from .PDF files and converted to .json for display in templates without the need to place the resume on the same server as the templates.
+2. **Move SatvikPraveen** resume from "extract" to his own folder. Remove/move references to SatvikPraveen in the "extract" folder.
 
-3. **Move SatvikPraveen** resume to his own folder. Remove/move references to SatvikPraveen in the "extract" folder.
+3. **In the "work" node of the detailed.json file**, use the order of the fields to set the bold title for each work (job) listed. The Harvard standard is "organization" first. Include support for the term "organization" as an alternative to "company".
 
-4. **Add filters to other CV pages** that don't currently have them
+4. **Auto-detect JSON files** in person folder.
 
-5. **In the "work" node of the detailed.json file**, use the order of the fields to set the bold title for each work (job) listed. The Harvard standard is "organization" first. Include support for the term "organization" as an alternative to "company".
-
-6. **Test use of .dark css which is provided by toggle in header**
-
-7. **Auto-detect JSON files** per person folder
-
-8. **Determine if the safe select will result in errors** if jQuery is added **AFTER** the following $ select runs in filters.js
-
+5. **Determine if the safe select will result in errors** if jQuery is added **AFTER** the following $ select runs in filters.js
 
 ### Before Refactoring
 ```javascript

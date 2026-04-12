@@ -19,9 +19,6 @@
 </head>
 
 <body>
-
-  <div id="cvFiltersContainer"></div>
-
   <script src="../common/filters.js"></script>
   <script>
     // Custom initialization for use-iframe.html
@@ -51,7 +48,7 @@
     });
     
     // Add simple.json option to dropdown
-    const jsonSelect = CVFilters.select('#cvJsonSelect');
+    const jsonSelect = CVFilters.select('#sourceSelect');
     if (jsonSelect) {
       const simpleOption = document.createElement('option');
       simpleOption.value = 'simple.json';

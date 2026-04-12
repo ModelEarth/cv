@@ -22,86 +22,20 @@ param.showsearch = "false"; // Set to true to include search bar
 <script>
 loadMarkdown("README.md", "guidanceDiv", "_parent");
 loadMarkdown("common/README.md", "commonDiv", "_parent");
-loadMarkdown("bios.md", "bioDiv", "_parent");
 loadMarkdown("PLAN.md", "planDiv", "_parent");
 </script>
-
-<style>
-/*
-.bio {
-  clear:both;
-  margin-bottom: 20px;
-  display:block;
-}
-*/
-#bioDiv {
-  container-type: inline-size;
-}
-#bioDiv hr {
-  clear: both; /* since clear on p img tag did not work, and the p might not always be there. */
-  opacity:0;
-}
-#bioDiv p:has(img) {
-  float: left;
-  width: 180px;
-  margin: 0 30px 28px 0;
-}
-/* All images forced to circles, portraits cropped from bottom */
-#bioDiv img {
-    padding: 0px !important;
-    margin: 0 !important;
-    display: block;
-    width: 180px !important;
-    height: 180px !important;
-    min-width: 180px !important;
-    min-height: 180px !important;
-    border-radius: 50% !important;
-    object-fit: cover !important;
-    object-position: center top !important;
-}
-.bioText {
-  /*display: flow-root; */
-  overflow:auto;
-  margin-bottom: 28px;
-}
-
-.bioText h2 {
-  margin: 0 0 8px;
-}
-@container (max-width: 760px) {
-  #bioDiv p:has(img) {
-    float: none;
-    clear: both;
-    width: auto;
-    margin: 0 0 12px 0;
-  }
-  .bioText {
-    overflow: visible;
-    margin-bottom: 22px;
-  }
-}
-@media print {
-  .bioimage img {
-      width: 140px !important;
-      height: 140px !important;
-      min-width: 140px !important;
-      min-height: 140px !important;
-  }
-  #toplogos {
-    margin-top: -40px;
-    padding-bottom: 20px;
-  }
-}
-</style>
 
 </head>
 
 <body>
-<div class="content contentpadding large-list">
+<div class="content contentpadding">
+
+  <div id="bioList" class="content bioList bioListSm"></div>
+  <script src="common/filters.js"></script>
+
   <div id="guidanceDiv"></div>
   
   <div id="readmeDiv"></div>
-  <div id="bioDiv"></div>
   <div id="planDiv"></div>
 
   <div id="commonDiv"></div>

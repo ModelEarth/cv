@@ -1,0 +1,137 @@
+/* cv/common/cv.css - Shared resume display styles loaded by filters.js */
+
+.dark {
+    --chip-text: #ccc;
+    --text-muted: #bbb;
+}
+
+#resumeContainerX, .contentPanelX {
+  border-radius: 24px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 20px 40px rgba(248, 148, 60, 0.4);
+}
+
+.content {
+  max-width: 950px;
+}
+#resumeContainer, .contentPanel {
+
+    backgroundX: #f4f4f4;
+    borderX: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    line-height: 1.6;
+    margin-bottom: 18px;
+}
+
+.containingDiv {
+  container-type: inline-size;
+}
+.containingDiv .top-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 18px;
+  margin-bottom: 10px;
+}
+.containingDiv .top-side {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.containingDiv .contact-item {
+  margin-bottom: 2px;
+}
+.containingDiv .top-side a {
+  color: inherit;
+}
+#resumeContainer .name {
+  font-size: 30px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+#resumeContainer .label {
+  font-size: 15px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.containingDiv .layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.containingDiv .col-main { flex: 2; }
+.containingDiv .col-side { flex: 1; }
+
+@container (min-width: 600px) {
+  .containingDiv .top-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .containingDiv .top-side {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .containingDiv .layout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+#resumeContainer .section {
+  margin-bottom: 4px;
+}
+#resumeContainer .section-title {
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+#resumeContainer .item {
+  margin-bottom: 10px;
+}
+#resumeContainer .item-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+#resumeContainer .item-sub {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+#resumeContainer .item-summary {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+#resumeContainer .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+#resumeContainer .chip {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: var(--chip-bg);
+  color: var(--chip-text);
+  border: 1px solid rgba(0,0,0,0.02);
+}
+
+#resumeContainer .summary-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-main);
+  margin-bottom: 16px;
+}
+
+#resumeContainer .pill-section {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(0,0,0,0.03);
+}

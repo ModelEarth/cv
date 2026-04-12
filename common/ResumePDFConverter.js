@@ -27,6 +27,10 @@
 const ResumePDFConverter = {
   pdfjsLib: null,
   isInitialized: false,
+  rawText: '',
+  pdfMetadata: {},
+  pdfNumPages: 0,
+  lastResponseHeaders: {},
 
   /**
    * Initialize CVFilters with PDF source
@@ -53,6 +57,7 @@ const ResumePDFConverter = {
 
       // Extract text from PDF
       const text = await this._extractTextFromPdf(arrayBuffer);
+      this.rawText = text;
 
       // Parse text to JSON Resume format
       const jsonData = this._parseResumeText(text);
@@ -73,38 +78,22 @@ const ResumePDFConverter = {
   },
 
   /**
-   * Ensure PDF.js library is loaded
+   * Ensure PDF.js library is loaded (lazy — only imported on first use)
    */
   async _ensurePdfjsReady() {
-    if (this.pdfjsLib) {
-      return;
-    }
+    if (this.pdfjsLib) return;
 
-    // Check if already available
     if (window.pdfjsLib) {
       this.pdfjsLib = window.pdfjsLib;
       return;
     }
 
-    // Wait for pdfjs-ready event
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error("PDF.js did not load within 10 seconds"));
-      }, 10000);
-
-      const handler = () => {
-        clearTimeout(timeout);
-        window.removeEventListener("pdfjs-ready", handler);
-        this.pdfjsLib = window.pdfjsLib;
-        if (!this.pdfjsLib) {
-          reject(new Error("PDF.js library not found"));
-        } else {
-          resolve();
-        }
-      };
-
-      window.addEventListener("pdfjs-ready", handler);
-    });
+    const pdfModule = await import("/cv/extract/vendor/pdf.mjs");
+    if (pdfModule.GlobalWorkerOptions) {
+      pdfModule.GlobalWorkerOptions.workerSrc = "/cv/extract/vendor/pdf.worker.mjs";
+    }
+    window.pdfjsLib = pdfModule;
+    this.pdfjsLib = pdfModule;
   },
 
   /**
@@ -115,6 +104,11 @@ const ResumePDFConverter = {
     if (!response.ok) {
       throw new Error(`Failed to fetch PDF: ${response.statusText}`);
     }
+    this.lastResponseHeaders = {
+      lastModified: response.headers.get('Last-Modified') || '',
+      contentLength: response.headers.get('Content-Length') || '',
+      contentType: response.headers.get('Content-Type') || '',
+    };
     return await response.arrayBuffer();
   },
 
@@ -137,6 +131,14 @@ const ResumePDFConverter = {
     const loadingTask = this.pdfjsLib.getDocument({ data: arrayBuffer });
     const pdf = await loadingTask.promise;
 
+    this.pdfNumPages = pdf.numPages;
+    try {
+      const meta = await pdf.getMetadata();
+      this.pdfMetadata = meta.info || {};
+    } catch (_e) {
+      this.pdfMetadata = {};
+    }
+
     let fullText = "";
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
       const page = await pdf.getPage(pageNum);
@@ -153,25 +155,80 @@ const ResumePDFConverter = {
         return ax - bx;
       });
 
-      // Group text by line
+      // Column-separator threshold: 15% of the actual page width.
+      // This is far more reliable than font-size guesses and catches the
+      // large horizontal jump between a resume name (left) and contact info (right).
+      const pageView = page.view || [0, 0, 612, 792];
+      const colThreshold = (pageView[2] - pageView[0]) * 0.15;
+
+      // Group text by line, using horizontal gaps to decide separators:
+      //   end-to-start gap < 0.5 pt       → no separator  (split word, e.g. "Presen"+"t")
+      //   start-to-start gap > 15% pw     → tab            (column jump, e.g. name → contact)
+      //   wide pure-whitespace item        → tab flag       (explicit spacer in the PDF)
+      //   narrow pure-whitespace item      → skipped       (word space — don't emit '\t')
+      //   otherwise                        → space          (normal word gap)
+      //
+      // Spacer items are SKIPPED (not added to parts) to avoid turning ordinary word
+      // spaces like the one in "Loren Heyns" into '\t'. Wide spacers set a pending flag
+      // that forces '\t' on the next real text item regardless of gap size.
       const lines = [];
-      let currentLine = { y: null, text: [] };
+      let currentLine = {
+        y: null, parts: [], lastEndX: null, lastStartX: null, pendingColumnSep: false
+      };
 
       for (const item of items) {
         const y = (item.transform && item.transform[5]) || 0;
-        if (currentLine.y !== null && Math.abs(y - currentLine.y) > 0.5) {
-          if (currentLine.text.length > 0) {
-            lines.push(currentLine.text.join(" "));
+        const x = (item.transform && item.transform[4]) || 0;
+        const endX = x + (item.width || 0);
+        const isSpacer = item.str.length > 0 && item.str.trim() === '';
+
+        if (currentLine.y !== null && Math.abs(y - currentLine.y) > 2) {
+          // New line — flush the current one
+          if (currentLine.parts.length > 0) {
+            lines.push(currentLine.parts.join('').replace(/ {2,}/g, ' '));
           }
-          currentLine = { y: y, text: [item.str] };
-        } else {
+          currentLine = {
+            y, parts: isSpacer ? [] : [item.str],
+            lastEndX: isSpacer ? null : endX,
+            lastStartX: isSpacer ? null : x,
+            pendingColumnSep: false
+          };
+        } else if (isSpacer) {
+          // Spacer within a line: advance lastEndX but don't add to parts.
+          // Only set the pending flag when the spacer is wide enough to be a column separator.
+          if (currentLine.lastEndX !== null) {
+            currentLine.lastEndX = Math.max(currentLine.lastEndX, endX);
+          }
+          if ((item.width || 0) > colThreshold * 0.5) {
+            currentLine.pendingColumnSep = true;
+          }
+        } else if (currentLine.parts.length === 0) {
+          // First real text item on this line
           currentLine.y = y;
-          currentLine.text.push(item.str);
+          currentLine.parts.push(item.str);
+          currentLine.lastEndX = endX;
+          currentLine.lastStartX = x;
+        } else {
+          const endGap   = x - currentLine.lastEndX;    // gap after previous word ends
+          const startGap = x - currentLine.lastStartX;  // distance between start positions
+          let prefix;
+          if (currentLine.pendingColumnSep || startGap > colThreshold) {
+            prefix = '\t';          // wide spacer flag or large positional jump = column
+          } else if (endGap < 0) {
+            prefix = '';            // overlapping items = split character in font encoding
+          } else {
+            prefix = ' ';           // normal inter-word space
+          }
+          currentLine.pendingColumnSep = false;
+          currentLine.parts.push(prefix + item.str);
+          currentLine.y = y;
+          currentLine.lastEndX = endX;
+          currentLine.lastStartX = x;
         }
       }
 
-      if (currentLine.text.length > 0) {
-        lines.push(currentLine.text.join(" "));
+      if (currentLine.parts.length > 0) {
+        lines.push(currentLine.parts.join('').replace(/ {2,}/g, ' '));
       }
 
       fullText += lines.join("\n") + "\n\n";
@@ -184,42 +241,127 @@ const ResumePDFConverter = {
    * Parse resume text to JSON Resume format
    */
   _parseResumeText(text) {
-    // Clean and normalize text
+    // Clean and normalize text (tabs are preserved by _cleanText as column markers)
     const cleanedText = this._cleanText(text);
-    const lines = cleanedText.split("\n").map(l => l.trim()).filter(l => l.length > 0);
 
-    // Extract basic info
-    let name = lines[0] || "Resume";
-    if (name.includes("|")) {
-      name = name.split("|")[0].trim();
-    }
-    // Remove phone numbers from name
-    name = name.replace(/\s+\d+\s*[-–—]\s*\d+\s*[-–—]\s*\d+\s*$/, "").trim();
-
-    const email = this._extractEmail(cleanedText);
-    const phone = this._extractPhone(cleanedText);
-    const url = this._extractURL(cleanedText);
-    const location = this._extractLocation(cleanedText);
+    // Parse the header block (everything before the first section heading) into
+    // structured basics. This captures all contact items regardless of layout.
+    const basics = this._extractBasics(cleanedText);
 
     // Identify sections
     const sections = this._identifySections(cleanedText);
 
-    // Build JSON Resume object
     return {
       basics: {
-        name: name,
-        label: lines[1] || "",
-        email: email,
-        phone: phone,
-        url: url,
-        location: location,
+        ...basics,
         summary: sections.summary || sections.about || "",
       },
       work: this._parseWorkExperience(sections.experience || sections.work || ""),
       education: this._parseEducation(sections.education || ""),
       skills: this._parseSkills(sections.skills || sections["technical skills"] || ""),
       projects: this._parseProjects(sections.projects || ""),
+      certificates: this._parseSimpleList(sections.certifications || ""),
+      awards: this._parseSimpleList(sections.awards || ""),
+      volunteer: this._parseSimpleList(sections.volunteer || ""),
+      languages: this._parseSimpleList(sections.languages || ""),
+      interests: this._parseSimpleList(sections.interests || ""),
     };
+  },
+
+  /**
+   * Extract structured basics from the header block (everything before the first
+   * recognized section heading).
+   *
+   * Strategy:
+   *   1. Isolate the header block.
+   *   2. Split every line on tab and pipe to get individual "pieces".
+   *   3. Name = first piece of first line (before tab/pipe).
+   *   4. Remaining pieces are categorized: email, phone, URL, location.
+   *      The first piece that matches none of those becomes the job label.
+   *      All others (extra URLs, unrecognized text) go into profiles[].
+   */
+  _extractBasics(text) {
+    // --- 1. Isolate header block ---
+    const sectionHeadingRe = /^(?:summary|professional\s+summary|career\s+summary|profile|objective|about(?:\s+me)?|overview|experience|work\s+experience|professional\s+experience|work\s+history|employment(?:\s+history)?|education(?:al\s+background)?|academic(?:\s+background)?|qualifications?|skills|technical\s+skills|core\s+competencies|competencies|expertise|technologies|key\s+skills|projects?|portfolio|certifications?|certificates?|awards?|honors?|achievements?|volunteer(?:ing)?|community(?:\s+involvement)?|languages?|interests?|hobbies|activities)\s*$/im;
+    const sectionMatch = text.match(sectionHeadingRe);
+    const headerText = sectionMatch
+      ? text.substring(0, sectionMatch.index)
+      : text.substring(0, 800);
+
+    // --- 2. Collect pieces: split each line on tab and pipe ---
+    const pieces = [];
+    for (const line of headerText.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      for (const piece of trimmed.split(/\t|\s*\|\s*/)) {
+        const p = piece.trim();
+        if (p) pieces.push(p);
+      }
+    }
+
+    if (!pieces.length) {
+      return { name: 'Resume', label: '', email: '', phone: '', url: '', location: '', profiles: [] };
+    }
+
+    // --- 3. Name = first piece (may contain pipe/bullet separators before tab) ---
+    let name = pieces[0].split(/\s*[•·]\s*/)[0].trim() || 'Resume';
+    // Strip trailing phone-like digits from name
+    name = name.replace(/\s+\d[\d\s\-().]{5,}$/, '').trim() || 'Resume';
+
+    // --- 4. Categorize remaining pieces ---
+    const emailRe = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+    const phoneRe = /(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/;
+    // Known social/portfolio domains that may appear without "https://"
+    const knownDomainRe = /^(?:https?:\/\/|www\.|linkedin\.com|github\.com|gitlab\.com|twitter\.com|x\.com|behance\.net|dribbble\.com|portfolio\.|medium\.com|stackoverflow\.com)/i;
+    // Fallback: anything that looks like domain.tld/path
+    const looksLikeUrlRe = /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?$/;
+    // City, ST  or  City, Country
+    const locationRe = /^[A-Z][a-z](?:[a-z]|\s(?=[A-Z]))*,\s*(?:[A-Z]{2}|[A-Z][a-z]+)/;
+
+    let label = '', email = '', url = '', location = '';
+    const phones = [];
+    const profiles = [];
+
+    for (const piece of pieces.slice(1)) {
+      // Email
+      const emailMatch = piece.match(emailRe);
+      if (emailMatch) {
+        if (!email) email = emailMatch[0];
+        continue;
+      }
+      // Phone — collect all, not just first
+      if (phoneRe.test(piece) && /\d{7,}/.test(piece.replace(/\D/g, ''))) {
+        phones.push(piece.match(phoneRe)[0]);
+        continue;
+      }
+      // URL
+      if (knownDomainRe.test(piece) || looksLikeUrlRe.test(piece)) {
+        const fullUrl = /^https?:\/\//i.test(piece) ? piece : 'https://' + piece.replace(/^www\./i, '');
+        if (!url) {
+          url = fullUrl;
+        } else {
+          // Derive a human-readable network name from the domain
+          const domainMatch = piece.replace(/^https?:\/\//i, '').match(/^(?:www\.)?([^./]+)/);
+          const network = domainMatch ? domainMatch[1] : piece;
+          profiles.push({ network, url: fullUrl });
+        }
+        continue;
+      }
+      // Location
+      if (locationRe.test(piece)) {
+        if (!location) location = piece;
+        continue;
+      }
+      // First unrecognized piece → job label/title
+      if (!label) {
+        label = piece;
+        continue;
+      }
+      // Everything else: display as extra contact item in top-side
+      profiles.push({ network: '', url: '', display: piece });
+    }
+
+    return { name, label, email, phone, url, location, profiles };
   },
 
   /**
@@ -227,7 +369,8 @@ const ResumePDFConverter = {
    */
   _cleanText(text) {
     return text
-      .replace(/[ \t]+/g, " ")
+      .replace(/\b((?:19|20))[\s\u00a0\u200b\u200c\u200d\ufeff]+(\d{2})\b/g, '$1$2')
+      .replace(/ +/g, " ")
       .replace(/[-–—]/g, "-")
       .replace(/\n\s*\n\s*\n+/g, "\n\n")
       .replace(/\s+([.,;:])/g, "$1")
@@ -235,163 +378,261 @@ const ResumePDFConverter = {
   },
 
   /**
-   * Extract email from text
-   */
-  _extractEmail(text) {
-    const match = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-    return match ? match[0] : "";
-  },
-
-  /**
-   * Extract phone from text
-   */
-  _extractPhone(text) {
-    const match = text.match(/(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/);
-    return match ? match[0] : "";
-  },
-
-  /**
-   * Extract URL from text
-   */
-  _extractURL(text) {
-    const match = text.match(/(https?:\/\/[^\s]+)|(linkedin\.com\/[^\s]+)/i);
-    return match ? match[0] : "";
-  },
-
-  /**
-   * Extract location from text (first 10 lines only)
-   */
-  _extractLocation(text) {
-    const lines = text.split("\n").slice(0, 10).join("\n");
-    const match = lines.match(/(?<![\s\w])([A-Z][a-z]+),\s*([A-Z]{2}|[A-Z][a-z]+)(?![a-z])/);
-    return match ? match[0] : "";
-  },
-
-  /**
-   * Identify resume sections
+   * Identify resume sections by scanning line-by-line for known headings.
+   * Handles many common variations; first occurrence of each section wins.
    */
   _identifySections(text) {
     const sections = {};
-    const sectionPatterns = [
-      { name: "education", pattern: /(?:^|\n)\s*(?:EDUCATION|ACADEMIC)\s*(?:\n|$)/gi },
-      { name: "experience", pattern: /(?:^|\n)\s*(?:EXPERIENCE|PROFESSIONAL\s+EXPERIENCE|WORK\s+EXPERIENCE)\s*(?:\n|$)/gi },
-      { name: "projects", pattern: /(?:^|\n)\s*(?:PROJECTS|PORTFOLIO)\s*(?:\n|$)/gi },
-      { name: "skills", pattern: /(?:^|\n)\s*(?:TECHNICAL\s+SKILLS|SKILLS)\s*(?:\n|$)/gi },
-      { name: "summary", pattern: /(?:^|\n)\s*(?:PROFESSIONAL\s+SUMMARY|SUMMARY|ABOUT)\s*(?:\n|$)/gi },
-      { name: "about", pattern: /(?:^|\n)\s*(?:ABOUT|PROFILE)\s*(?:\n|$)/gi },
+
+    const sectionMap = [
+      { name: "summary",        re: /^(?:summary|professional\s+summary|career\s+summary|profile|objective|about(?:\s+me)?|overview)$/ },
+      { name: "experience",     re: /^(?:experience|work\s+experience|professional\s+experience|work\s+history|employment(?:\s+history)?|professional\s+background|career(?:\s+history)?)$/ },
+      { name: "education",      re: /^(?:education(?:al\s+background)?|academic(?:\s+background)?|qualifications?)$/ },
+      { name: "skills",         re: /^(?:skills|technical\s+skills|core\s+competencies|competencies|expertise|technologies|key\s+skills|tools(?:\s+[&+]\s+technologies)?)$/ },
+      { name: "projects",       re: /^(?:projects?|portfolio|personal\s+projects?|key\s+projects?|notable\s+projects?|selected\s+projects?)$/ },
+      { name: "certifications", re: /^(?:certifications?|certificates?|licenses?(?:\s+[&+]\s+certifications?)?|credentials?)$/ },
+      { name: "awards",         re: /^(?:awards?(?:\s+[&+]\s+(?:honors?|achievements?))?|honors?|achievements?|recognition)$/ },
+      { name: "volunteer",      re: /^(?:volunteer(?:ing|(?:\s+experience))?|community(?:\s+involvement)?|civic\s+involvement)$/ },
+      { name: "languages",      re: /^(?:languages?(?:\s+[&+]\s+tools?)?)$/ },
+      { name: "interests",      re: /^(?:interests?|hobbies|activities)$/ },
     ];
 
-    // Find all section matches first
-    const matches = [];
-    for (const { name, pattern } of sectionPatterns) {
-      // Reset regex lastIndex and create a fresh match
-      pattern.lastIndex = 0;
-      const match = pattern.exec(text);
-      if (match) {
-        matches.push({
-          name,
-          index: match.index,
-          endIndex: match.index + match[0].length,
-        });
+    const lines = text.split("\n");
+    const markers = []; // { name, startChar, endChar } of each header line
+    let charOffset = 0;
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      const lineEnd = charOffset + line.length + 1;
+
+      if (trimmed.length > 0 && trimmed.length <= 60) {
+        for (const { name, re } of sectionMap) {
+          if (re.test(trimmed.toLowerCase())) {
+            markers.push({ name, startChar: charOffset, endChar: lineEnd });
+            break;
+          }
+        }
       }
+
+      charOffset = lineEnd;
     }
 
-    // Sort matches by position
-    matches.sort((a, b) => a.index - b.index);
-
-    // Extract sections between matches
-    for (let i = 0; i < matches.length; i++) {
-      const match = matches[i];
-      const startIndex = match.endIndex;
-      const endIndex = i < matches.length - 1 ? matches[i + 1].index : text.length;
-      sections[match.name] = text.substring(startIndex, endIndex).trim();
+    for (let i = 0; i < markers.length; i++) {
+      const contentStart = markers[i].endChar;
+      const contentEnd = i + 1 < markers.length ? markers[i + 1].startChar : text.length;
+      if (!sections[markers[i].name]) {
+        sections[markers[i].name] = text.substring(contentStart, contentEnd).trim();
+      }
     }
 
     return sections;
   },
 
   /**
-   * Parse work experience section
+   * Parse work experience section using date ranges as entry boundaries.
+   *
+   * Two-pass approach: first tag every line, find date-range lines, then look
+   * back (up to 2 non-bullet/non-date lines) to find the title/company for each
+   * entry. This prevents the job title of entry N+1 from being absorbed into
+   * entry N's summary. Tab characters (column separators) split "Position\tCompany"
+   * on the same line.
    */
   _parseWorkExperience(text) {
     const entries = [];
-    const lines = text.split("\n").filter(l => l.trim());
-    
-    // Simple parsing - can be enhanced
-    let currentEntry = null;
-    for (const line of lines) {
-      // Look for company/position patterns
-      if (line.match(/^[A-Z][^•\n]+(?:•|$)/)) {
-        if (currentEntry) entries.push(currentEntry);
-        currentEntry = {
-          company: line.replace(/•.*$/, "").trim(),
-          position: "",
-          startDate: "",
-          endDate: "",
-          summary: "",
-        };
-      } else if (currentEntry) {
-        currentEntry.summary += (currentEntry.summary ? " " : "") + line;
+    if (!text) return entries;
+
+    const lines = text.split("\n").map(l => l.trim()).filter(l => l);
+    const bulletRe = /^[•·▪\-–*]\s+/;
+    const fullDateRangeRe = /\b(?:(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+)?\d{4}\s*(?:[-–—]+|\bto\b)\s*(?:(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+)?(?:\d{4}|[Pp]resent|[Cc]urrent)\b/i;
+
+    const tagged = lines.map(l => ({
+      line: l,
+      isDate: !!l.match(fullDateRangeRe),
+      isBullet: bulletRe.test(l),
+    }));
+
+    const dateIndices = tagged.reduce((acc, t, i) => (t.isDate ? [...acc, i] : acc), []);
+
+    if (dateIndices.length === 0) {
+      // No date ranges — treat first line as position, second as company
+      if (lines.length > 0) {
+        const tabIdx = lines[0].indexOf('\t');
+        const position = tabIdx > 0 ? lines[0].substring(0, tabIdx).trim() : lines[0];
+        const company  = tabIdx > 0 ? lines[0].substring(tabIdx + 1).trim() : (lines[1] || "");
+        const rest = lines.slice(tabIdx > 0 ? 1 : 2);
+        entries.push({
+          position, company, startDate: "", endDate: "",
+          summary: rest.filter(l => !bulletRe.test(l)).join(" "),
+          highlights: rest.filter(l => bulletRe.test(l)).map(l => l.replace(bulletRe, "").trim()),
+        });
+      }
+      return entries;
+    }
+
+    for (let di = 0; di < dateIndices.length; di++) {
+      const dateIdx = dateIndices[di];
+      const dateLine = tagged[dateIdx].line;
+      const dm = dateLine.match(fullDateRangeRe);
+      const dateParts = dm[0].split(/\s*(?:[-–—]+|\bto\b)\s*/i);
+      const startDate = (dateParts[0] || "").trim();
+      const endRaw    = (dateParts[1] || "").trim();
+      const endDate   = /present|current/i.test(endRaw) ? "" : endRaw;
+      const restOnDateLine = dateLine.replace(fullDateRangeRe, "").replace(/[|,·•\t]+/g, " ").trim();
+
+      // Look back up to 2 non-bullet/non-date lines immediately before the date line
+      const titleLines = [];
+      for (let j = dateIdx - 1; j >= 0 && titleLines.length < 2; j--) {
+        const t = tagged[j];
+        if (t.isDate || t.isBullet) break;
+        titleLines.unshift(t.line);
+      }
+
+      // Derive position and company from title lines (tab = column separator)
+      let position = "", company = "";
+      if (titleLines.length > 0) {
+        const firstTitle = titleLines[0];
+        const tabIdx = firstTitle.indexOf('\t');
+        if (tabIdx > 0) {
+          position = firstTitle.substring(0, tabIdx).trim();
+          company  = firstTitle.substring(tabIdx + 1).trim();
+          if (!company && titleLines.length > 1) company = titleLines[1];
+        } else {
+          position = firstTitle;
+          company  = titleLines[1] || "";
+        }
+      }
+      if (restOnDateLine && !position) position = restOnDateLine;
+      else if (restOnDateLine && !company) company  = restOnDateLine;
+
+      // Collect highlights and summary from lines after the date until the next date
+      const nextDateIdx = di + 1 < dateIndices.length ? dateIndices[di + 1] : tagged.length;
+      const afterDate = tagged.slice(dateIdx + 1, nextDateIdx);
+      const highlights = [];
+      let summary = "";
+      for (const t of afterDate) {
+        if (t.isBullet) {
+          highlights.push(t.line.replace(bulletRe, "").trim());
+        } else if (!t.isDate) {
+          if (!company) company = t.line;
+          else summary += (summary ? " " : "") + t.line;
+        }
+      }
+
+      if (position || company || startDate) {
+        entries.push({ position, company, startDate, endDate, summary, highlights });
       }
     }
-    if (currentEntry) entries.push(currentEntry);
 
     return entries;
   },
 
   /**
-   * Parse education section
+   * Parse education section with degree and date detection.
    */
   _parseEducation(text) {
     const entries = [];
-    const lines = text.split("\n").filter(l => l.trim());
-    
+    if (!text) return entries;
+
+    const lines = text.split("\n").map(l => l.trim()).filter(l => l);
+    const degreeRe = /\b(Bachelor[^,\n]*|Master[^,\n]*|Ph\.?D[^,\n]*|M\.?B\.?A[^,\n]*|B\.?S\.?|M\.?S\.?|B\.?A\.?|M\.?A\.?|Associate[^,\n]*|Doctor[^,\n]*)\b/i;
+    const yearRe = /\b(\d{4})\b/g;
+    const bulletRe = /^[•·▪\-–*]\s+/;
+
+    let current = null;
+
+    const flush = () => {
+      if (current && current.institution) entries.push(current);
+      current = { institution: "", studyType: "", area: "", startDate: "", endDate: "" };
+    };
+
     for (const line of lines) {
-      // Look for institution patterns
-      if (line.match(/^[A-Z]/)) {
-        entries.push({
-          institution: line,
-          studyType: "",
-          area: "",
-          startDate: "",
-          endDate: "",
-          location: "",
-        });
+      if (bulletRe.test(line)) continue;
+
+      const degreeMatch = line.match(degreeRe);
+      const years = [...line.matchAll(yearRe)].map(m => m[1]);
+
+      if (degreeMatch) {
+        if (!current) flush();
+        current.studyType = degreeMatch[0].trim();
+        // "in Computer Science" following the degree
+        const areaMatch = line.match(/\bin\s+([A-Z][^,\n]+)/i);
+        if (areaMatch) current.area = areaMatch[1].trim();
+        if (years.length) {
+          current.startDate = years[0];
+          current.endDate = years[1] || "";
+        }
+      } else if (years.length && current) {
+        if (!current.startDate) current.startDate = years[0];
+        if (!current.endDate && years[1]) current.endDate = years[1];
+      } else if (line.length > 2) {
+        // Institution or area line
+        flush();
+        current.institution = line;
       }
     }
 
+    flush();
     return entries;
   },
 
   /**
-   * Parse skills section
+   * Generic parser for list-style sections (certifications, awards, etc.)
+   */
+  _parseSimpleList(text) {
+    if (!text) return [];
+    const bulletRe = /^[•·▪\-–*]\s+/;
+    return text.split("\n")
+      .map(l => l.trim())
+      .filter(l => l.length > 0)
+      .map(l => ({ name: l.replace(bulletRe, "").trim() }));
+  },
+
+  /**
+   * Parse skills section.
+   * Handles three formats that PDFs produce after column-aware extraction:
+   *   "Languages:"              — standalone header line
+   *   "Languages: Python, JS"   — inline header + keywords
+   *   "Languages:\tPython, JS"  — tab-separated (left col = header, right = keywords)
    */
   _parseSkills(text) {
     const skills = [];
+    if (!text) return skills;
     const lines = text.split("\n").filter(l => l.trim());
-    
-    // Group skills by category if detected
+
     let currentCategory = "Skills";
-    const keywords = [];
-    
+    let keywords = [];
+
+    const pushCurrent = () => {
+      if (keywords.length > 0) {
+        skills.push({ name: currentCategory, keywords: [...keywords] });
+        keywords = [];
+      }
+    };
+
     for (const line of lines) {
-      if (line.match(/^[A-Z][^:]+:$/)) {
-        if (keywords.length > 0) {
-          skills.push({ name: currentCategory, keywords: [...keywords] });
-          keywords.length = 0;
+      // Split on tab to separate possible "Category:" from inline keywords
+      const tabIdx = line.indexOf('\t');
+      const mainPart = (tabIdx >= 0 ? line.substring(0, tabIdx) : line).trim();
+      const tabRest  = tabIdx >= 0 ? line.substring(tabIdx + 1).trim() : '';
+
+      // Category header: "Something:" or "Something Name: optional keywords..."
+      // Require at least one uppercase start and colon within first 35 chars of mainPart
+      const catMatch = mainPart.match(/^([A-Z][^:\n]{0,33}):\s*(.*)$/);
+      if (catMatch) {
+        pushCurrent();
+        currentCategory = catMatch[1].trim();
+        const inlineContent = (catMatch[2] + (tabRest ? ' ' + tabRest : '')).trim();
+        if (inlineContent) {
+          keywords.push(...inlineContent.split(/[,•]/).map(w => w.trim()).filter(w => w));
         }
-        currentCategory = line.replace(":", "").trim();
       } else {
-        // Extract keywords (comma or space separated)
-        const words = line.split(/[,•]/).map(w => w.trim()).filter(w => w);
-        keywords.push(...words);
+        // Plain keywords line — merge tab-separated parts with comma
+        const fullLine = tabRest ? `${mainPart}, ${tabRest}` : mainPart;
+        keywords.push(...fullLine.split(/[,•]/).map(w => w.trim()).filter(w => w));
       }
     }
-    
-    if (keywords.length > 0) {
-      skills.push({ name: currentCategory, keywords });
-    }
 
+    pushCurrent();
     return skills;
   },
 
@@ -418,6 +659,52 @@ const ResumePDFConverter = {
     if (currentProject) projects.push(currentProject);
 
     return projects;
+  },
+
+  /**
+   * Detect formatting issues in the raw extracted text that the user should fix in their source document.
+   * Returns an array of { type, message, fix } objects.
+   */
+  detectIssues() {
+    const issues = [];
+    if (!this.rawText) return issues;
+
+    const lines = this.rawText.split('\n').filter(l => l.trim());
+
+    // Tab or multi-space in the name line causes name to bleed into adjacent content.
+    // After extraction: column separators become '\t'; as a fallback also detect 3+ spaces.
+    const nameLine = lines[0] || '';
+    const nameSepMatch = nameLine.match(/\t| {3,}/);
+    if (nameSepMatch) {
+      const parts = nameLine.split(/\t| {3,}/);
+      issues.push({
+        type: 'tab-in-name',
+        message: `Name line has a column separator — "${parts[0].trim()}" is followed by "${parts.slice(1).join(' ').trim()}"`,
+        fix: 'Replace the tab/large gap in the name/header line with a line break in your source document.'
+      });
+    }
+
+    // Split year: a 4-digit year like "2020" appears as "20 20" because an invisible
+    // character (e.g. soft hyphen, zero-width space) is embedded in the digits
+    const splitYearRe = /\b((?:19|20))[\s\u00a0\u200b\u200c\u200d\ufeff]+(\d{2})\b/g;
+    const foundYears = new Map();
+    let m;
+    while ((m = splitYearRe.exec(this.rawText)) !== null) {
+      const combined = m[1] + m[2];
+      const num = parseInt(combined, 10);
+      if (num >= 1900 && num <= 2099 && !foundYears.has(combined)) {
+        foundYears.set(combined, `"${m[1]} ${m[2]}"`);
+      }
+    }
+    for (const [year, displayed] of foundYears) {
+      issues.push({
+        type: 'split-year',
+        message: `Year "${year}" appears as ${displayed} — an invisible character is splitting the digits.`,
+        fix: `Select and delete "${year}" in your source document, then retype it.`
+      });
+    }
+
+    return issues;
   },
 };
 

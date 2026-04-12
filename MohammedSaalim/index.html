@@ -15,8 +15,9 @@
 
     <style>
         .pdf-status {
+            border: 1px solid #ddd;
             padding: 10px;
-            border-radius: 6px;
+            border-radius: 14px;
             margin: 10px 25px;
             font-size: 13px;
         }
@@ -241,15 +242,40 @@
 <body>
 
     <!-- Tab buttons above filters -->
-    <div style="margin: 25px 25px 0 25px;">
+    <!-- TO DO: Fix tabs and reuse tab styling from another page -->
+    <!--
+    <div style="margin: 25px 25px 0 25px;" class="content">
         <div class="page-tab-container">
+            <button class="page-tab" id="tabResume" onclick="event.stopPropagation(); showTab('resume')">Resume</button>
+
             <button class="page-tab active" id="tabHighlights"
                 onclick="event.stopPropagation(); showTab('highlights')">Highlights</button>
-            <button class="page-tab" id="tabResume" onclick="event.stopPropagation(); showTab('resume')">Resume</button>
+            
             <button class="page-tab" id="tabAll" onclick="event.stopPropagation(); showTab('all')">All</button>
         </div>
         <div class="page-tab-line"></div>
     </div>
+    -->
+
+        <!-- Resume link is a Word Doc -->
+        <!--
+        <div id="resumeContent" class="content-section">
+            <div class="pdf-info" style="margin: 0 25px;">
+                
+                📄 <strong>Resume PDF:</strong> <a
+                    href="https://depauledu-my.sharepoint.com/:b:/g/personal/mkartapi_depaul_edu/IQCdpkI3bxV0Rr-wv-7Z-DHMAff0bao2qMSQwmCTf4DDjPk?e=vAt6BE&download=1"
+                    target="_blank">View/Download PDF Resume</a>
+                <br><small>Note: PDF is pulled from external SharePoint link and should be kept in sync with
+                    detailed.json</small>
+            </div>
+        </div>
+        -->
+
+        <!-- CV Filters always visible at body level (localsite.js rearranges DOM children) -->
+        
+        <div id="pdfStatusContainer"></div>
+
+        <script src="../common/filters.js"></script>
 
     <!-- Highlights Section -->
     <div id="highlightsContent" class="content-section active portfolio-container">
@@ -600,22 +626,9 @@
             </div>
         </div>
 
-        <!-- Resume Section (PDF link) -->
-        <div id="resumeContent" class="content-section">
-            <div class="pdf-info" style="margin: 0 25px;">
-                📄 <strong>Resume PDF:</strong> <a
-                    href="https://depauledu-my.sharepoint.com/:b:/g/personal/mkartapi_depaul_edu/IQCdpkI3bxV0Rr-wv-7Z-DHMAff0bao2qMSQwmCTf4DDjPk?e=vAt6BE&download=1"
-                    target="_blank">View/Download PDF Resume</a>
-                <br><small>Note: PDF is pulled from external SharePoint link and should be kept in sync with
-                    detailed.json</small>
-            </div>
-        </div>
 
-        <!-- CV Filters always visible at body level (localsite.js rearranges DOM children) -->
-        <div id="cvFiltersContainer"></div>
-        <div id="pdfStatusContainer"></div>
 
-        <script src="../common/filters.js"></script>
+
         <script>
             // Tab switching function
             function showTab(tab) {
@@ -623,11 +636,9 @@
                 var mainContent = document.getElementById('main-content');
                 var highlightsContent = document.getElementById('highlightsContent');
                 var resumeContent = document.getElementById('resumeContent');
-                var container = document.getElementById('cvFiltersContainer');
                 if (mainContent && typeof insertBeforeFooter === 'function') {
-                    if (highlightsContent) insertBeforeFooter(highlightsContent);
-                    if (resumeContent) insertBeforeFooter(resumeContent);
-                    if (container) insertBeforeFooter(container);
+                    //if (highlightsContent) insertBeforeFooter(highlightsContent);
+                    //if (resumeContent) insertBeforeFooter(resumeContent);
                 }
 
                 var tabAll = document.getElementById('tabAll');
@@ -658,7 +669,7 @@
 
             // PDF configuration - external resume PDF URL
             var PDF_CONFIG = {
-                pdfUrl: 'https://depauledu-my.sharepoint.com/:b:/g/personal/mkartapi_depaul_edu/IQCdpkI3bxV0Rr-wv-7Z-DHMAff0bao2qMSQwmCTf4DDjPk?e=vAt6BE&download=1'
+                pdfUrl_OMIT: 'https://depauledu-my.sharepoint.com/:b:/g/personal/mkartapi_depaul_edu/IQCdpkI3bxV0Rr-wv-7Z-DHMAff0bao2qMSQwmCTf4DDjPk?e=vAt6BE&download=1'
             };
 
             // Load PDF resume if configured
@@ -669,7 +680,7 @@
                 if (!pdfStatusContainer) return null;
 
                 var statusDiv = document.createElement('div');
-                statusDiv.className = 'pdf-status pdf-loading';
+                statusDiv.className = 'pdf-status pdf-loading content contentpadding';
                 statusDiv.textContent = '📄 Loading PDF resume...';
                 pdfStatusContainer.appendChild(statusDiv);
 
@@ -689,12 +700,12 @@
                     var jsonData = await ResumePDFConverter.init({
                         pdfUrl: PDF_CONFIG.pdfUrl,
                         onSuccess: function (data) {
-                            statusDiv.className = 'pdf-status pdf-success';
+                            statusDiv.className = 'pdf-status pdf-success content contentpadding';
                             statusDiv.textContent = '✅ PDF loaded successfully! Name: ' + (data.basics.name || 'Resume');
                             console.log('[ResumePDFConverter] PDF loaded, name:', data.basics.name);
                         },
                         onError: function (error) {
-                            statusDiv.className = 'pdf-status pdf-error';
+                            statusDiv.className = 'pdf-status pdf-error content contentpadding';
                             statusDiv.textContent = '❌ PDF unavailable, using JSON data instead';
                             console.warn('[ResumePDFConverter] Error:', error);
                         }
@@ -702,7 +713,7 @@
 
                     return jsonData;
                 } catch (error) {
-                    statusDiv.className = 'pdf-status pdf-error';
+                    statusDiv.className = 'pdf-status pdf-error content contentpadding';
                     statusDiv.textContent = '❌ PDF unavailable, using JSON data instead';
                     console.warn('[loadPdfResume] Error:', error);
                     return null;
@@ -733,10 +744,9 @@
                 return originalLoadTheme.call(this, jsonFile, theme);
             };
 
-            // Initialize filters immediately (populates cvFiltersContainer)
+            // Initialize filters immediately
             CVFilters.init({
-                defaultJson: 'detailed.json',
-                defaultTheme: 'elegant'
+                defaultJson: 'detailed.json'
             });
 
             // Try to load PDF resume after CVFilters is initialized
@@ -783,12 +793,10 @@
 
                 var highlights = document.getElementById('highlightsContent');
                 var resume = document.getElementById('resumeContent');
-                var container = document.getElementById('cvFiltersContainer');
 
                 // Place elements BEFORE the footer so they appear above it
-                if (highlights) insertBeforeFooter(highlights);
-                if (resume) insertBeforeFooter(resume);
-                if (container) insertBeforeFooter(container);
+                //if (highlights) insertBeforeFooter(highlights);
+                //if (resume) insertBeforeFooter(resume);
 
                 // Only auto-switch if user explicitly navigated with ?resume=
                 if (userRequestedResume) {

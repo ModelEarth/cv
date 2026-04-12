@@ -1,7 +1,10 @@
 /**
  * CV Filters Module - Common filter/dropdown functionality for CV pages
  * jQuery-compatible selector and filter management
- * 
+ *
+ * Loads /cv/common/cv.css and /cv/common/index.js via localsite.js helpers
+ * (includeCSS3 and loadScript) so theme.html is no longer needed.
+ *
  * Usage:
  *   CVFilters.init({
  *     defaultJson: 'detailed.json',
@@ -32,14 +35,50 @@
     return Array.from(document.querySelectorAll(selector));
   }
 
-  function detectPersonFolder() {
+  function getCurrentFolderSegments() {
     const segments = window.location.pathname.split('/').filter(Boolean);
-    if (!segments.length) return '';
+    if (!segments.length) return [];
 
     const lastSegment = segments[segments.length - 1];
-    const folderSegment = lastSegment.includes('.')
-      ? segments[segments.length - 2]
-      : lastSegment;
+    return lastSegment.includes('.') ? segments.slice(0, -1) : segments;
+  }
+
+  function getCvRootIndex(segments) {
+    return segments.lastIndexOf('cv');
+  }
+
+  function getCvRootRelativePrefix() {
+    const segments = getCurrentFolderSegments();
+    const cvIndex = getCvRootIndex(segments);
+    if (cvIndex < 0) return '';
+    const depthBelowCv = Math.max(0, segments.length - (cvIndex + 1));
+    return '../'.repeat(depthBelowCv);
+  }
+
+  function getDepthBelowCv() {
+    const segments = getCurrentFolderSegments();
+    const cvIndex = getCvRootIndex(segments);
+    if (cvIndex < 0) return -1;
+    return Math.max(0, segments.length - (cvIndex + 1));
+  }
+
+  function isCvRootPage() {
+    return getDepthBelowCv() === 0;
+  }
+
+  function resolveCvRootAssetPath(file) {
+    if (!file) return '';
+    const normalizedFile = String(file).replace(/^\/+/, '');
+    const prefix = getCvRootRelativePrefix();
+    return `${prefix}${normalizedFile}`;
+  }
+
+  function detectPersonFolder() {
+    const segments = getCurrentFolderSegments();
+    if (!segments.length) return '';
+
+    const cvIndex = getCvRootIndex(segments);
+    const folderSegment = cvIndex >= 0 ? segments[cvIndex + 1] : segments[segments.length - 1];
 
     if (!folderSegment) return '';
 
@@ -54,7 +93,7 @@
   let config = {
     personFolder: '',
     defaultJson: 'detailed.json',
-    defaultTheme: 'elegant',
+    defaultTheme: '',
     defaultPDF: '',
     syncResumeParam: false,
     autoDetectJsonFiles: false,
@@ -66,6 +105,10 @@
   let currentTheme = '';
   let currentPdfData = null;
   let currentPdfBlobUrl = '';
+  let activePersonFolder = '';
+  let filtersInitialized = false;
+  let standaloneBioModeBound = false;
+  const personFolderExistsCache = new Map();
 
   // Theme options (12 local custom themes)
   const THEMES = [
@@ -83,29 +126,121 @@
     { value: 'striking', label: 'Striking' }
   ];
 
-  // URL parameter utilities
-  function getParam(key, fallback) {
-    return new URLSearchParams(location.search).get(key) ?? fallback;
-  }
-
-  function setParam(params) {
-    const url = new URL(location.href);
-    Object.entries(params).forEach(([key, value]) => {
-      if (value) {
-        url.searchParams.set(key, value);
-      } else {
-        url.searchParams.delete(key);
-      }
-    });
-    history.replaceState(null, '', url.toString());
-  }
-
-  function setFilterParams(jsonFile, theme) {
-    const params = { theme };
-    if (config.syncResumeParam) {
-      params.resume = jsonFile;
+  // Hash-based state utilities (uses localsite.js getHash / goHash / updateHash)
+  function getHashParam(key, fallback) {
+    if (typeof getHash === 'function') {
+      const h = getHash();
+      return (h[key] !== undefined && h[key] !== '') ? h[key] : fallback;
     }
-    setParam(params);
+    return fallback;
+  }
+
+  function getWhoTokens() {
+    return String(getHashParam('who', '') || '')
+      .split(',')
+      .map((token) => token.trim())
+      .filter(Boolean);
+  }
+
+  function hasTeamToken(tokens) {
+    return tokens.some((token) => token.toLowerCase() === 'team');
+  }
+
+  function buildTeamWhoValue(personFolder) {
+    return ['team', personFolder].filter(Boolean).join(',');
+  }
+
+  function buildWhoValueWithoutTeam() {
+    return getWhoTokens()
+      .filter((token) => token.toLowerCase() !== 'team')
+      .join(',');
+  }
+
+  function getTeamLinkHref(personFolder) {
+    const whoValue = buildTeamWhoValue(personFolder);
+    return getCvPageHref(whoValue);
+  }
+
+  function getCvPageHref(whoValue) {
+    const rootHref = getCvRootRelativePrefix() || './';
+    return whoValue ? `${rootHref}#who=${encodeURIComponent(whoValue)}` : rootHref;
+  }
+
+  function resolvePersonAssetPath(personFolder, file) {
+    if (!file) return '';
+    if (/^(?:[a-z]+:)?\/\//i.test(file) || file.startsWith('data:') || file.startsWith('blob:')) {
+      return file;
+    }
+    if (file.startsWith('../') || file.startsWith('./') || file.startsWith('/')) {
+      return file;
+    }
+    if (!personFolder) return resolveCvRootAssetPath(file);
+    return resolveCvRootAssetPath(`${personFolder}/${file}`);
+  }
+
+  async function personFolderExists(personFolder) {
+    const candidate = (personFolder || '').trim();
+    if (!candidate || candidate.toLowerCase() === 'team') return false;
+    if (candidate === config.personFolder) return true;
+    if (personFolderExistsCache.has(candidate)) {
+      return personFolderExistsCache.get(candidate);
+    }
+
+    const probePaths = Array.from(new Set([
+      resolvePersonAssetPath(candidate, currentJsonFile || config.defaultJson || 'detailed.json'),
+      resolvePersonAssetPath(candidate, config.defaultJson || 'detailed.json'),
+      resolvePersonAssetPath(candidate, 'detailed.json'),
+      resolvePersonAssetPath(candidate, 'index.html')
+    ]));
+
+    let exists = false;
+    for (const path of probePaths) {
+      try {
+        const res = await fetch(path, { method: 'HEAD', cache: 'no-store' });
+        if (res.ok) {
+          exists = true;
+          break;
+        }
+      } catch {
+        // Ignore probe failures and continue to the next candidate path.
+      }
+    }
+
+    personFolderExistsCache.set(candidate, exists);
+    return exists;
+  }
+
+  async function resolveActivePersonFolder() {
+    const whoTokens = getWhoTokens();
+    for (const token of whoTokens) {
+      if (token.toLowerCase() === 'team') continue;
+      if (await personFolderExists(token)) {
+        return token;
+      }
+    }
+    return config.personFolder;
+  }
+
+  const THEME_CACHE_KEY = 'cv_theme';
+
+  function getCachedTheme() {
+    try { return localStorage.getItem(THEME_CACHE_KEY) || ''; } catch { return ''; }
+  }
+
+  function setCachedTheme(theme) {
+    try { localStorage.setItem(THEME_CACHE_KEY, theme); } catch {} // eslint-disable-line no-empty
+  }
+
+  function setFilterParams(jsonFile, theme, silent) {
+    const params = { theme: theme || '' };
+    if (config.syncResumeParam) {
+      params.resume = jsonFile || '';
+    }
+    if (silent) {
+      if (typeof updateHash === 'function') updateHash(params);
+    } else {
+      if (typeof goHash === 'function') goHash(params);
+    }
   }
 
   function revokePdfBlobUrl() {
@@ -147,12 +282,12 @@
 
   function renderJsonOptions(selectedFile) {
     return Array.from(new Set([selectedFile || config.defaultJson].filter(Boolean)))
-      .map((file) => `<option value="${file}"${file === selectedFile ? ' selected' : ''}>${file}</option>`)
+      .map((file, i) => `<option value="${file}"${file === selectedFile ? ' selected' : ''}>${i === 0 ? 'From JSON' : file}</option>`)
       .join('\n');
   }
 
   function ensureJsonSelectOption(file) {
-    const jsonSelect = select('#cvJsonSelect');
+    const jsonSelect = select('#sourceSelect');
     if (!jsonSelect || !file) return;
     if (Array.from(jsonSelect.options).some((option) => option.value === file)) return;
 
@@ -162,25 +297,234 @@
     jsonSelect.appendChild(option);
   }
 
+  function updateTeamLink() {
+    const teamLink = select('#cvOurTeamLink');
+    if (!teamLink) return;
+    const personFolder = activePersonFolder || config.personFolder;
+    const showingTeam = hasTeamToken(getWhoTokens());
+    const whoWithoutTeam = buildWhoValueWithoutTeam();
+    teamLink.textContent = showingTeam ? 'Hide Team' : 'Our Team';
+    teamLink.href = showingTeam ? getCvPageHref(whoWithoutTeam) : getTeamLinkHref(personFolder);
+  }
+
+  function getBioTarget() {
+    return select('#bioList');
+  }
+
+  function shouldShowBioList() {
+    return hasTeamToken(getWhoTokens()) || isCvRootPage();
+  }
+
+  function cleanupBioSummary(target) {
+    target.querySelectorAll('.bio-expand-toggle').forEach((button) => button.remove());
+    target.querySelectorAll('.bioText p').forEach((paragraph) => {
+      paragraph.classList.remove('bio-collapsible', 'bio-expanded');
+      paragraph.dataset.bioExpandable = '';
+    });
+  }
+
+  function getPrimaryBioParagraph(bioText) {
+    const paragraphs = Array.from(bioText.querySelectorAll('p'));
+    return paragraphs.find((paragraph) => paragraph.textContent.trim().length > 40) || null;
+  }
+
+  function toggleBioParagraph(paragraph, button) {
+    const expanded = paragraph.classList.toggle('bio-expanded');
+    button.textContent = expanded ? 'Less' : 'More';
+    button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  }
+
+  function refreshBioSummary(target) {
+    if (!target) return;
+    cleanupBioSummary(target);
+    if (!target.classList.contains('bioListSm')) return;
+
+    target.querySelectorAll('.bioText').forEach((bioText) => {
+      const paragraph = getPrimaryBioParagraph(bioText);
+      if (!paragraph) return;
+
+      paragraph.classList.add('bio-collapsible');
+      const paragraphStyle = getComputedStyle(paragraph);
+      const lineHeight = parseFloat(paragraphStyle.lineHeight)
+        || (parseFloat(paragraphStyle.fontSize) * 1.4)
+        || 22;
+      const collapsedHeight = lineHeight * 2;
+      if (!(paragraph.scrollHeight > collapsedHeight + 4)) return;
+
+      paragraph.dataset.bioExpandable = 'true';
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'bio-expand-toggle';
+      button.textContent = 'More';
+      button.setAttribute('aria-expanded', 'false');
+      button.addEventListener('click', () => toggleBioParagraph(paragraph, button));
+      paragraph.insertAdjacentElement('afterend', button);
+    });
+  }
+
+  function bindBioExpansion(target) {
+    if (!target || target.dataset.bioExpandBound === 'true') return;
+
+    const observer = new MutationObserver(() => {
+      window.requestAnimationFrame(() => refreshBioSummary(target));
+    });
+    observer.observe(target, { childList: true, subtree: true });
+    target.dataset.bioExpandBound = 'true';
+    target._bioExpandObserver = observer;
+  }
+
+  function syncBioSection(forceReload) {
+    const bioList = getBioTarget();
+    if (!bioList) return;
+    bindBioExpansion(bioList);
+
+    if (!shouldShowBioList()) {
+      bioList.style.display = 'none';
+      bioList.innerHTML = '';
+      bioList.dataset.loadedMarkdown = '';
+      cleanupBioSummary(bioList);
+      return;
+    }
+
+    bioList.style.display = '';
+    if (!forceReload && bioList.dataset.loadedMarkdown === 'team') return;
+
+    bioList.dataset.loadedMarkdown = 'team';
+    if (typeof loadMarkdown === 'function') {
+      loadMarkdown(resolveCvRootAssetPath('bios.md'), bioList.id, '_parent');
+    } else {
+      bioList.innerHTML = `<p style='color:red;'>Failed to load ${resolveCvRootAssetPath('bios.md')}.</p>`;
+    }
+  }
+
+  function syncTeamUiFromHash(forceReload) {
+    updateTeamLink();
+    syncBioSection(forceReload);
+  }
+
+  function bindStandaloneBioMode() {
+    if (standaloneBioModeBound || filtersInitialized) return;
+    if (!getBioTarget()) return;
+
+    standaloneBioModeBound = true;
+    ensureBioStyles();
+    syncTeamUiFromHash(true);
+
+    document.addEventListener('hashChangeEvent', function () {
+      if (filtersInitialized) return;
+      const priorWho = window.priorHash && window.priorHash.who ? window.priorHash.who : '';
+      syncTeamUiFromHash(getHashParam('who', '') !== priorWho);
+    });
+  }
+
   // Generate filter HTML
+  function ensureBioStyles() {
+    let styleEl = document.getElementById('cvBioStyles');
+    if (styleEl) return;
+
+    styleEl = document.createElement('style');
+    styleEl.id = 'cvBioStyles';
+    styleEl.textContent = `
+      #bioList {
+        container-type: inline-size;
+        display: none;
+      }
+      .bioList {
+        --bio-image-size: 180px;
+      }
+      #bioList hr {
+        clear: both;
+        opacity: 0;
+      }
+      .bioList p:has(img) {
+        float: left;
+        width: var(--bio-image-size);
+        margin: 0 30px 28px 0;
+      }
+      .bioList img {
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block;
+        width: var(--bio-image-size) !important;
+        height: var(--bio-image-size) !important;
+        min-width: var(--bio-image-size) !important;
+        min-height: var(--bio-image-size) !important;
+        border-radius: 50% !important;
+        object-fit: cover !important;
+        object-position: center top !important;
+      }
+      .bioList .bioText {
+        overflow: auto;
+        margin-bottom: 28px;
+      }
+      .bioList .bioText h2 {
+        margin: 0 0 8px;
+      }
+      .bioList .bioText p {
+        overflow: visible;
+      }
+      .bioList .bioText p.bio-collapsible {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow: hidden;
+      }
+      .bioList .bioText p.bio-collapsible.bio-expanded {
+        display: block;
+        -webkit-line-clamp: unset;
+        overflow: visible;
+      }
+      .bioList .bio-expand-toggle {
+        border: 0;
+        background: transparent;
+        color: #0b63c9;
+        padding: 0;
+        font: 600 12px/1.3 system-ui;
+        cursor: pointer;
+      }
+      .dark .bioList .bio-expand-toggle {
+        color: #7fc0ff;
+      }
+      .bioList.bioListSm {
+        --bio-image-size: 50px;
+      }
+      .bioList.bioListSm p:has(img) {
+        margin: 0 14px 12px 0;
+      }
+      .bioList.bioListSm .bioText {
+        margin-bottom: 14px;
+      }
+      .bioList.bioListSm .bioText h2 {
+        font-size: 18px;
+        margin-bottom: 4px;
+      }
+      @container (max-width: 760px) {
+        .bioList p:has(img) {
+          float: none;
+          clear: both;
+          width: auto;
+          margin: 0 0 12px 0;
+        }
+        .bioList .bioText {
+          overflow: visible;
+          margin-bottom: 22px;
+        }
+      }
+    `;
+    document.head.appendChild(styleEl);
+  }
+
   function generateFilterHTML() {
     return `
       <style>
-        .cv-filters-section {
-          margin-bottom: 40px;
-        }
-        .cv-filters-section h3 {
-          margin-bottom: 10px;
+        #sourceSelect {
+          display:none !important; /* temp */
         }
         .cv-filters-row {
-          padding: 8px;
           display: flex;
           align-items: center;
-          /*
-          gap: 12px;
-          flex-wrap: wrap;
-          margin-bottom: 15px;
-          */
+          margin-top: 8px;
+          margin-bottom: 12px;
         }
         .cv-filters-spacer {
           flex: 1 1 auto;
@@ -275,51 +619,29 @@
           margin-right: 8px;
           font-weight: 500;
         }
-        #cvFiltersContainer select {
-          border: 1px solid #d9d9d9;
-        }
-        .cv-iframe-preview {
-          width: 100%;
-          height: 900px;
-          border: 1px solid #ddd;
-          border-radius: 8px;
-          background: white;
-          margin: 15px 0;
-        }
-        .cv-data-preview {
+        .contentPanel {
           background: #f4f4f4;
           padding: 15px;
-          border-radius: 8px;
+          border-radius: var(--cv-panel-radius);
+          border: 1px solid #ddd;
           white-space: pre-wrap;
           overflow-x: auto;
           max-height: 320px;
           font-family: monospace;
           font-size: 13px;
         }
+        .dark .contentPanel {
+          background: #1f1f1f;
+          border: 1px solid #3f3f3f;
+          color: #e4e4e4;
+        }
         .cv-data-status {
           margin-top: 8px;
           font: 13px/1.4 system-ui;
           color: #666;
         }
-        .cv-readme-content {
-          background: #fff;
-          border: 1px solid #ddd;
-          border-radius: 8px;
-          padding: 20px;
-          line-height: 1.6;
-        }
-        .dark .cv-data-preview {
-          background: #1f1f1f;
-          border: 1px solid #3f3f3f;
-          color: #e4e4e4;
-        }
         .dark .cv-data-status {
           color: #b8b8b8;
-        }
-        .dark .cv-readme-content {
-          background: #1f1f1f;
-          border-color: #3f3f3f;
-          color: #e4e4e4;
         }
         .dark .pdf-info {
           background: #1e2c36;
@@ -331,41 +653,81 @@
         .dark .pdf-info a:hover {
           color: #a8d6ff;
         }
+        .btn-alert {
+          background: #fff3cd;
+          border-color: #ffc107 !important;
+          color: #856404;
+        }
+        .btn-alert:hover {
+          background: #ffecb3;
+        }
+        .dark .btn-alert {
+          background: #3a2d00;
+          border-color: #ffc107 !important;
+          color: #ffd54f;
+        }
+        .cv-report-panel {
+          background: #f4f4f4;
+          padding: 15px;
+          border-radius: var(--cv-panel-radius);
+          border: 1px solid #ddd;
+          overflow-y: auto;
+          max-height: 360px;
+          font-size: 13px;
+          line-height: 1.5;
+        }
+        .dark .cv-report-panel {
+          background: #1f1f1f;
+          border-color: #3f3f3f;
+          color: #e4e4e4;
+        }
+        .dark .cv-report-panel a { color: #7fc0ff; }
+        .dark .cv-report-panel hr { border-color: #3f3f3f; }
       </style>
       
-      <div class="cv-filters-section">
-        <div class="cv-filters-row">
-          <label>Data:</label>
-          <select id="cvJsonSelect">
-            ${renderJsonOptions(config.defaultJson)}
-          </select>
+        <div class="cv-filters-row content">
+          <label><a id="cvOurTeamLink" href="${getTeamLinkHref(config.personFolder)}">Our Team</a></label>
 
           <label style="margin-left:12px;">Theme:</label>
-          <select id="cvThemeSelect">
+          <select id="themeSelect">
+            <option value="">Base</option>
             ${THEMES.map(theme =>
       `<option value="${theme.value}">${theme.label}</option>`
     ).join('\n            ')}
+          </select>
+
+          <select id="sourceSelect" style="margin-left:8px;display:none">
+            ${renderJsonOptions(config.defaultJson)}
           </select>
 
           <div class="cv-filters-spacer"></div>
           <div id="map-print-download-icons"></div>
         </div>
 
-        <iframe id="cvThemePreview" class="cv-iframe-preview"></iframe>
-        <div class="content contentpadding">
+        <div id="bioList" class="content bioList"></div>
+        <div id="resumeContainer" class="content">Loading...</div>
+
           <div id="cvReadmeSection">
-            <div id="cvReadmeContent" class="cv-readme-content"></div>
+            <div id="cvReadmeContent" class="content"></div>
           </div>
-          <pre id="cvDataPreview" class="cv-data-preview">Loading JSON…</pre>
-          <div id="cvDataStatus" class="cv-data-status"></div>
-        </div>
-      </div>
+          <pre id="cvDataPreview" class="content contentPanel" style="display:none">Loading JSON\u2026</pre>
+          <div id="cvParseReport" class="content cv-report-panel" style="display:none"></div>
+          <div class="content" style="display:flex;align-items:center;gap:8px;">
+            <div id="cvDataStatus" class="cv-data-status"></div>
+            <button type="button" id="cvToggleJsonBtn" class="btn-sm">View json</button>
+            <button type="button" id="cvParseReportBtn" class="btn-sm" style="display:none">Parse Report</button>
+          </div>
+
+      
     `;
   }
 
   // Load JSON data
   async function loadJson(file) {
     const dataPreview = select('#cvDataPreview');
+    const resolvedJsonPath = currentPdfData
+      ? getPdfBlobUrl()
+      : resolvePersonAssetPath(activePersonFolder || config.personFolder, file);
 
     if (currentPdfData) {
       if (dataPreview) {
@@ -376,50 +738,267 @@
     }
 
     try {
-      const res = await fetch(file, { cache: 'no-store' });
+      const res = await fetch(resolvedJsonPath, { cache: 'no-store' });
       const json = await res.json();
-      dataPreview.textContent = JSON.stringify(json, null, 2);
+      if (dataPreview) {
+        dataPreview.textContent = JSON.stringify(json, null, 2);
+      }
       currentResumeData = json;
       return json;
     } catch (err) {
       console.error('Failed to load JSON:', err);
-      dataPreview.textContent = `⚠️ Failed to load ${file}`;
+      if (dataPreview) {
+        dataPreview.textContent = `\u26a0\ufe0f Failed to load ${resolvedJsonPath || file}`;
+      }
       currentResumeData = null;
       return null;
     }
   }
 
-  // Load theme in iframe
+  // Update the theme-specific stylesheet and render resume via CVRenderer
   function loadTheme(jsonFile, theme) {
-    const previewFrame = select('#cvThemePreview');
-    const statusBox = select('#cvDataStatus');
-    let iframeJsonPath = '';
-    if (currentPdfData) {
-      iframeJsonPath = getPdfBlobUrl();
-    } else {
-      // Convert local path to path relative to common folder for iframe
-      iframeJsonPath = jsonFile.startsWith('../')
-        ? jsonFile
-        : `../${config.personFolder}/${jsonFile}`;
+    // Update per-theme stylesheet using a managed <link> element
+    const themeLink = document.getElementById('cvThemeStylesheet');
+    if (theme) {
+      let link = themeLink;
+      if (!link) {
+        link = document.createElement('link');
+        link.id = 'cvThemeStylesheet';
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        document.head.appendChild(link);
+      }
+      link.href = `/cv/common/themes/${encodeURIComponent(theme)}/style.css`;
+    } else if (themeLink) {
+      themeLink.href = '';
     }
 
-    const url = `../common/theme.html?resume=${encodeURIComponent(iframeJsonPath)}&theme=${encodeURIComponent(theme)}`;
-    const start = performance.now();
+    const statusBox = select('#cvDataStatus');
+    const resolvedJsonPath = currentPdfData
+      ? getPdfBlobUrl()
+      : resolvePersonAssetPath(activePersonFolder || config.personFolder, jsonFile);
 
-    previewFrame.onload = () => {
+    const start = performance.now();
+    const done = function () {
       const ms = (performance.now() - start).toFixed(1);
-      statusBox.textContent = `Theme "${theme}" loaded in ${ms} ms`;
+      if (statusBox) statusBox.textContent = theme ? `Theme "${theme}" loaded in ${ms} ms` : `Loaded in ${ms} ms`;
+
+      // Append "View PDF" link only for the page's native resume source.
+      const topSide = document.querySelector('#resumeContainer .top-side');
+      if (topSide) {
+        const existing = topSide.querySelector('.cv-source-link');
+        if (existing) existing.remove();
+      }
+      if (config.defaultPDF && (activePersonFolder || config.personFolder) === config.personFolder) {
+        if (topSide) {
+          const a = document.createElement('a');
+          a.href = config.defaultPDF;
+          a.textContent = 'View PDF';
+          a.className = 'cv-source-link';
+          a.target = '_blank';
+          a.rel = 'noopener';
+          // Place on the same line as the phone number if present, else append a new row
+          const phoneRow = topSide.querySelector('.contact-item-phone');
+          if (phoneRow) {
+            phoneRow.appendChild(document.createTextNode('\u00a0\u00b7\u00a0'));
+            phoneRow.appendChild(a);
+          } else {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'contact-item';
+            wrapper.appendChild(a);
+            topSide.appendChild(wrapper);
+          }
+          fetch(config.defaultPDF, { method: 'HEAD' })
+            .then(res => { if (res.status === 404) a.remove(); })
+            .catch(() => {});
+        }
+      }
     };
 
-    previewFrame.src = url;
+    if (window.CVRenderer && typeof window.CVRenderer.render === 'function') {
+      window.CVRenderer.render(resolvedJsonPath, done);
+    }
   }
 
-  // Load both JSON and theme
+  // Load both JSON (data preview) and render the theme
   async function loadAll(jsonFile, theme) {
     currentJsonFile = jsonFile;
     currentTheme = theme;
+    activePersonFolder = await resolveActivePersonFolder();
+    updateTeamLink();
+    syncBioSection(false);
     await loadJson(jsonFile);
     loadTheme(jsonFile, theme);
+  }
+
+  function buildParseReport(converter) {
+    const issues = typeof converter.detectIssues === 'function' ? converter.detectIssues() : [];
+    const info = converter.pdfMetadata || {};
+    const headers = converter.lastResponseHeaders || {};
+    const pdfUrl = config.defaultPDF;
+    const absUrl = /^https?:\/\//.test(pdfUrl)
+      ? pdfUrl
+      : new URL(pdfUrl, window.location.href).href;
+
+    // Identify source app and file type from PDF metadata
+    const creator = (info.Creator || '').trim();
+    const producer = (info.Producer || '').trim();
+    const combined = (creator + ' ' + producer).toLowerCase();
+    let appName = creator || producer || '';
+    let fileTypeHint = '';
+    if (combined.includes('microsoft word') || combined.includes('winword')) {
+      appName = 'Microsoft Word';
+      fileTypeHint = 'Word document (.docx)';
+    } else if (combined.includes('libreoffice')) {
+      appName = 'LibreOffice' + (combined.includes('writer') ? ' Writer' : '');
+      fileTypeHint = 'Writer document (.odt or .docx)';
+    } else if (combined.includes('google')) {
+      appName = 'Google Docs';
+      fileTypeHint = 'Google Doc';
+    } else if (combined.includes('canva')) {
+      appName = 'Canva';
+      fileTypeHint = 'Canva design';
+    }
+
+    let html = '';
+
+    if (appName || fileTypeHint) {
+      html += `<p style="margin:0 0 10px"><strong>Source:</strong> ${appName}${fileTypeHint ? ` using a ${fileTypeHint}` : ''}</p>`;
+    }
+
+    if (issues.length > 0) {
+      html += `<p style="margin:0 0 4px"><strong>Issues detected (${issues.length}):</strong></p>`;
+      html += `<ul style="margin:0 0 10px 18px;padding:0">`;
+      for (const issue of issues) {
+        html += `<li style="margin-bottom:6px">${issue.message}`;
+        if (issue.fix) html += `<br><em style="color:#888;font-size:11px">Fix: ${issue.fix}</em>`;
+        html += '</li>';
+      }
+      html += '</ul>';
+    } else {
+      html += `<p style="margin:0 0 10px;color:#388e3c"><strong>No issues detected.</strong></p>`;
+    }
+
+    html += `<hr style="border:none;border-top:1px solid #ccc;margin:10px 0">`;
+
+    const fileSize = headers.contentLength
+      ? Math.round(parseInt(headers.contentLength, 10) / 1024) + '\u00a0KB'
+      : '';
+    const rows = [
+      ['Link', `<a href="${absUrl}" target="_blank" rel="noopener">${absUrl}</a>`],
+      fileSize ? ['File size', fileSize] : null,
+      converter.pdfNumPages ? ['Pages', converter.pdfNumPages] : null,
+      headers.lastModified ? ['Last modified', headers.lastModified] : null,
+      headers.contentType ? ['Content-Type', headers.contentType] : null,
+      info.Title ? ['PDF Title', info.Title] : null,
+      info.Author ? ['PDF Author', info.Author] : null,
+      info.Creator ? ['PDF Creator', info.Creator] : null,
+      info.Producer ? ['PDF Producer', info.Producer] : null,
+      info.CreationDate ? ['PDF Creation Date', info.CreationDate] : null,
+    ].filter(Boolean);
+
+    html += `<table style="border-collapse:collapse;font-size:12px;line-height:1.7">`;
+    for (const [k, v] of rows) {
+      html += `<tr><td style="padding:2px 14px 2px 0;color:#666;white-space:nowrap">${k}</td><td>${v}</td></tr>`;
+    }
+    html += '</table>';
+
+    return { html, issueCount: issues.length };
+  }
+
+  function updateParseReport(converter) {
+    const btn = select('#cvParseReportBtn');
+    const panel = select('#cvParseReport');
+    if (!btn || !panel) return;
+    const { html, issueCount } = buildParseReport(converter);
+    panel.innerHTML = html;
+    btn.style.display = '';
+    if (issueCount > 0) {
+      btn.classList.add('btn-alert');
+    } else {
+      btn.classList.remove('btn-alert');
+    }
+  }
+
+  function isEmptyParseResult(parsed) {
+    if (!parsed) return true;
+    return !(parsed.work || []).length
+      && !(parsed.education || []).length
+      && !(parsed.skills || []).length;
+  }
+
+  async function showPdfDiagnostics(pdfUrl) {
+    const container = select('#resumeContainer');
+    if (!container) return;
+    container.innerHTML = '<p style="padding:20px">Analyzing PDF\u2026</p>';
+
+    try {
+      const response = await fetch(pdfUrl, { cache: 'no-store' });
+      const lastModified = response.headers.get('Last-Modified') || '';
+      const contentLength = response.headers.get('Content-Length');
+      const fileSize = contentLength
+        ? Math.round(parseInt(contentLength) / 1024) + '\u00a0KB'
+        : '';
+      const contentType = response.headers.get('Content-Type') || '';
+      const arrayBuffer = await response.arrayBuffer();
+
+      let pageCount = '';
+      let lineCount = '';
+      let charCount = '';
+      let pdfInfo = {};
+
+      const converter = getResumePdfConverter();
+      if (converter) {
+        await converter._ensurePdfjsReady();
+        const pdfDoc = await converter.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        pageCount = pdfDoc.numPages;
+        try {
+          const meta = await pdfDoc.getMetadata();
+          pdfInfo = meta.info || {};
+        } catch (_e) { /* ignore */ }
+
+        let text = '';
+        for (let p = 1; p <= pdfDoc.numPages; p++) {
+          const page = await pdfDoc.getPage(p);
+          const content = await page.getTextContent();
+          text += content.items.map(item => item.str).join(' ') + '\n';
+        }
+        lineCount = text.split('\n').filter(l => l.trim()).length;
+        charCount = text.replace(/\s/g, '').length;
+      }
+
+      const absUrl = /^https?:\/\//.test(pdfUrl)
+        ? pdfUrl
+        : new URL(pdfUrl, window.location.href).href;
+
+      const rows = [
+        ['Link', `<a href="${absUrl}" target="_blank" rel="noopener">${absUrl}</a>`],
+        fileSize ? ['File size', fileSize] : null,
+        pageCount !== '' ? ['Pages', pageCount] : null,
+        lineCount !== '' ? ['Lines', lineCount] : null,
+        charCount !== '' ? ['Characters (non-whitespace)', charCount] : null,
+        lastModified ? ['Last modified', lastModified] : null,
+        contentType ? ['Content-Type', contentType] : null,
+        pdfInfo.Title ? ['PDF Title', pdfInfo.Title] : null,
+        pdfInfo.Author ? ['PDF Author', pdfInfo.Author] : null,
+        pdfInfo.Creator ? ['PDF Creator', pdfInfo.Creator] : null,
+        pdfInfo.Producer ? ['PDF Producer', pdfInfo.Producer] : null,
+        pdfInfo.CreationDate ? ['PDF Creation Date', pdfInfo.CreationDate] : null,
+      ].filter(Boolean);
+
+      container.innerHTML = `
+        <div class="content" style="padding:20px">
+          <h3 style="margin-top:0">PDF Info (parse returned no content)</h3>
+          <table style="border-collapse:collapse;font-size:13px;line-height:1.8">
+            ${rows.map(([k, v]) => `<tr>
+              <td style="padding:2px 16px 2px 0;color:#666;white-space:nowrap">${k}</td>
+              <td>${v}</td>
+            </tr>`).join('')}
+          </table>
+        </div>`;
+    } catch (err) {
+      container.innerHTML = `<p style="color:red;padding:20px">Failed to analyze PDF: ${err.message}</p>`;
+    }
   }
 
   async function loadDefaultPdfResume() {
@@ -439,9 +1018,15 @@
     }
 
     try {
-      const parsed = await converter.init({
-        pdfUrl: config.defaultPDF
-      });
+      const parsed = await converter.init({ pdfUrl: config.defaultPDF });
+      updateParseReport(converter);
+
+      if (isEmptyParseResult(parsed)) {
+        if (statusBox) statusBox.textContent = 'PDF parse returned no content; showing diagnostics.';
+        await showPdfDiagnostics(config.defaultPDF);
+        return false;
+      }
+
       currentPdfData = parsed;
       currentResumeData = parsed;
       revokePdfBlobUrl();
@@ -480,6 +1065,12 @@
     return `${person}-${resume}-${theme}`;
   }
 
+  function updateSourceSelectVisibility() {
+    const jsonSelect = select('#sourceSelect');
+    if (!jsonSelect) return;
+    jsonSelect.style.display = jsonSelect.options.length >= 2 ? '' : 'none';
+  }
+
   function closeIconPopups() {
     selectAll('.cv-icon-popup').forEach((popup) => popup.classList.remove('open'));
   }
@@ -504,10 +1095,14 @@
     URL.revokeObjectURL(url);
   }
 
+  function getThemeStylesheetHref() {
+    const link = document.getElementById('cvThemeStylesheet');
+    return link ? link.href : '';
+  }
+
   function printThemePreview() {
-    const previewFrame = select('#cvThemePreview');
-    const doc = previewFrame?.contentDocument || previewFrame?.contentWindow?.document;
-    if (!doc) {
+    const resumeRoot = select('#resumeContainer');
+    if (!resumeRoot || resumeRoot.textContent.trim() === 'Loading theme\u2026') {
       alert('Preview is not ready for printing yet.');
       return;
     }
@@ -516,46 +1111,26 @@
       alert('Unable to open print window. Please allow pop-ups for this site.');
       return;
     }
-
-    const styleTags = Array.from(doc.querySelectorAll('style'))
-      .map((el) => el.outerHTML)
-      .join('\n');
-    const stylesheetLinks = Array.from(doc.querySelectorAll('link[rel="stylesheet"]'))
-      .map((el) => el.outerHTML)
-      .join('\n');
-
-    const resumeRoot = doc.querySelector('#resumeContainer') || doc.querySelector('.resume-container') || doc.body;
-    const resumeMarkup = resumeRoot ? resumeRoot.innerHTML : '';
-
+    const themeHref = getThemeStylesheetHref();
     printWindow.document.write(`
       <!doctype html>
       <html>
       <head>
         <meta charset="UTF-8">
         <title>Resume Print</title>
-        ${stylesheetLinks}
-        ${styleTags}
+        <link rel="stylesheet" href="/cv/common/cv.css">
+        ${themeHref ? `<link rel="stylesheet" href="${themeHref}">` : ''}
         <style>
           @page { margin: 8mm; }
           html, body { margin: 0; padding: 0; background: #fff !important; }
-          #resumePrintRoot,
-          #resumePrintRoot #resumeContainer,
-          #resumePrintRoot .resume-container,
-          #resumePrintRoot [id*="resumeContainer"] {
-            border: 0 !important;
-            box-shadow: none !important;
-            outline: 0 !important;
-            background: #fff !important;
-          }
-          #resumePrintRoot * {
+          #resumeContainer { box-shadow: none !important; }
+          #resumeContainer * {
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
         </style>
       </head>
-      <body>
-        <div id="resumePrintRoot">${resumeMarkup}</div>
-      </body>
+      <body>${resumeRoot.outerHTML}</body>
       </html>
     `);
     printWindow.document.close();
@@ -597,13 +1172,13 @@
   }
 
   function downloadThemeHtml() {
-    const previewFrame = select('#cvThemePreview');
-    const doc = previewFrame?.contentDocument || previewFrame?.contentWindow?.document;
-    if (!doc) {
+    const resumeRoot = select('#resumeContainer');
+    if (!resumeRoot) {
       alert('Preview HTML is not available yet.');
       return;
     }
-    const html = '<!doctype html>\n' + doc.documentElement.outerHTML;
+    const themeHref = getThemeStylesheetHref();
+    const html = `<!doctype html>\n<html>\n<head>\n  <meta charset="UTF-8">\n  <title>Resume</title>\n  <link rel="stylesheet" href="/cv/common/cv.css">\n  ${themeHref ? `<link rel="stylesheet" href="${themeHref}">` : ''}\n</head>\n<body>\n${resumeRoot.outerHTML}\n</body>\n</html>`;
     downloadBlob(html, `${makeBaseFilename()}.html`, 'text/html;charset=utf-8');
   }
 
@@ -616,11 +1191,39 @@
     downloadBlob(json, `${makeBaseFilename()}.json`, 'application/json;charset=utf-8');
   }
 
+  // Dark mode toggle (shared with project/index.html #pageConfigDarkToggle technique)
+  function isDarkActive() {
+    if (document.body.classList.contains('dark')) return true;
+    if (typeof Cookies === 'undefined') return false;
+    const sitelook = Cookies.get('sitelook') || 'default';
+    if (sitelook === 'dark') return true;
+    if (sitelook === 'computer') return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (sitelook === 'default') {
+      return (typeof Cookies !== 'undefined' && Cookies.get('modelsite') === 'dreamstudio')
+        || location.host.indexOf('dreamstudio') >= 0
+        || location.host.indexOf('planet.live') >= 0;
+    }
+    return false;
+  }
+
+  function updateDarkToggleIcon(btn) {
+    if (!btn) return;
+    const icon = btn.querySelector('.material-icons');
+    const dark = isDarkActive();
+    btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+    if (icon) icon.textContent = dark ? 'dark_mode' : 'light_mode';
+  }
+
   function setupPrintDownloadIcons() {
     const target = select('#map-print-download-icons');
     if (!target || target.dataset.ready === 'true') return;
 
     target.innerHTML = `
+      <div class="cv-icon-menu">
+        <button id="cvDarkToggleBtn" class="cv-icon-btn" type="button" title="Toggle dark mode" aria-pressed="false">
+          <span class="material-icons">light_mode</span>
+        </button>
+      </div>
       <div class="cv-icon-menu">
         <button id="cvPrintMenuBtn" class="cv-icon-btn" type="button" title="Print">
           <span class="material-icons">print</span>
@@ -640,6 +1243,25 @@
         </div>
       </div>
     `;
+
+    const darkToggleBtn = select('#cvDarkToggleBtn');
+    if (darkToggleBtn) {
+      updateDarkToggleIcon(darkToggleBtn);
+      if (typeof waitForElm === 'function') {
+        waitForElm('#bodyloaded').then(() => updateDarkToggleIcon(darkToggleBtn));
+      }
+      darkToggleBtn.addEventListener('click', () => {
+        const newLook = document.body.classList.contains('dark') ? 'default' : 'dark';
+        if (typeof Cookies !== 'undefined') Cookies.set('sitelook', newLook);
+        if (typeof setSitelook === 'function') setSitelook(newLook);
+        updateDarkToggleIcon(darkToggleBtn);
+      });
+      if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+          updateDarkToggleIcon(darkToggleBtn);
+        });
+      }
+    }
 
     const printBtn = select('#cvPrintMenuBtn');
     const downloadBtn = select('#cvDownloadMenuBtn');
@@ -698,56 +1320,140 @@
   function loadReadme() {
     const readmeContent = select('#cvReadmeContent');
     if (!readmeContent) return;
+    const readmePath = resolvePersonAssetPath(activePersonFolder || config.personFolder, 'README.md');
 
     if (typeof loadMarkdown === 'function') {
-      loadMarkdown('README.md', 'cvReadmeContent', '_parent');
+      loadMarkdown(readmePath, 'cvReadmeContent', '_parent');
       return;
     }
 
-    readmeContent.innerHTML = "<p style='color:red;'>Failed to load README.md.</p>";
+    readmeContent.innerHTML = `<p style='color:red;'>Failed to load ${readmePath}.</p>`;
   }
 
   // Setup event listeners
   function setupEventListeners() {
-    const jsonSelect = select('#cvJsonSelect');
-    const themeSelect = select('#cvThemeSelect');
+    const jsonSelect = select('#sourceSelect');
+    const themeSelect = select('#themeSelect');
+    const toggleJsonBtn = select('#cvToggleJsonBtn');
+    const dataPreview = select('#cvDataPreview');
+    if (toggleJsonBtn && dataPreview) {
+      toggleJsonBtn.addEventListener('click', () => {
+        const visible = dataPreview.style.display !== 'none';
+        dataPreview.style.display = visible ? 'none' : 'block';
+        toggleJsonBtn.textContent = visible ? 'View json' : 'Hide json';
+      });
+    }
+
+    const parseReportBtn = select('#cvParseReportBtn');
+    const parseReport = select('#cvParseReport');
+    if (parseReportBtn && parseReport) {
+      parseReportBtn.addEventListener('click', () => {
+        const visible = parseReport.style.display !== 'none';
+        parseReport.style.display = visible ? 'none' : 'block';
+        parseReportBtn.textContent = visible ? 'Parse Report' : 'Hide Report';
+      });
+    }
 
     if (jsonSelect) {
       jsonSelect.addEventListener('change', () => {
-        const jsonFile = jsonSelect.value;
-        const theme = themeSelect.value;
-        currentPdfData = null;
-        revokePdfBlobUrl();
-        setFilterParams(jsonFile, theme);
-        loadAll(jsonFile, theme);
+        if (typeof updateHash === 'function') updateHash({ source: jsonSelect.value });
+        if (jsonSelect.value === 'pdf') {
+          loadDefaultPdfResume().then((loaded) => {
+            if (loaded) {
+              loadTheme(currentJsonFile || config.defaultJson, currentTheme);
+            }
+          });
+        } else {
+          currentPdfData = null;
+          revokePdfBlobUrl();
+          if (config.syncResumeParam && typeof goHash === 'function') {
+            goHash({ resume: jsonSelect.value });
+          } else {
+            loadAll(jsonSelect.value, currentTheme);
+          }
+        }
       });
     }
 
     if (themeSelect) {
       themeSelect.addEventListener('change', () => {
-        const jsonFile = jsonSelect.value;
         const theme = themeSelect.value;
-        setFilterParams(jsonFile, theme);
-        loadAll(jsonFile, theme);
+        setCachedTheme(theme);
+        if (typeof goHash === 'function') {
+          const params = { theme: theme || '' };
+          if (config.syncResumeParam) params.resume = jsonSelect ? jsonSelect.value : '';
+          goHash(params);
+        } else {
+          loadAll(currentJsonFile || config.defaultJson, theme);
+        }
       });
     }
+
+    const teamLink = select('#cvOurTeamLink');
+    if (teamLink) {
+      teamLink.addEventListener('click', (event) => {
+        if (typeof goHash !== 'function') return;
+        event.preventDefault();
+        const showingTeam = hasTeamToken(getWhoTokens());
+        if (showingTeam) {
+          const whoWithoutTeam = buildWhoValueWithoutTeam();
+          if (whoWithoutTeam) {
+            goHash({ who: whoWithoutTeam, team: '' }, 'team');
+          } else {
+            goHash({ team: '' }, ['team', 'who']);
+          }
+        } else {
+          goHash({ who: buildTeamWhoValue(activePersonFolder || config.personFolder) });
+        }
+      });
+    }
+
+    // React to hash changes (triggered by goHash or direct URL edits)
+    document.addEventListener('hashChangeEvent', async function () {
+      const hashTheme = getHashParam('theme', null);
+      const theme = hashTheme !== null ? hashTheme : currentTheme;
+      const jsonFile = getHashParam('resume', config.defaultJson);
+      const themeEl = select('#themeSelect');
+      const jsonEl = select('#sourceSelect');
+      if (themeEl) themeEl.value = theme;
+      if (jsonEl) {
+        ensureJsonSelectOption(jsonFile);
+        jsonEl.value = jsonFile;
+      }
+      syncTeamUiFromHash(getHashParam('who', '') !== (window.priorHash && window.priorHash.who ? window.priorHash.who : ''));
+      await loadAll(jsonFile, theme);
+      if (config.showReadme) {
+        loadReadme();
+      }
+      if (config.autoDetectJsonFiles) {
+        autoDetectJsonFiles(jsonFile);
+      }
+    });
   }
 
   // Initialize filters
   function init(options = {}) {
+    filtersInitialized = true;
+    ensureBioStyles();
+
     // Merge config
     config = Object.assign({}, config, options);
     if (!config.personFolder) {
       config.personFolder = detectPersonFolder();
     }
+    activePersonFolder = config.personFolder;
     if (config.defaultPDF && typeof options.syncResumeParam === 'undefined') {
       config.syncResumeParam = false;
+    }
+
+    // Load shared resume styles once via localsite.js includeCSS3
+    if (typeof includeCSS3 === 'function') {
+      includeCSS3('/cv/common/cv.css');
     }
 
     // Find or create container
     let container = select('#cvFiltersContainer');
     if (!container) {
-      // If no container specified, insert at start of body
       container = document.createElement('div');
       container.id = 'cvFiltersContainer';
       document.body.insertBefore(container, document.body.firstChild);
@@ -769,67 +1475,95 @@
       if (dataStatus) dataStatus.style.display = 'none';
     }
 
-    // Honor explicit ?resume= links, but do not write resume back into the URL
-    // unless the page opts into syncResumeParam.
-    const jsonFile = getParam('resume', config.defaultJson);
-    const theme = getParam('theme', config.defaultTheme);
+    const jsonFile = getHashParam('resume', config.defaultJson);
+
+    // Theme priority: hash → page default (options.defaultTheme) → localStorage cache
+    const hashTheme = getHashParam('theme', null);
+    const theme = hashTheme !== null ? hashTheme
+      : options.defaultTheme ? config.defaultTheme
+      : getCachedTheme();
 
     // Set dropdown values
-    const jsonSelect = select('#cvJsonSelect');
-    const themeSelect = select('#cvThemeSelect');
+    const jsonSelect = select('#sourceSelect');
+    const themeSelect = select('#themeSelect');
 
     ensureJsonSelectOption(jsonFile);
     if (jsonSelect) jsonSelect.value = jsonFile;
     if (themeSelect) themeSelect.value = theme;
 
-    // Update URL with current params
-    setFilterParams(jsonFile, theme);
+    if (config.defaultPDF && jsonSelect) {
+      const pdfOpt = document.createElement('option');
+      pdfOpt.value = 'pdf';
+      pdfOpt.textContent = 'PDF';
+      jsonSelect.appendChild(pdfOpt);
+    }
+    updateSourceSelectVisibility();
 
     // Setup event listeners
     setupEventListeners();
     setupPrintDownloadIcons();
 
-    // Load initial content
-    (async () => {
-      const loadedPdf = await loadDefaultPdfResume();
-      if (loadedPdf) {
-        currentJsonFile = jsonFile;
-        currentTheme = theme;
-        loadTheme(jsonFile, theme);
-      } else {
-        await loadAll(jsonFile, theme);
-      }
+    // Load index.js via localsite.js loadScript, then start rendering
+    function startContent() {
+      (async () => {
+        const sourceVal = getHashParam('source', null);
 
-      if (config.showReadme) {
-        loadReadme();
-      }
+        if (sourceVal && jsonSelect) {
+          if (sourceVal !== 'pdf') ensureJsonSelectOption(sourceVal);
+          jsonSelect.value = sourceVal;
+          updateSourceSelectVisibility();
+        }
 
-      // Auto-detect available JSON files only for JSON mode
-      if (!loadedPdf && config.autoDetectJsonFiles) {
-        autoDetectJsonFiles(jsonFile);
-      }
-    })();
+        const effectiveSource = (sourceVal && jsonSelect && jsonSelect.value === sourceVal)
+          ? sourceVal : null;
+
+        if (effectiveSource === 'pdf') {
+          const loaded = await loadDefaultPdfResume();
+          if (loaded) {
+            loadTheme(currentJsonFile || config.defaultJson, theme);
+          } else {
+            await loadAll(jsonFile, theme);
+          }
+        } else {
+          await loadAll(effectiveSource || jsonFile, theme);
+        }
+
+        if (config.showReadme) {
+          loadReadme();
+        }
+
+        if (config.autoDetectJsonFiles) {
+          autoDetectJsonFiles(jsonFile);
+        }
+      })();
+    }
+
+    if (typeof loadScript === 'function') {
+      loadScript('/cv/common/index.js', startContent);
+    } else {
+      startContent();
+    }
   }
 
   // Probe for common JSON filenames and populate the Data dropdown
   async function autoDetectJsonFiles(currentFile) {
     const candidates = getJsonCandidates();
-    const jsonSelect = select('#cvJsonSelect');
+    const jsonSelect = select('#sourceSelect');
     if (!jsonSelect) return;
 
     const found = [];
     await Promise.all(candidates.map(async (file) => {
       try {
-        const res = await fetch(file, { method: 'HEAD', cache: 'no-store' });
+        const res = await fetch(resolvePersonAssetPath(activePersonFolder || config.personFolder, file), { method: 'HEAD', cache: 'no-store' });
         if (res.ok) found.push(file);
       } catch { /* ignore */ }
     }));
 
-    // Only update if we found more than the default
     if (found.length > 1) {
       jsonSelect.innerHTML = found
-        .map(f => `<option value="${f}"${f === currentFile ? ' selected' : ''}>${f}</option>`)
+        .map((f, i) => `<option value="${f}"${f === currentFile ? ' selected' : ''}>${i === 0 ? 'From JSON' : f}</option>`)
         .join('\n');
+      updateSourceSelectVisibility();
     }
   }
 
@@ -838,8 +1572,8 @@
     init: init,
     select: select,
     selectAll: selectAll,
-    getParam: getParam,
-    setParam: setParam,
+    getHashParam: getHashParam,
+    setFilterParams: setFilterParams,
     loadJson: loadJson,
     loadTheme: loadTheme,
     loadReadme: loadReadme,
@@ -847,5 +1581,6 @@
   };
 
   window.addEventListener('beforeunload', revokePdfBlobUrl);
+  bindStandaloneBioMode();
 
 })(window);
