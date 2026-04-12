@@ -311,14 +311,26 @@
     return select('#bioList');
   }
 
+  function getBioMarkdownPath() {
+    return resolveCvRootAssetPath('bios/bios.md');
+  }
+
   function shouldShowBioList() {
     return hasTeamToken(getWhoTokens()) || isCvRootPage();
   }
 
+  function shouldKeepBioListVisible() {
+    return isCvRootPage();
+  }
+
   function cleanupBioSummary(target) {
-    target.querySelectorAll('.bio-expand-toggle').forEach((button) => button.remove());
+    target.querySelectorAll('.bioText, .bioMedia').forEach((element) => {
+      element.classList.remove('bioTextHasToggle', 'bioRowExpandable');
+      element.onclick = null;
+      element.title = '';
+    });
     target.querySelectorAll('.bioText p').forEach((paragraph) => {
-      paragraph.classList.remove('bio-collapsible', 'bio-expanded');
+      paragraph.classList.remove('bio-collapsed');
       paragraph.dataset.bioExpandable = '';
     });
   }
@@ -328,22 +340,38 @@
     return paragraphs.find((paragraph) => paragraph.textContent.trim().length > 40) || null;
   }
 
-  function toggleBioParagraph(paragraph, button) {
-    const expanded = paragraph.classList.toggle('bio-expanded');
-    button.textContent = expanded ? 'Less' : 'More';
-    button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  function annotateBioMarkup(target) {
+    if (!target) return;
+    target.querySelectorAll('p').forEach((paragraph) => {
+      if (paragraph.querySelector('img')) {
+        paragraph.classList.add('bioMedia');
+      } else {
+        paragraph.classList.remove('bioMedia');
+      }
+    });
+
+    target.querySelectorAll('a[href]').forEach((link) => {
+      const href = link.getAttribute('href');
+      if (!href || /^(?:[a-z]+:|\/|#)/i.test(href)) return;
+      const normalizedHref = href.replace(/^\.\//, '').replace(/^bios\//, '');
+      link.setAttribute('href', resolveCvRootAssetPath(normalizedHref));
+    });
+  }
+
+  function toggleBioParagraph(paragraph) {
+    paragraph.classList.toggle('bio-collapsed');
   }
 
   function refreshBioSummary(target) {
     if (!target) return;
     cleanupBioSummary(target);
+    annotateBioMarkup(target);
     if (!target.classList.contains('bioListSm')) return;
 
     target.querySelectorAll('.bioText').forEach((bioText) => {
       const paragraph = getPrimaryBioParagraph(bioText);
       if (!paragraph) return;
 
-      paragraph.classList.add('bio-collapsible');
       const paragraphStyle = getComputedStyle(paragraph);
       const lineHeight = parseFloat(paragraphStyle.lineHeight)
         || (parseFloat(paragraphStyle.fontSize) * 1.4)
@@ -351,24 +379,41 @@
       const collapsedHeight = lineHeight * 2;
       if (!(paragraph.scrollHeight > collapsedHeight + 4)) return;
 
+      bioText.classList.add('bioTextHasToggle');
+      bioText.classList.add('bioRowExpandable');
       paragraph.dataset.bioExpandable = 'true';
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'bio-expand-toggle';
-      button.textContent = 'More';
-      button.setAttribute('aria-expanded', 'false');
-      button.addEventListener('click', () => toggleBioParagraph(paragraph, button));
-      paragraph.insertAdjacentElement('afterend', button);
+      paragraph.classList.add('bio-collapsed');
+      bioText.title = 'Click to expand';
+      bioText.onclick = function (event) {
+        if (event.target.closest('a')) return;
+        toggleBioParagraph(paragraph);
+      };
+
+      const mediaBlock = bioText.previousElementSibling;
+      if (mediaBlock && mediaBlock.querySelector('img')) {
+        mediaBlock.classList.add('bioMedia', 'bioRowExpandable');
+        mediaBlock.title = 'Click to expand';
+        mediaBlock.onclick = function (event) {
+          if (event.target.closest('a')) return;
+          toggleBioParagraph(paragraph);
+        };
+      }
     });
   }
 
   function bindBioExpansion(target) {
     if (!target || target.dataset.bioExpandBound === 'true') return;
 
+    let refreshQueued = false;
     const observer = new MutationObserver(() => {
-      window.requestAnimationFrame(() => refreshBioSummary(target));
+      if (refreshQueued) return;
+      refreshQueued = true;
+      window.requestAnimationFrame(() => {
+        refreshQueued = false;
+        refreshBioSummary(target);
+      });
     });
-    observer.observe(target, { childList: true, subtree: true });
+    observer.observe(target, { childList: true });
     target.dataset.bioExpandBound = 'true';
     target._bioExpandObserver = observer;
   }
@@ -378,7 +423,9 @@
     if (!bioList) return;
     bindBioExpansion(bioList);
 
-    if (!shouldShowBioList()) {
+    const keepVisible = shouldKeepBioListVisible();
+
+    if (!shouldShowBioList() && !keepVisible) {
       bioList.style.display = 'none';
       bioList.innerHTML = '';
       bioList.dataset.loadedMarkdown = '';
@@ -386,14 +433,14 @@
       return;
     }
 
-    bioList.style.display = '';
-    if (!forceReload && bioList.dataset.loadedMarkdown === 'team') return;
+    bioList.style.display = 'block';
+    if (!forceReload && bioList.dataset.loadedMarkdown === 'team' && bioList.innerHTML.trim()) return;
 
     bioList.dataset.loadedMarkdown = 'team';
     if (typeof loadMarkdown === 'function') {
-      loadMarkdown(resolveCvRootAssetPath('bios.md'), bioList.id, '_parent');
+      loadMarkdown(getBioMarkdownPath(), bioList.id, '_parent');
     } else {
-      bioList.innerHTML = `<p style='color:red;'>Failed to load ${resolveCvRootAssetPath('bios.md')}.</p>`;
+      bioList.innerHTML = `<p style='color:red;'>Failed to load ${getBioMarkdownPath()}.</p>`;
     }
   }
 
@@ -436,7 +483,7 @@
         clear: both;
         opacity: 0;
       }
-      .bioList p:has(img) {
+      .bioList .bioMedia {
         float: left;
         width: var(--bio-image-size);
         margin: 0 30px 28px 0;
@@ -463,43 +510,39 @@
       .bioList .bioText p {
         overflow: visible;
       }
-      .bioList .bioText p.bio-collapsible {
+      .bioList .bioText p.bio-collapsed {
         display: -webkit-box;
         -webkit-box-orient: vertical;
         -webkit-line-clamp: 2;
         overflow: hidden;
       }
-      .bioList .bioText p.bio-collapsible.bio-expanded {
-        display: block;
-        -webkit-line-clamp: unset;
-        overflow: visible;
-      }
-      .bioList .bio-expand-toggle {
-        border: 0;
-        background: transparent;
-        color: #0b63c9;
-        padding: 0;
-        font: 600 12px/1.3 system-ui;
-        cursor: pointer;
-      }
-      .dark .bioList .bio-expand-toggle {
-        color: #7fc0ff;
-      }
       .bioList.bioListSm {
-        --bio-image-size: 50px;
+        --bio-image-size: 64px;
       }
-      .bioList.bioListSm p:has(img) {
+      .bioList.bioListSm .bioMedia {
         margin: 0 14px 12px 0;
       }
       .bioList.bioListSm .bioText {
+        position: relative;
         margin-bottom: 14px;
+        padding: 2px 8px 4px;
+        border-radius: 10px;
       }
       .bioList.bioListSm .bioText h2 {
         font-size: 18px;
-        margin-bottom: 4px;
+        margin: 0 0 4px;
+      }
+      .bioList.bioListSm .bioRowExpandable {
+        cursor: pointer;
+      }
+      .bioList.bioListSm .bioText.bioRowExpandable:hover {
+        background: rgba(11, 99, 201, 0.08);
+      }
+      .dark .bioList.bioListSm .bioText.bioRowExpandable:hover {
+        background: rgba(127, 192, 255, 0.14);
       }
       @container (max-width: 760px) {
-        .bioList p:has(img) {
+        .bioList .bioMedia {
           float: none;
           clear: both;
           width: auto;

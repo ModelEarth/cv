@@ -49,19 +49,38 @@
       : (b.location || '');
     const locationShort = locationStr && locationStr.length < 50;
 
-    // Build contact items as real elements (not text nodes)
-    const contactItems = [];
-    if (b.email) contactItems.push(`<a href="mailto:${esc(b.email)}">${esc(b.email)}</a>`);
-    if (b.url) contactItems.push(`<a href="${esc(toHref(b.url))}" target="_blank" rel="noopener">${esc(b.url)}</a>`);
-    profiles.forEach(p => {
-      if (p.url) {
-        contactItems.push(`<a href="${esc(toHref(p.url))}" target="_blank" rel="noopener">${esc(p.network || p.url)}</a>`);
-      } else if (p.display) {
-        contactItems.push(`<span class="contact-extra">${esc(p.display)}</span>`);
-      }
+    // Separate URL-profile items from plain-text display extras
+    const urlProfiles = profiles.filter(p => p.url);
+    const displayExtras = profiles.filter(p => p.display && !p.url).map(p => p.display);
+
+    // Phone list: prefer b.phones[] (PDF-parsed), fall back to b.phone string
+    const phoneList = (b.phones && b.phones.length) ? b.phones : (b.phone ? [b.phone] : []);
+
+    // Build contact rows — each entry is { html, extraClass }
+    const contactRows = [];
+    if (b.email) contactRows.push({ html: `<a href="mailto:${esc(b.email)}">${esc(b.email)}</a>`, cls: '' });
+    if (b.url)   contactRows.push({ html: `<a href="${esc(toHref(b.url))}" target="_blank" rel="noopener">${esc(b.url)}</a>`, cls: '' });
+    urlProfiles.forEach(p => {
+      contactRows.push({ html: `<a href="${esc(toHref(p.url))}" target="_blank" rel="noopener">${esc(p.network || p.url)}</a>`, cls: '' });
     });
-    if (b.phone) contactItems.push(`<span class="contact-phone">${esc(b.phone)}</span>`);
-    if (locationShort) contactItems.push(`<span class="contact-location">${esc(locationStr)}</span>`);
+
+    // Phone + extras: combined into one row so "View PDF" appended by filters.js lands here
+    if (phoneList.length > 0 || displayExtras.length > 0) {
+      const phonePart = phoneList.map(ph => `<span class="contact-phone">${esc(ph)}</span>`).join(', ');
+      const extraPart = displayExtras.map(e => `<span class="contact-extra">${esc(e)}</span>`).join(' · ');
+      let rowHtml;
+      if (phoneList.length === 1 && displayExtras.length > 0) {
+        rowHtml = phonePart + ' · ' + extraPart;
+      } else if (phoneList.length > 1 && displayExtras.length > 0) {
+        rowHtml = phonePart + '<br>' + extraPart;
+      } else {
+        rowHtml = phonePart + extraPart;
+      }
+      // Class 'contact-item-phone' is what filters.js queries to append "View PDF"
+      contactRows.push({ html: rowHtml, cls: 'contact-item-phone' });
+    }
+
+    if (locationShort) contactRows.push({ html: `<span class="contact-location">${esc(locationStr)}</span>`, cls: 'contact-item-meta' });
 
     c.innerHTML = `
       <div class="containingDiv">
@@ -72,7 +91,7 @@
             ${!locationShort && locationStr ? `<div class="location-long">${esc(locationStr)}</div>` : ""}
           </div>
           <div class="top-side">
-            ${contactItems.map(item => `<div class="contact-item${item.includes('contact-phone') || item.includes('contact-location') ? ' contact-item-meta' : ''}">${item}</div>`).join("")}
+            ${contactRows.map(({ html, cls }) => `<div class="contact-item${cls ? ' ' + cls : ''}">${html}</div>`).join("")}
           </div>
         </div>
 
@@ -109,10 +128,9 @@
           <div class="col-side">
             ${renderSection("Skills", skills.map(s => `
                 <div class="item">
-                  <div class="item-title">${esc(s.name)}</div>
-                  <div class="chips">
-                    ${(s.keywords || []).map(k => `<span class="chip">${esc(k)}</span>`).join("")}
-                  </div>
+                  ${s.name ? `<div class="item-title">${esc(s.name)}</div>` : ""}
+                  ${s.summary ? `<div class="item-summary">${esc(s.summary)}</div>` : ""}
+                  ${(s.keywords || []).length ? `<div class="chips">${(s.keywords || []).map(k => `<span class="chip">${esc(k)}</span>`).join("")}</div>` : ""}
                 </div>`).join(""))}
 
             ${renderSection("Education", edu.map(e => `

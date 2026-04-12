@@ -361,7 +361,7 @@ const ResumePDFConverter = {
       profiles.push({ network: '', url: '', display: piece });
     }
 
-    return { name, label, email, phone, url, location, profiles };
+    return { name, label, email, phone: phones[0] || '', phones, url, location, profiles };
   },
 
   /**
@@ -593,6 +593,9 @@ const ResumePDFConverter = {
    *   "Languages:"              — standalone header line
    *   "Languages: Python, JS"   — inline header + keywords
    *   "Languages:\tPython, JS"  — tab-separated (left col = header, right = keywords)
+   *
+   * Any lines that appear before the first category header are treated as intro
+   * text (e.g. a summary sentence) and stored as { name: '', summary: '...' }.
    */
   _parseSkills(text) {
     const skills = [];
@@ -601,6 +604,8 @@ const ResumePDFConverter = {
 
     let currentCategory = "Skills";
     let keywords = [];
+    let foundFirstCategory = false;
+    const introLines = [];
 
     const pushCurrent = () => {
       if (keywords.length > 0) {
@@ -616,17 +621,26 @@ const ResumePDFConverter = {
       const tabRest  = tabIdx >= 0 ? line.substring(tabIdx + 1).trim() : '';
 
       // Category header: "Something:" or "Something Name: optional keywords..."
-      // Require at least one uppercase start and colon within first 35 chars of mainPart
       const catMatch = mainPart.match(/^([A-Z][^:\n]{0,33}):\s*(.*)$/);
       if (catMatch) {
+        if (!foundFirstCategory && introLines.length > 0) {
+          // Flush accumulated intro text as a header-less entry before first category
+          skills.push({ name: '', summary: introLines.join(' '), keywords: [] });
+          introLines.length = 0;
+        }
+        foundFirstCategory = true;
         pushCurrent();
         currentCategory = catMatch[1].trim();
         const inlineContent = (catMatch[2] + (tabRest ? ' ' + tabRest : '')).trim();
         if (inlineContent) {
           keywords.push(...inlineContent.split(/[,•]/).map(w => w.trim()).filter(w => w));
         }
+      } else if (!foundFirstCategory) {
+        // Before first category header: accumulate as intro text
+        const fullLine = tabRest ? `${mainPart} ${tabRest}` : mainPart;
+        introLines.push(fullLine);
       } else {
-        // Plain keywords line — merge tab-separated parts with comma
+        // After first category header: plain keywords line
         const fullLine = tabRest ? `${mainPart}, ${tabRest}` : mainPart;
         keywords.push(...fullLine.split(/[,•]/).map(w => w.trim()).filter(w => w));
       }
