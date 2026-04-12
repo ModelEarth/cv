@@ -5,6 +5,7 @@
 [Noor Fathima](../#NoorFathima)
 [Loren Heyns](../#LorenHeyns)
 [Mohammed Saalim](../#MohammedSaalim)
+[Satvik Praveen](../#SatvikPraveen)
 [Shanmuga Priya Kannan](../#ShanmugaPriyaKannan)<!-- Projects section -->
 
 <!--
