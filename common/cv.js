@@ -1200,10 +1200,12 @@
             </select>
           </div>
         
+          <div class="hide-when-no-bio">
           <div class="local" style="display:none">
           <select id="sourceSelect" style="margin-left:8px;display:none">
             ${renderJsonOptions()}
           </select>
+          </div>
           </div>
 
           <div class="cv-filters-spacer"></div>
