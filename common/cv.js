@@ -712,6 +712,57 @@
     return paragraphs.find((paragraph) => paragraph.textContent.trim().length > 40) || null;
   }
 
+  function getBioHashValue(bioText) {
+    if (!bioText || typeof bioText.getAttribute !== 'function') return '';
+    return String(bioText.getAttribute('bio') || '').trim();
+  }
+
+  function getBioWebsiteValue(bioText) {
+    if (!bioText || typeof bioText.getAttribute !== 'function') return '';
+    return String(bioText.getAttribute('website') || '').trim();
+  }
+
+  function navigateToBioTarget(target) {
+    if (!target) return;
+    window.location.href = target;
+  }
+
+  function applyBioAction(bioText) {
+    const bioValue = getBioHashValue(bioText);
+    const websiteValue = getBioWebsiteValue(bioText);
+    let actionTarget = '';
+    let actionLabel = '';
+
+    if (bioValue) {
+      actionTarget = getCvRootHashHref(`#${encodeURIComponent(bioValue)}`);
+      actionLabel = `#${bioValue}`;
+    } else if (websiteValue) {
+      actionTarget = websiteValue;
+      actionLabel = websiteValue;
+    } else {
+      return false;
+    }
+
+    bioText.classList.add('bioTextHasToggle', 'bioRowExpandable');
+    bioText.title = `Open ${actionLabel}`;
+    bioText.onclick = function (event) {
+      if (event.target.closest('a')) return;
+      navigateToBioTarget(actionTarget);
+    };
+
+    const mediaBlock = bioText.previousElementSibling;
+    if (mediaBlock && mediaBlock.querySelector('img')) {
+      mediaBlock.classList.add('bioMedia', 'bioRowExpandable');
+      mediaBlock.title = `Open ${actionLabel}`;
+      mediaBlock.onclick = function (event) {
+        if (event.target.closest('a')) return;
+        navigateToBioTarget(actionTarget);
+      };
+    }
+
+    return true;
+  }
+
   function annotateBioMarkup(target) {
     if (!target) return;
     target.querySelectorAll('p').forEach((paragraph) => {
@@ -740,6 +791,8 @@
     if (!target.classList.contains('bioListSm')) return;
 
     target.querySelectorAll('.bioText').forEach((bioText) => {
+      if (applyBioAction(bioText)) return;
+
       const paragraph = getPrimaryBioParagraph(bioText);
       if (!paragraph) return;
 

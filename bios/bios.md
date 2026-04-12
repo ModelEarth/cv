@@ -1,22 +1,21 @@
 ## Lead Engineers
 
-<div markdown="1">
-[Yash Gondkar](../#YashGondkar)
-[Noor Fathima](../#NoorFathima)
-[Loren Heyns](../#LorenHeyns)
-[Mohammed Saalim](../#MohammedSaalim)
-[Satvik Praveen](../#SatvikPraveen)
-[Shanmuga Priya Kannan](../#ShanmugaPriyaKannan)<!-- Projects section -->
-
-<!--
-[Satvik Praveen](extract) - JSON drop to convert-->
-<!--
-[Thanmayi Sai](ThanmayiSai)-->
-<!--[Rekha Chimpiri](RekhaChimpiri) -->
-
-</div><br>
-
-
+![Loren Heyns](https://dreamstudio.com/earth/img/team/Loren-Heyns.jpg)
+<div class="bioText" markdown="1" bio="LorenHeyns">
+## Loren Heyns
+Loren is a Full-Stack Developer with 25 years experience building collaborative websites that combine data visualizations and interactive maps with fast static hosting using GitHub and Cloudflare. Loren enjoys building open frameworks and immersive data science websites combining industry data analysis, Google Data Common API timelines and LLM interfaces.
+[My Recent Work ~ Get In Touch](https://dreamstudio.com/loren)
+</div>
+---
+![Gary Martirosyan](https://dreamstudio.com/earth/img/team/gary.jpg)
+<div class="bioText" markdown="1" website="https://gary-mart.com">
+## Gary Martirosyan
+Gary is a Data Engineer and Database Developer, specializing in designing, creating, and maintaining relational databases, ensuring their efficiency, reliability, and scalability. Gary optimizes database performance through applying best practices, query tuning, and stored procedure enhancements, ensuring fast and efficient data retrieval.
+[My Recent Work ~ Get In Touch](https://gary-mart.com)
+</div>
+---
+Alumni
+---
 ![Sugandha Bhandari](https://dreamstudio.com/earth/img/team/Sugandha-Bhandari.jpg)
 <div class="bioText" markdown="1">
 ## Sugandha Bhandari
@@ -28,12 +27,6 @@ Sugandha is a software engineer with an MS in Computer Science, experienced in t
 <div class="bioText" markdown="1">
 ## Dhananjay Surti
 Dhananjay is a recent Computer Science graduate from Case Western University. He likes to dabble in Web Development, Computer Vision, ML and IoT devices. He is currently learning how to use LLMs to gain meaningful insights from files in GitHub repositories.
-</div>
----
-![Gary Martirosyan](https://dreamstudio.com/earth/img/team/gary.jpg)
-<div class="bioText" markdown="1">
-## Gary Martirosyan
-Gary is a Data Engineer and Database Developer, specializing in designing, creating, and maintaining relational databases, ensuring their efficiency, reliability, and scalability. Gary optimizes database performance through applying best practices, query tuning, and stored procedure enhancements, ensuring fast and efficient data retrieval.
 </div>
 ---
 ![Melody Yang](https://dreamstudio.com/earth/img/team/Melody-Yang.jpg)
@@ -54,13 +47,6 @@ Priyanka is a Data Scientist / Research Data Analyst with a PhD in Computer Mana
 ## Ivy Zhou
 Ivy is a Senior Programmer and Data Analytics Specialist with degrees in Applied Machine Learning from Northeastern University and Mathematics from the University of Washington, Seattle. She applies Python, SQL and R in data visualization, strategy optimization decision-making, and statistical analysis.
 [My Recent Work ~ Get In Touch](https://contra.com/dreamstudioteam)
-</div>
----
-![Loren Heyns](https://dreamstudio.com/earth/img/team/Loren-Heyns.jpg)
-<div class="bioText" markdown="1">
-## Loren Heyns
-Loren is a Full-Stack Developer with 25 years experience building collaborative websites that combine data visualizations and interactive maps with fast static hosting using GitHub and Cloudflare. Loren enjoys building open frameworks and immersive data science websites combining industry data analysis, Google Data Common API timelines and LLM interfaces.
-[My Recent Work ~ Get In Touch](https://dreamstudio.com/loren)
 </div>
 
 <!--
@@ -108,5 +94,20 @@ Mohammad is a Data Analyst and Full Stack Developer with a Master's in MIS from 
 
 -->
 
+<div markdown="1">
+**CV Pages**
+[Yash Gondkar](../#YashGondkar)
+[Noor Fathima](../#NoorFathima)
+[Loren Heyns](../#LorenHeyns)
+[Mohammed Saalim](../#MohammedSaalim)
+[Satvik Praveen](../#SatvikPraveen)
+[Shanmuga Priya Kannan](../#ShanmugaPriyaKannan)<!-- Projects section -->
 
+<!--
+[Satvik Praveen](extract) - JSON drop to convert-->
+<!--
+[Thanmayi Sai](ThanmayiSai)-->
+<!--[Rekha Chimpiri](RekhaChimpiri) -->
+
+</div><br>
 
