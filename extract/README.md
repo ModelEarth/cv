@@ -104,55 +104,6 @@ Professional standard layout. Always reliable.
 
 ---
 
-## 📦 Hosting on GitHub Pages
-
-### Step 1: Prepare Repository
-
-```bash
-# Create or navigate to your repository
-git clone https://github.com/SatvikPraveen/resume-template-generator.git
-cd resume-template-generator
-
-# Ensure you're on main branch
-git checkout main
-```
-
-### Step 2: Configure GitHub Pages
-
-1. Go to **Repository Settings** → **Pages**
-2. Under "Build and deployment":
-   - Source: Select `Deploy from a branch`
-   - Branch: Select `main` and `/root`
-3. Click **Save**
-
-### Step 3: Verify Deployment
-
-After a few minutes, your site will be available at:
-
-```
-https://SatvikPraveen.github.io/resume-template-generator
-```
-
-### Step 4: Update Configuration (Optional)
-
-Add to `index.html` `<head>`:
-
-```html
-<base href="/resume-template-generator/" />
-```
-
-This ensures assets load correctly from the subdirectory.
-
-### Step 5: Custom Domain (Optional)
-
-To use a custom domain:
-
-1. Settings → Pages → Custom domain
-2. Enter your domain (e.g., `resume.yoursite.com`)
-3. Update DNS CNAME record to point to `yourusername.github.io`
-
----
-
 ## 🔧 Project Structure
 
 ```

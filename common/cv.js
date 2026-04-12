@@ -2,8 +2,7 @@
  * CV Filters Module - Common filter/dropdown functionality for CV pages
  * jQuery-compatible selector and filter management
  *
- * Loads /cv/common/cv.css and /cv/common/index.js via localsite.js helpers
- * (includeCSS3 and loadScript) so theme.html is no longer needed.
+ * Loads /cv/common/cv.css via localsite.js includeCSS3
  *
  * Usage:
  *   CVFilters.init({
@@ -124,7 +123,9 @@
   let rootHashTargetsPerson = false;
   let filtersInitialized = false;
   let standaloneBioModeBound = false;
+  let baseConfig = null;
   const personFolderExistsCache = new Map();
+  const personProfileConfigCache = new Map();
 
   // Theme options (12 local custom themes)
   const THEMES = [
@@ -193,7 +194,112 @@
     return personFolder || config.personFolder || '';
   }
 
+  function parseQuotedConfigValue(sourceText, key) {
+    if (!sourceText || !key) return '';
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const match = sourceText.match(new RegExp(`${escapedKey}\\s*:\\s*(['"])(.*?)\\1`));
+    return match ? match[2].trim() : '';
+  }
+
+  function resolvePersonPageConfigUrl(personFolder, value) {
+    if (!value) return '';
+    if (/^(?:[a-z]+:)?\/\//i.test(value) || value.startsWith('data:') || value.startsWith('blob:')) {
+      return value;
+    }
+    const personBaseUrl = new URL(getPersonPageHref(personFolder), window.location.href);
+    return new URL(value, personBaseUrl).href;
+  }
+
+  async function getPersonProfileConfig(personFolder) {
+    const candidate = (personFolder || '').trim();
+    if (!candidate) return null;
+    if (personProfileConfigCache.has(candidate)) {
+      return personProfileConfigCache.get(candidate);
+    }
+
+    const indexUrl = resolvePersonPageConfigUrl(candidate, 'index.html');
+
+    try {
+      const response = await fetch(indexUrl, { cache: 'no-store' });
+      if (!response.ok) {
+        personProfileConfigCache.set(candidate, null);
+        return null;
+      }
+
+      const html = await response.text();
+      const profileConfig = {
+        defaultJson: resolvePersonPageConfigUrl(candidate, parseQuotedConfigValue(html, 'defaultJson')),
+        defaultPDF: resolvePersonPageConfigUrl(candidate, parseQuotedConfigValue(html, 'defaultPDF')),
+        defaultTheme: parseQuotedConfigValue(html, 'defaultTheme')
+      };
+
+      personProfileConfigCache.set(candidate, profileConfig);
+      return profileConfig;
+    } catch {
+      personProfileConfigCache.set(candidate, null);
+      return null;
+    }
+  }
+
+  function syncSourceSelectOptions(preferredValue) {
+    const jsonSelect = select('#sourceSelect');
+    if (!jsonSelect || !isCvRootPage()) return;
+
+    const preferredSource = getSourceSelectValue(preferredValue);
+    const options = [];
+    if (config.defaultJson) {
+      options.push({ value: 'json', label: 'From JSON' });
+    }
+    if (config.defaultPDF) {
+      options.push({ value: 'pdf', label: 'PDF' });
+    }
+
+    if (!options.length && preferredSource) {
+      options.push({
+        value: preferredSource,
+        label: preferredSource === 'pdf' ? 'PDF' : 'From JSON'
+      });
+    }
+
+    jsonSelect.innerHTML = options
+      .map((option) => `<option value="${option.value}">${option.label}</option>`)
+      .join('\n');
+
+    if (options.length) {
+      const nextValue = options.some((option) => option.value === preferredSource)
+        ? preferredSource
+        : (config.defaultPDF && !config.defaultJson ? 'pdf' : options[0].value);
+      jsonSelect.value = nextValue;
+    }
+
+    updateSourceSelectVisibility();
+  }
+
+  async function applyActivePersonProfileConfig(personFolder) {
+    if (!baseConfig) return;
+
+    config.defaultJson = baseConfig.defaultJson;
+    config.defaultPDF = baseConfig.defaultPDF;
+    config.defaultTheme = baseConfig.defaultTheme;
+
+    if (!isCvRootPage() || !personFolder) return;
+
+    const profileConfig = await getPersonProfileConfig(personFolder);
+    if (!profileConfig) return;
+
+    if (profileConfig.defaultJson || profileConfig.defaultPDF) {
+      config.defaultJson = profileConfig.defaultJson || '';
+      config.defaultPDF = profileConfig.defaultPDF || '';
+    }
+    if (profileConfig.defaultTheme) {
+      config.defaultTheme = profileConfig.defaultTheme;
+    }
+  }
+
   function getTeamLinkHref(personFolder) {
+    if (!isCvRootPage()) {
+      return getCvRootRelativePrefix() || getCvRootPathname();
+    }
     const whoValue = buildTeamWhoValue(personFolder);
     return getCvPageHref(whoValue);
   }
@@ -286,6 +392,17 @@
     try { localStorage.setItem(THEME_CACHE_KEY, theme); } catch {} // eslint-disable-line no-empty
   }
 
+  function getThemeForHashChange() {
+    const hash = typeof getHash === 'function' ? getHash() : {};
+    if (hash.theme !== undefined) {
+      return hash.theme || '';
+    }
+    if (window.priorHash && window.priorHash.theme !== undefined) {
+      return '';
+    }
+    return currentTheme || '';
+  }
+
   function setFilterParams(jsonFile, theme, silent) {
     const params = { theme: theme || '' };
     if (config.syncResumeParam) {
@@ -296,6 +413,32 @@
     } else {
       if (typeof goHash === 'function') goHash(params);
     }
+  }
+
+  function isPdfOnlyMode() {
+    return !!(config.defaultPDF && !config.defaultJson);
+  }
+
+  function getRequestedSource() {
+    const source = getHashParam('source', null);
+    if (source) return source;
+    return isPdfOnlyMode() ? 'pdf' : '';
+  }
+
+  function getSourceSelectValue(requestedSource) {
+    const source = requestedSource === undefined ? getRequestedSource() : requestedSource;
+    if (source === 'pdf') return 'pdf';
+    if (source === 'json') return 'json';
+    if (source) return 'json';
+    if (config.defaultJson) return 'json';
+    return isPdfOnlyMode() ? 'pdf' : '';
+  }
+
+  function getRequestedJsonFile() {
+    const source = getRequestedSource();
+    if (source === 'pdf' || source === 'json') return config.defaultJson;
+    if (source) return source;
+    return getHashParam('resume', config.defaultJson);
   }
 
   function revokePdfBlobUrl() {
@@ -325,6 +468,35 @@
     return null;
   }
 
+  function ensureResumePdfConverterLoaded() {
+    if (getResumePdfConverter()) {
+      return Promise.resolve(true);
+    }
+
+    const scriptPath = resolveCvRootAssetPath('common/ResumePDFConverter.js');
+
+    if (typeof loadScript === 'function') {
+      return new Promise((resolve) => {
+        loadScript(scriptPath, () => resolve(!!getResumePdfConverter()));
+      });
+    }
+
+    return new Promise((resolve) => {
+      const existing = document.querySelector(`script[src="${scriptPath}"]`);
+      if (existing) {
+        existing.addEventListener('load', () => resolve(!!getResumePdfConverter()), { once: true });
+        existing.addEventListener('error', () => resolve(false), { once: true });
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = scriptPath;
+      script.onload = () => resolve(!!getResumePdfConverter());
+      script.onerror = () => resolve(false);
+      document.head.appendChild(script);
+    });
+  }
+
   function getJsonCandidates() {
     return Array.from(new Set([
       config.defaultJson,
@@ -334,21 +506,26 @@
     ].filter(Boolean)));
   }
 
-  function renderJsonOptions(selectedFile) {
-    return Array.from(new Set([selectedFile || config.defaultJson].filter(Boolean)))
-      .map((file, i) => `<option value="${file}"${file === selectedFile ? ' selected' : ''}>${i === 0 ? 'From JSON' : file}</option>`)
-      .join('\n');
+  function renderJsonOptions(selectedValue) {
+    if (!config.defaultJson) return '';
+    return `<option value="json"${(selectedValue || getSourceSelectValue()) === 'json' ? ' selected' : ''}>From JSON</option>`;
   }
 
-  function ensureJsonSelectOption(file) {
+  function ensureJsonSelectOption() {
     const jsonSelect = select('#sourceSelect');
-    if (!jsonSelect || !file) return;
-    if (Array.from(jsonSelect.options).some((option) => option.value === file)) return;
+    if (!jsonSelect || !config.defaultJson) return;
+    if (Array.from(jsonSelect.options).some((option) => option.value === 'json')) return;
 
     const option = document.createElement('option');
-    option.value = file;
-    option.textContent = file;
-    jsonSelect.appendChild(option);
+    option.value = 'json';
+    option.textContent = 'From JSON';
+
+    const pdfOption = Array.from(jsonSelect.options).find((existingOption) => existingOption.value === 'pdf');
+    if (pdfOption) {
+      jsonSelect.insertBefore(option, pdfOption);
+    } else {
+      jsonSelect.appendChild(option);
+    }
   }
 
   function updateTeamLink() {
@@ -424,17 +601,32 @@
     return !(activePersonFolder || config.personFolder);
   }
 
+  function setNoBioElementDisplay(element, shouldShow, defaultDisplay) {
+    if (!element.dataset.noBioVisibleDisplay) {
+      element.dataset.noBioVisibleDisplay = defaultDisplay !== undefined
+        ? defaultDisplay
+        : (element.id === 'cvFooter' ? 'flex' : '');
+    }
+    element.style.display = shouldShow ? element.dataset.noBioVisibleDisplay : 'none';
+  }
+
   function syncNoBioElements(noBioState) {
     selectAll('#cvFiltersContainer .hide-when-bio').forEach((element) => {
-      if (!element.dataset.noBioVisibleDisplay) {
-        element.dataset.noBioVisibleDisplay = element.id === 'cvFooter' ? 'flex' : '';
-      }
-      element.style.display = noBioState ? 'none' : element.dataset.noBioVisibleDisplay;
+      setNoBioElementDisplay(element, !noBioState);
+    });
+
+    selectAll('#cvFiltersContainer .hide-when-no-bio').forEach((element) => {
+      setNoBioElementDisplay(element, !noBioState);
     });
 
     selectAll('.content.contentpadding > .hide-when-bio').forEach((element) => {
       if (element.closest('#cvFiltersContainer')) return;
-      element.style.display = noBioState ? 'block' : 'none';
+      setNoBioElementDisplay(element, noBioState, 'block');
+    });
+
+    selectAll('.content.contentpadding > .hide-when-no-bio').forEach((element) => {
+      if (element.closest('#cvFiltersContainer')) return;
+      setNoBioElementDisplay(element, !noBioState, 'block');
     });
   }
 
@@ -443,6 +635,7 @@
     if (!noBioTarget) return;
     const noBioState = isNoBioState();
     noBioTarget.classList.toggle('hide-when-bio', noBioState);
+    noBioTarget.classList.toggle('hide-when-no-bio', !noBioState);
     syncNoBioElements(noBioState);
   }
 
@@ -829,9 +1022,6 @@
   function generateFilterHTML() {
     return `
       <style>
-        #sourceSelect {
-          display:none !important; /* temp */
-        }
         .cv-filters-row {
           display: flex;
           align-items: center;
@@ -1010,9 +1200,11 @@
             </select>
           </div>
         
+          <div class="local" style="display:none">
           <select id="sourceSelect" style="margin-left:8px;display:none">
-            ${renderJsonOptions(config.defaultJson)}
+            ${renderJsonOptions()}
           </select>
+          </div>
 
           <div class="cv-filters-spacer"></div>
           <div id="map-print-download-icons"></div>
@@ -1069,8 +1261,233 @@
     }
   }
 
+  // Resume renderer moved from /cv/common/index.js.
+  function initCvRenderer() {
+    if (window.CVRenderer && typeof window.CVRenderer.render === 'function') return;
+
+    function getRendererParam(name, fallback) {
+      return new URLSearchParams(location.search).get(name) ?? fallback;
+    }
+
+    function stringifyValue(value) {
+      return (value || '').toString();
+    }
+
+    function toHref(url) {
+      if (!url) return url;
+      const value = url.trim();
+      if (/^[a-zA-Z][a-zA-Z0-9+\-.]*:\/\//.test(value)) return value;
+      if (
+        value.startsWith('/')
+        || value.startsWith('.')
+        || /^(localhost|127\.|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(value)
+      ) {
+        return value;
+      }
+      const slashIndex = value.indexOf('/');
+      const dotIndex = value.indexOf('.');
+      if (dotIndex !== -1 && (slashIndex === -1 || dotIndex < slashIndex)) {
+        return `https://${value}`;
+      }
+      return value;
+    }
+
+    function renderSection(title, content) {
+      if (!content || !content.trim()) return '';
+      return `
+      <div class="section">
+        <div class="section-title">${title}</div>
+        ${content}
+      </div>
+    `;
+    }
+
+    function renderResume(data) {
+      const basics = data.basics || {};
+      const work = data.work || [];
+      const education = data.education || [];
+      const skills = data.skills || [];
+      const projects = data.projects || [];
+      const certifications = data.certifications || data.certificates || [];
+      const languages = data.languages || [];
+      const profiles = basics.profiles || data.profiles || [];
+
+      const resumeContainer = document.getElementById('resumeContainer');
+      if (!resumeContainer) return;
+
+      const locationString = typeof basics.location === 'object' && basics.location
+        ? [basics.location.city, basics.location.region, basics.location.countryCode || basics.location.country].filter(Boolean).join(', ')
+        : (basics.location || '');
+      const locationShort = locationString && locationString.length < 50;
+
+      const urlProfiles = profiles.filter((profile) => profile.url);
+      const displayExtras = profiles
+        .filter((profile) => profile.display && !profile.url)
+        .map((profile) => (profile.display || '').trim())
+        .filter(Boolean);
+      const displayExtrasCharacters = displayExtras.reduce((sum, extra) => sum + extra.length, 0);
+      const displayExtrasText = displayExtras.join(' · ');
+      const extrasInTopMain = displayExtrasCharacters > 50;
+
+      const phoneList = (basics.phones && basics.phones.length)
+        ? basics.phones
+        : (basics.phone ? [basics.phone] : []);
+
+      const contactRows = [];
+      if (basics.email) {
+        contactRows.push({
+          html: `<a href="mailto:${stringifyValue(basics.email)}">${stringifyValue(basics.email)}</a>`,
+          cls: ''
+        });
+      }
+      if (basics.url) {
+        contactRows.push({
+          html: `<a href="${stringifyValue(toHref(basics.url))}" target="_blank" rel="noopener">${stringifyValue(basics.url)}</a>`,
+          cls: ''
+        });
+      }
+      urlProfiles.forEach((profile) => {
+        contactRows.push({
+          html: `<a href="${stringifyValue(toHref(profile.url))}" target="_blank" rel="noopener">${stringifyValue(profile.network || profile.url)}</a>`,
+          cls: ''
+        });
+      });
+
+      if (phoneList.length > 0 || (!extrasInTopMain && displayExtrasText)) {
+        const phonePart = phoneList.map((phone) => `<span class="contact-phone">${stringifyValue(phone)}</span>`).join(', ');
+        const extraPart = (!extrasInTopMain && displayExtrasText)
+          ? `<span class="contact-extra">${stringifyValue(displayExtrasText)}</span>`
+          : '';
+        let rowHtml;
+        if (phoneList.length === 1 && extraPart) {
+          rowHtml = `${phonePart} · ${extraPart}`;
+        } else if (phoneList.length > 1 && extraPart) {
+          rowHtml = `${phonePart}<br>${extraPart}`;
+        } else {
+          rowHtml = phonePart + extraPart;
+        }
+        contactRows.push({ html: rowHtml, cls: 'contact-item-phone' });
+      }
+
+      if (locationShort) {
+        contactRows.push({
+          html: `<span class="contact-location">${stringifyValue(locationString)}</span>`,
+          cls: 'contact-item-meta'
+        });
+      }
+
+      resumeContainer.innerHTML = `
+      <div class="containingDiv">
+        <div class="top-row">
+          <div class="top-main">
+            <h1 class="name">${stringifyValue(basics.name)}</h1>
+            ${basics.label ? `<div class="label">${stringifyValue(basics.label)}</div>` : ''}
+            ${extrasInTopMain && displayExtrasText ? `<div class="contact-extra contact-extra-main">${stringifyValue(displayExtrasText)}</div>` : ''}
+            ${!locationShort && locationString ? `<div class="location-long">${stringifyValue(locationString)}</div>` : ''}
+          </div>
+          <div class="top-side">
+            ${contactRows.map(({ html, cls }) => `<div class="contact-item${cls ? ` ${cls}` : ''}">${html}</div>`).join('')}
+          </div>
+        </div>
+
+        <div class="layout">
+          <div class="col-main">
+            ${renderSection('Summary', basics.summary ? `<div class="summary-text">${stringifyValue(basics.summary)}</div>` : '')}
+
+            ${renderSection('Experience', work.map((job) => {
+      const organization = stringifyValue(job.organization || job.company);
+      const dates = job.startDate ? ` · ${stringifyValue(job.startDate)} – ${stringifyValue(job.endDate || 'Present')}` : '';
+      const highlights = (job.highlights || []).length
+        ? `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--text-main);">${job.highlights.map((highlight) => `<li>${stringifyValue(highlight)}</li>`).join('')}</ul>`
+        : '';
+      return `
+                <div class="item">
+                  <div class="item-title">${stringifyValue(job.position)}</div>
+                  <div class="item-sub">${organization}${dates}</div>
+                  <div class="item-summary">${stringifyValue(job.summary)}</div>
+                  ${highlights}
+                </div>`;
+    }).join(''))}
+
+            ${renderSection('Projects', projects.map((project) => `
+                <div class="item pill-section">
+                  <div class="item-title">${stringifyValue(project.name)}</div>
+                  <div class="item-summary">${stringifyValue(project.summary)}</div>
+                  ${project.keywords && project.keywords.length ? `
+                    <div class="chips">
+                      ${project.keywords.map((keyword) => `<span class="chip">${stringifyValue(keyword)}</span>`).join('')}
+                    </div>` : ''}
+                </div>`).join(''))}
+          </div>
+
+          <div class="col-side">
+            ${renderSection('Skills', skills.map((skill) => `
+                <div class="item">
+                  ${skill.name ? `<div class="item-title">${stringifyValue(skill.name)}</div>` : ''}
+                  ${skill.summary ? `<div class="item-summary">${stringifyValue(skill.summary)}</div>` : ''}
+                  ${(skill.keywords || []).length ? `<div class="chips">${(skill.keywords || []).map((keyword) => `<span class="chip">${stringifyValue(keyword)}</span>`).join('')}</div>` : ''}
+                </div>`).join(''))}
+
+            ${renderSection('Education', education.map((entry) => `
+                <div class="item">
+                  <div class="item-title">${stringifyValue(entry.studyType)} — ${stringifyValue(entry.area)}</div>
+                  <div class="item-sub">${stringifyValue(entry.institution)}${entry.location ? ` · ${stringifyValue(entry.location)}` : ''}</div>
+                </div>`).join(''))}
+
+            ${renderSection('Certifications', certifications.map((certification) => `
+                <div class="item-sub">• ${stringifyValue(certification.name)}</div>`).join(''))}
+
+            ${renderSection('Languages', languages.map((language) => `
+                <div class="item-sub">• ${stringifyValue(language.language)}${language.fluency ? ` — ${stringifyValue(language.fluency)}` : ''}</div>`).join(''))}
+          </div>
+        </div>
+      </div>
+    `;
+    }
+
+    async function loadAndRender(jsonFile, callback) {
+      const resumeContainer = document.getElementById('resumeContainer');
+      if (!jsonFile) {
+        if (resumeContainer) resumeContainer.innerHTML = '';
+        if (typeof callback === 'function') callback();
+        return;
+      }
+      if (resumeContainer) resumeContainer.innerHTML = 'Loading theme…';
+      try {
+        let data;
+        if (jsonFile.startsWith('data:')) {
+          const base64Match = jsonFile.match(/data:application\/json[^,]*,(.+)/);
+          if (base64Match) {
+            data = JSON.parse(decodeURIComponent(base64Match[1]));
+          }
+        } else {
+          const response = await fetch(jsonFile, { cache: 'no-store' });
+          if (!response.ok) throw new Error('JSON not found');
+          data = await response.json();
+        }
+        if (data) renderResume(data);
+        if (typeof callback === 'function') callback();
+      } catch (error) {
+        console.error(error);
+        if (resumeContainer) {
+          resumeContainer.innerHTML = "<p style='color:red;'>Failed to load resume JSON.</p>";
+        }
+      }
+    }
+
+    window.CVRenderer = {
+      render(jsonFile, callback) {
+        const file = jsonFile || window.cvResumeFile || getRendererParam('resume', '');
+        loadAndRender(file, callback);
+      }
+    };
+  }
+
   // Update the theme-specific stylesheet and render resume via CVRenderer
   function loadTheme(jsonFile, theme) {
+    if (typeof jsonFile === 'string') currentJsonFile = jsonFile;
+    currentTheme = theme || '';
+
     // Update per-theme stylesheet using a managed <link> element
     const themeLink = document.getElementById('cvThemeStylesheet');
     if (theme) {
@@ -1084,7 +1501,7 @@
       }
       link.href = `/cv/common/themes/${encodeURIComponent(theme)}/style.css`;
     } else if (themeLink) {
-      themeLink.href = '';
+      themeLink.remove();
     }
 
     const statusBox = select('#cvDataStatus');
@@ -1140,6 +1557,7 @@
     currentTheme = theme;
     await refreshRootHashTargetState();
     activePersonFolder = await resolveActivePersonFolder();
+    await applyActivePersonProfileConfig(activePersonFolder);
     syncNoBioClass();
     updateTeamLink();
     syncBioSection(false);
@@ -1148,8 +1566,24 @@
       clearReadmeDisplay();
       return;
     }
-    await loadJson(jsonFile);
-    loadTheme(jsonFile, theme);
+
+    const source = getRequestedSource();
+    const effectiveJsonFile = jsonFile || config.defaultJson;
+
+    syncSourceSelectOptions(getSourceSelectValue(source));
+
+    if (source === 'pdf' && config.defaultPDF) {
+      const loaded = await loadDefaultPdfResume();
+      if (loaded) {
+        loadTheme(effectiveJsonFile, theme);
+      }
+      return;
+    }
+
+    currentPdfData = null;
+    revokePdfBlobUrl();
+    await loadJson(effectiveJsonFile);
+    loadTheme(effectiveJsonFile, theme);
   }
 
   function buildParseReport(converter) {
@@ -1323,17 +1757,34 @@
   }
 
   async function loadDefaultPdfResume() {
-    if (!config.defaultPDF) return false;
+    if (isCvRootPage()) {
+      await refreshRootHashTargetState();
+      activePersonFolder = await resolveActivePersonFolder();
+      await applyActivePersonProfileConfig(activePersonFolder);
+      syncSourceSelectOptions(getSourceSelectValue('pdf'));
+      syncNoBioClass();
+      updateTeamLink();
+    }
+
+    if (!config.defaultPDF) {
+      currentPdfData = null;
+      revokePdfBlobUrl();
+      clearResumeDisplay();
+      return false;
+    }
 
     const statusBox = select('#cvDataStatus');
     if (statusBox) {
       statusBox.textContent = `Loading external PDF: ${config.defaultPDF}`;
     }
 
+    await ensureResumePdfConverterLoaded();
     const converter = getResumePdfConverter();
     if (!converter) {
       if (statusBox) {
-        statusBox.textContent = 'ResumePDFConverter is not available; using JSON fallback.';
+        statusBox.textContent = isPdfOnlyMode()
+          ? 'ResumePDFConverter is not available.'
+          : 'ResumePDFConverter is not available; using JSON fallback.';
       }
       return false;
     }
@@ -1364,7 +1815,9 @@
       currentPdfData = null;
       revokePdfBlobUrl();
       if (statusBox) {
-        statusBox.textContent = `Failed to parse external PDF (${err.message}); using JSON fallback.`;
+        statusBox.textContent = isPdfOnlyMode()
+          ? `Failed to parse external PDF (${err.message}).`
+          : `Failed to parse external PDF (${err.message}); using JSON fallback.`;
       }
       return false;
     }
@@ -1545,7 +1998,7 @@
           <span class="material-icons">light_mode</span>
         </button>
       </div>
-      <div class="cv-icon-menu">
+      <div class="cv-icon-menu hide-when-no-bio">
         <button id="cvPrintMenuBtn" class="cv-icon-btn" type="button" title="Print">
           <span class="material-icons">print</span>
         </button>
@@ -1554,7 +2007,7 @@
           <button type="button" id="cvPrintJsonBtn">Print JSON Data</button>
         </div>
       </div>
-      <div class="cv-icon-menu">
+      <div class="cv-icon-menu hide-when-no-bio">
         <button id="cvDownloadMenuBtn" class="cv-icon-btn" type="button" title="Download">
           <span class="material-icons">download</span>
         </button>
@@ -1702,8 +2155,11 @@
 
     if (jsonSelect) {
       jsonSelect.addEventListener('change', () => {
-        if (typeof updateHash === 'function') updateHash({ source: jsonSelect.value });
-        if (jsonSelect.value === 'pdf') {
+        const selectedSource = jsonSelect.value;
+        if (typeof updateHash === 'function') {
+          updateHash({ source: selectedSource }, true, ['resume']);
+        }
+        if (selectedSource === 'pdf') {
           loadDefaultPdfResume().then((loaded) => {
             if (loaded) {
               loadTheme(currentJsonFile || config.defaultJson, currentTheme);
@@ -1712,11 +2168,7 @@
         } else {
           currentPdfData = null;
           revokePdfBlobUrl();
-          if (config.syncResumeParam && typeof goHash === 'function') {
-            goHash({ resume: jsonSelect.value });
-          } else {
-            loadAll(jsonSelect.value, currentTheme);
-          }
+          loadAll(getRequestedJsonFile(), currentTheme);
         }
       });
     }
@@ -1727,10 +2179,18 @@
         setCachedTheme(theme);
         if (typeof goHash === 'function') {
           const params = { theme: theme || '' };
-          if (config.syncResumeParam) params.resume = jsonSelect ? jsonSelect.value : '';
-          goHash(params);
+          const removeFromHash = ['resume'];
+          if (config.syncResumeParam && currentJsonFile) {
+            params.resume = currentJsonFile;
+            removeFromHash.length = 0;
+          }
+          goHash(params, removeFromHash);
         } else {
-          loadAll(currentJsonFile || config.defaultJson, theme);
+          if (jsonSelect && jsonSelect.value === 'pdf') {
+            loadTheme(currentJsonFile || config.defaultJson, theme);
+          } else {
+            loadAll(currentJsonFile || config.defaultJson, theme);
+          }
         }
       });
     }
@@ -1738,7 +2198,7 @@
     const teamLink = select('#cvOurTeamLink');
     if (teamLink) {
       teamLink.addEventListener('click', (event) => {
-        if (typeof goHash !== 'function') return;
+        if (!isCvRootPage() || typeof goHash !== 'function') return;
         event.preventDefault();
         const showingTeam = hasTeamToken(getWhoTokens());
         if (showingTeam) {
@@ -1760,22 +2220,30 @@
 
     // React to hash changes (triggered by goHash or direct URL edits)
     document.addEventListener('hashChangeEvent', async function () {
-      const hashTheme = getHashParam('theme', null);
-      const theme = hashTheme !== null ? hashTheme : currentTheme;
-      const jsonFile = getHashParam('resume', config.defaultJson);
+      const theme = getThemeForHashChange();
+      const source = getRequestedSource();
+      const jsonFile = getRequestedJsonFile();
+      const sourceSelectValue = getSourceSelectValue(source);
       const themeEl = select('#themeSelect');
       const jsonEl = select('#sourceSelect');
       if (themeEl) themeEl.value = theme;
       if (jsonEl) {
-        ensureJsonSelectOption(jsonFile);
-        jsonEl.value = jsonFile;
+        ensureJsonSelectOption();
+        jsonEl.value = sourceSelectValue;
       }
       syncTeamUiFromHash(getHashParam('who', '') !== (window.priorHash && window.priorHash.who ? window.priorHash.who : ''));
-      await loadAll(jsonFile, theme);
+      if (sourceSelectValue === 'pdf') {
+        const loaded = await loadDefaultPdfResume();
+        if (loaded) {
+          loadTheme(currentJsonFile || config.defaultJson, theme);
+        }
+      } else {
+        await loadAll(jsonFile, theme);
+      }
       if (config.showReadme) {
         loadReadme();
       }
-      if (config.autoDetectJsonFiles) {
+      if (config.autoDetectJsonFiles && !isPdfOnlyMode()) {
         autoDetectJsonFiles(jsonFile);
       }
     });
@@ -1788,6 +2256,7 @@
 
     // Merge config
     config = Object.assign({}, config, options);
+    baseConfig = Object.assign({}, config);
     if (!config.personFolder) {
       config.personFolder = detectPersonFolder();
     }
@@ -1826,7 +2295,9 @@
       if (dataStatus) dataStatus.style.display = 'none';
     }
 
-    const jsonFile = getHashParam('resume', config.defaultJson);
+    const source = getRequestedSource();
+    const jsonFile = getRequestedJsonFile();
+    const sourceSelectValue = getSourceSelectValue(source);
 
     // Theme priority: hash → page default (options.defaultTheme) → localStorage cache
     const hashTheme = getHashParam('theme', null);
@@ -1838,15 +2309,18 @@
     const jsonSelect = select('#sourceSelect');
     const themeSelect = select('#themeSelect');
 
-    ensureJsonSelectOption(jsonFile);
-    if (jsonSelect) jsonSelect.value = jsonFile;
+    ensureJsonSelectOption();
+    if (jsonSelect) jsonSelect.value = sourceSelectValue;
     if (themeSelect) themeSelect.value = theme;
 
     if (config.defaultPDF && jsonSelect) {
-      const pdfOpt = document.createElement('option');
-      pdfOpt.value = 'pdf';
-      pdfOpt.textContent = 'PDF';
-      jsonSelect.appendChild(pdfOpt);
+      if (!Array.from(jsonSelect.options).some((option) => option.value === 'pdf')) {
+        const pdfOpt = document.createElement('option');
+        pdfOpt.value = 'pdf';
+        pdfOpt.textContent = 'PDF';
+        jsonSelect.appendChild(pdfOpt);
+      }
+      if (source === 'pdf') jsonSelect.value = 'pdf';
     }
     updateSourceSelectVisibility();
 
@@ -1854,50 +2328,47 @@
     setupEventListeners();
     setupPrintDownloadIcons();
 
-    // Load index.js via localsite.js loadScript, then start rendering
+    // Initialize the renderer moved from index.js, then start rendering
     function startContent() {
       (async () => {
-        const sourceVal = getHashParam('source', null);
+        const sourceVal = getRequestedSource();
+        const selectedSource = getSourceSelectValue(sourceVal);
 
-        if (sourceVal && jsonSelect) {
-          if (sourceVal !== 'pdf') ensureJsonSelectOption(sourceVal);
-          jsonSelect.value = sourceVal;
+        if (jsonSelect) {
+          ensureJsonSelectOption();
+          jsonSelect.value = selectedSource;
           updateSourceSelectVisibility();
         }
 
-        const effectiveSource = (sourceVal && jsonSelect && jsonSelect.value === sourceVal)
-          ? sourceVal : null;
-
-        if (effectiveSource === 'pdf') {
+        if (selectedSource === 'pdf') {
           const loaded = await loadDefaultPdfResume();
           if (loaded) {
             loadTheme(currentJsonFile || config.defaultJson, theme);
-          } else {
+          } else if (!isPdfOnlyMode()) {
             await loadAll(jsonFile, theme);
           }
         } else {
-          await loadAll(effectiveSource || jsonFile, theme);
+          await loadAll(jsonFile, theme);
         }
 
         if (config.showReadme) {
           loadReadme();
         }
 
-        if (config.autoDetectJsonFiles) {
+        if (config.autoDetectJsonFiles && !isPdfOnlyMode()) {
           autoDetectJsonFiles(jsonFile);
         }
       })();
     }
 
-    if (typeof loadScript === 'function') {
-      loadScript('/cv/common/index.js', startContent);
-    } else {
-      startContent();
-    }
+    initCvRenderer();
+    startContent();
   }
 
   // Probe for common JSON filenames and populate the Data dropdown
   async function autoDetectJsonFiles(currentFile) {
+    if (isPdfOnlyMode()) return;
+
     const candidates = getJsonCandidates();
     const jsonSelect = select('#sourceSelect');
     if (!jsonSelect) return;
@@ -1910,10 +2381,13 @@
       } catch { /* ignore */ }
     }));
 
-    if (found.length > 1) {
-      jsonSelect.innerHTML = found
-        .map((f, i) => `<option value="${f}"${f === currentFile ? ' selected' : ''}>${i === 0 ? 'From JSON' : f}</option>`)
-        .join('\n');
+    if (found.length) {
+      if (!config.defaultJson) {
+        config.defaultJson = currentFile || found[0];
+      }
+      syncSourceSelectOptions(getSourceSelectValue());
+      ensureJsonSelectOption();
+      jsonSelect.value = getSourceSelectValue();
       updateSourceSelectVisibility();
     }
   }

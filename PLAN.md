@@ -2,13 +2,11 @@
 
 1. **Add an input field for pasting an external resume .PDF URLs** on the [extract page](extract/). We'll use this to output .json for the AI Builder to place in the their cv folder.
 
-2. **Move SatvikPraveen** resume from "extract" to his own folder. Remove/move references to SatvikPraveen in the "extract" folder.
+2. **In the "work" node of the detailed.json file**, use the order of the fields to set the bold title for each work (job) listed. The Harvard standard is "organization" first. Include support for the term "organization" as an alternative to "company".
 
-3. **In the "work" node of the detailed.json file**, use the order of the fields to set the bold title for each work (job) listed. The Harvard standard is "organization" first. Include support for the term "organization" as an alternative to "company".
+3. **Auto-detect JSON files** in person folder.
 
-4. **Auto-detect JSON files** in person folder.
-
-5. **Determine if the safe select will result in errors** if jQuery is added **AFTER** the following $ select runs in filters.js
+4. **Determine if the safe select will result in errors** if jQuery is added **AFTER** the following $ select runs in cv.js
 
 ### Before Refactoring
 ```javascript
@@ -18,7 +16,7 @@ const $ = s => document.querySelector(s);
 
 ### After Refactoring
 ```javascript
-// common/filters.js - NO CONFLICT
+// common/cv.js - NO CONFLICT
 function select(selector) {
   if (typeof jQuery !== 'undefined') {
     return jQuery(selector)[0];
@@ -37,7 +35,7 @@ function select(selector) {
 
 [Add link to original here]
 
-### 1. Created New Module: `cv/common/filters.js`
+### 1. Created New Module: `cv/common/cv.js`
 
 A jQuery-compatible filter module that:
 - ✅ Provides a safe selector function that works with or without jQuery
