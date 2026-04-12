@@ -14,6 +14,14 @@ Gary is a Data Engineer and Database Developer, specializing in designing, creat
 [My Recent Work ~ Get In Touch](https://gary-mart.com)
 </div>
 ---
+![Mohammed Saalim ](/io/team/img/Mohammed-Saalim-K.jpg)
+<div class="bioText" markdown="1" bio="MohammedSaalim">
+## Mohammed Saalim K
+Mohammed Saalim K is a full-stack developer specializing in React, TypeScript, and data visualization. As Lead Developer for our USEEIO updates at model.earth, he implemented v2 model integration with dynamic state-specific conversions, built interactive D3.js bubble charts with real-time GitHub API data loading, and developed matrix-based job quantity calculations. Key contributions include fixing a critical legacy hash retention bug in React widgets and implementing comprehensive UX improvements.
+<a href="https://mohammed-saalim.vercel.app/">My Recent Work ~ Get In Touch</a><!--| <a href="https://www.linkedin.com/in/mohammed-saalim/">LinkedIn</a> | <a href="https://github.com/mohammed-saalim">GitHub</a>-->
+</div>
+
+---
 Alumni
 ---
 ![Sugandha Bhandari](https://dreamstudio.com/earth/img/team/Sugandha-Bhandari.jpg)
