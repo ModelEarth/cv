@@ -40,17 +40,17 @@
 
     <!-- PDF.js Library -->
     <script type="module">
-        import * as pdfModule from "../extract/vendor/pdf.mjs";
+        import * as pdfModule from "../../extract/vendor/pdf.mjs";
         window.pdfjsLib = pdfModule;
         if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
-            window.pdfjsLib.GlobalWorkerOptions.workerSrc = "../extract/vendor/pdf.worker.mjs";
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = "../../extract/vendor/pdf.worker.mjs";
         }
         window._pdfModuleReady = true;
         window.dispatchEvent(new Event("pdfjs-ready"));
     </script>
 
     <!-- ResumePDFConverter - PDF-to-JSON converter -->
-    <script src="../common/ResumePDFConverter.js"></script>
+    <script src="../../common/ResumePDFConverter.js"></script>
 
 
 
@@ -275,7 +275,7 @@
         
         <div id="pdfStatusContainer"></div>
 
-        <script src="../common/filters.js"></script>
+        <script src="../../common/filters.js"></script>
 
     <!-- Highlights Section -->
     <div id="highlightsContent" class="content-section active portfolio-container">

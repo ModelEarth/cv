@@ -152,6 +152,11 @@
 
   async function loadAndRender(jsonFile, callback) {
     const c = document.getElementById("resumeContainer");
+    if (!jsonFile) {
+      if (c) c.innerHTML = "";
+      if (typeof callback === "function") callback();
+      return;
+    }
     if (c) c.innerHTML = "Loading theme\u2026";
     try {
       let data;
@@ -176,7 +181,7 @@
   // Public API — called by filters.js via loadScript()
   window.CVRenderer = {
     render: function (jsonFile, callback) {
-      const file = jsonFile || window.cvResumeFile || getParam("resume", "detailed.json");
+      const file = jsonFile || window.cvResumeFile || getParam("resume", "");
       loadAndRender(file, callback);
     }
   };

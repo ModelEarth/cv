@@ -3,6 +3,7 @@
 .dark {
     --chip-text: #ccc;
     --text-muted: #bbb;
+    --accent-soft: #555;
 }
 
 #resumeContainerX, .contentPanelX {

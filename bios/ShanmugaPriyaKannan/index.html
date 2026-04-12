@@ -4,27 +4,26 @@
   <meta charset="utf-8" />
   <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Portfolio Resume</title>
+  <title>Shanmuga Priya Kannan</title>
 
   <link type="text/css" rel="stylesheet" href="/localsite/css/base.css" id="/localsite/css/base.css" />
   <script type="text/javascript" src="/localsite/js/localsite.js?showheader=true"></script>
 
-  <style>
-    body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      background-color: #f9fafb;
-      color: #333;
-    }
-  </style>
+  <script src="../../common/ResumePDFConverter.js"></script>
 </head>
 
 <body>
-  
-  <script src="../common/filters.js"></script>
+
+  <script src="../../common/filters.js"></script>
+  <div id="cvFiltersContainer"></div>
+
   <script>
     CVFilters.init({
       defaultJson: 'detailed.json',
-      defaultTheme: 'elegant'
+      defaultPDF: 'https://dreamstudio.com/about/loren-heyns/Loren-Heyns-Resume.pdf',
+      syncResumeParam: false,
+      autoDetectJsonFiles: false,
+      defaultThemeX: 'elegant'
     });
   </script>
 

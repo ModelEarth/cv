@@ -55,6 +55,13 @@
     return '../'.repeat(depthBelowCv);
   }
 
+  function getCvRootPathname() {
+    const segments = getCurrentFolderSegments();
+    const cvIndex = getCvRootIndex(segments);
+    if (cvIndex < 0) return '/cv/';
+    return `/${segments.slice(0, cvIndex + 1).join('/')}/`;
+  }
+
   function getDepthBelowCv() {
     const segments = getCurrentFolderSegments();
     const cvIndex = getCvRootIndex(segments);
@@ -73,12 +80,20 @@
     return `${prefix}${normalizedFile}`;
   }
 
+  function resolveBiosAssetPath(file) {
+    if (!file) return '';
+    return resolveCvRootAssetPath(`bios/${String(file).replace(/^\/+/, '')}`);
+  }
+
   function detectPersonFolder() {
     const segments = getCurrentFolderSegments();
     if (!segments.length) return '';
 
     const cvIndex = getCvRootIndex(segments);
-    const folderSegment = cvIndex >= 0 ? segments[cvIndex + 1] : segments[segments.length - 1];
+    let folderSegment = cvIndex >= 0 ? segments[cvIndex + 1] : segments[segments.length - 1];
+    if (folderSegment === 'bios') {
+      folderSegment = segments[cvIndex + 2] || '';
+    }
 
     if (!folderSegment) return '';
 
@@ -92,7 +107,7 @@
   // Configuration
   let config = {
     personFolder: '',
-    defaultJson: 'detailed.json',
+    defaultJson: '',
     defaultTheme: '',
     defaultPDF: '',
     syncResumeParam: false,
@@ -106,6 +121,7 @@
   let currentPdfData = null;
   let currentPdfBlobUrl = '';
   let activePersonFolder = '';
+  let rootHashTargetsPerson = false;
   let filtersInitialized = false;
   let standaloneBioModeBound = false;
   const personFolderExistsCache = new Map();
@@ -130,9 +146,24 @@
   function getHashParam(key, fallback) {
     if (typeof getHash === 'function') {
       const h = getHash();
+      if (key === 'who' && h[key] === undefined && h[''] !== undefined && h[''] !== '') {
+        return h[''];
+      }
       return (h[key] !== undefined && h[key] !== '') ? h[key] : fallback;
     }
     return fallback;
+  }
+
+  function hasExplicitWhoHash() {
+    if (typeof getHash !== 'function') return false;
+    const h = getHash();
+    return h.who !== undefined && h.who !== '';
+  }
+
+  function hasBareWhoHash() {
+    if (typeof getHash !== 'function') return false;
+    const h = getHash();
+    return h.who === undefined && h[''] !== undefined && h[''] !== '';
   }
 
   function getWhoTokens() {
@@ -146,8 +177,8 @@
     return tokens.some((token) => token.toLowerCase() === 'team');
   }
 
-  function buildTeamWhoValue(personFolder) {
-    return ['team', personFolder].filter(Boolean).join(',');
+  function buildTeamWhoValue() {
+    return 'team';
   }
 
   function buildWhoValueWithoutTeam() {
@@ -156,14 +187,25 @@
       .join(',');
   }
 
+  function getRestoreWhoValue(personFolder) {
+    const explicitWho = buildWhoValueWithoutTeam();
+    if (explicitWho) return explicitWho.split(',')[0];
+    return personFolder || config.personFolder || '';
+  }
+
   function getTeamLinkHref(personFolder) {
     const whoValue = buildTeamWhoValue(personFolder);
     return getCvPageHref(whoValue);
   }
 
   function getCvPageHref(whoValue) {
-    const rootHref = getCvRootRelativePrefix() || './';
+    const rootHref = getCvRootPathname();
     return whoValue ? `${rootHref}#who=${encodeURIComponent(whoValue)}` : rootHref;
+  }
+
+  function getCvRootHashHref(hashFragment) {
+    const rootHref = getCvRootPathname();
+    return `${rootHref}${String(hashFragment || '').replace(/^\.?\//, '')}`;
   }
 
   function resolvePersonAssetPath(personFolder, file) {
@@ -175,7 +217,7 @@
       return file;
     }
     if (!personFolder) return resolveCvRootAssetPath(file);
-    return resolveCvRootAssetPath(`${personFolder}/${file}`);
+    return resolveBiosAssetPath(`${personFolder}/${file}`);
   }
 
   async function personFolderExists(personFolder) {
@@ -187,11 +229,10 @@
     }
 
     const probePaths = Array.from(new Set([
-      resolvePersonAssetPath(candidate, currentJsonFile || config.defaultJson || 'detailed.json'),
-      resolvePersonAssetPath(candidate, config.defaultJson || 'detailed.json'),
-      resolvePersonAssetPath(candidate, 'detailed.json'),
-      resolvePersonAssetPath(candidate, 'index.html')
-    ]));
+      currentJsonFile,
+      config.defaultJson,
+      'index.html'
+    ].filter(Boolean).map((file) => resolvePersonAssetPath(candidate, file))));
 
     let exists = false;
     for (const path of probePaths) {
@@ -219,6 +260,20 @@
       }
     }
     return config.personFolder;
+  }
+
+  async function refreshRootHashTargetState() {
+    if (!isCvRootPage()) {
+      rootHashTargetsPerson = false;
+      return false;
+    }
+    const firstUser = getFirstWhoUser();
+    if (!firstUser) {
+      rootHashTargetsPerson = false;
+      return false;
+    }
+    rootHashTargetsPerson = await personFolderExists(firstUser);
+    return rootHashTargetsPerson;
   }
 
   const THEME_CACHE_KEY = 'cv_theme';
@@ -273,7 +328,6 @@
   function getJsonCandidates() {
     return Array.from(new Set([
       config.defaultJson,
-      'detailed.json',
       'summary.json',
       'resume.json',
       'brief.json'
@@ -302,25 +356,150 @@
     if (!teamLink) return;
     const personFolder = activePersonFolder || config.personFolder;
     const showingTeam = hasTeamToken(getWhoTokens());
-    const whoWithoutTeam = buildWhoValueWithoutTeam();
+    const restoreWho = getRestoreWhoValue(personFolder);
     teamLink.textContent = showingTeam ? 'Hide Team' : 'Our Team';
-    teamLink.href = showingTeam ? getCvPageHref(whoWithoutTeam) : getTeamLinkHref(personFolder);
+    teamLink.href = showingTeam
+      ? getCvPageHref(restoreWho)
+      : (isCvRootPage() && hasBareWhoHash() ? getCvPageHref('') : getTeamLinkHref(personFolder));
   }
 
   function getBioTarget() {
     return select('#bioList');
   }
 
+  function getExternalBioTarget() {
+    const bioList = getBioTarget();
+    return bioList && !bioList.closest('#cvFiltersContainer') ? bioList : null;
+  }
+
   function getBioMarkdownPath() {
-    return resolveCvRootAssetPath('bios/bios.md');
+    return resolveBiosAssetPath('bios.md');
+  }
+
+  function ensureBioListElement() {
+    const container = select('#cvFiltersContainer');
+    let bioList = getBioTarget();
+
+    if (!bioList) {
+      bioList = document.createElement('div');
+      bioList.id = 'bioList';
+      bioList.className = 'content bioList';
+    }
+
+    bioList.classList.add('content', 'bioList');
+    bioList.classList.toggle('bioListSm', isCvRootPage());
+
+    if (container && container.parentNode) {
+      if (bioList.parentNode !== container.parentNode || bioList.previousElementSibling !== container) {
+        container.parentNode.insertBefore(bioList, container.nextSibling);
+      }
+      return bioList;
+    }
+
+    const contentShell = document.querySelector('.content.contentpadding');
+    if (contentShell && bioList.parentNode !== contentShell) {
+      contentShell.appendChild(bioList);
+      return bioList;
+    }
+
+    if (!bioList.parentNode) {
+      document.body.appendChild(bioList);
+    }
+
+    return bioList;
+  }
+
+  function getUserBioTarget() {
+    return select('#userBioDiv');
+  }
+
+  function getNoBioClassTarget() {
+    return document.querySelector('.content.contentpadding') || document.body;
+  }
+
+  function isNoBioState() {
+    if (isCvRootPage()) {
+      return !window.location.hash || !rootHashTargetsPerson;
+    }
+    return !(activePersonFolder || config.personFolder);
+  }
+
+  function syncNoBioElements(noBioState) {
+    selectAll('#cvFiltersContainer .hide-when-bio').forEach((element) => {
+      if (!element.dataset.noBioVisibleDisplay) {
+        element.dataset.noBioVisibleDisplay = element.id === 'cvFooter' ? 'flex' : '';
+      }
+      element.style.display = noBioState ? 'none' : element.dataset.noBioVisibleDisplay;
+    });
+
+    selectAll('.content.contentpadding > .hide-when-bio').forEach((element) => {
+      if (element.closest('#cvFiltersContainer')) return;
+      element.style.display = noBioState ? 'block' : 'none';
+    });
+  }
+
+  function syncNoBioClass() {
+    const noBioTarget = getNoBioClassTarget();
+    if (!noBioTarget) return;
+    const noBioState = isNoBioState();
+    noBioTarget.classList.toggle('hide-when-bio', noBioState);
+    syncNoBioElements(noBioState);
+  }
+
+  function normalizeBioLinkHref(href) {
+    return String(href || '')
+      .replace(/^(\.\.\/)+/, '')
+      .replace(/^\.\//, '')
+      .replace(/^bios\//, '');
+  }
+
+  function shouldRenderGeneratedBioList() {
+    return !getExternalBioTarget();
+  }
+
+  function getFirstWhoUser() {
+    return getWhoTokens().find((token) => token.toLowerCase() !== 'team') || '';
+  }
+
+  function getPersonPageHref(personFolder) {
+    if (!personFolder) return getCvPageHref('');
+    return `${getCvRootPathname()}bios/${encodeURIComponent(personFolder)}/`;
+  }
+
+  function resolveBioLinkUrl(href) {
+    const normalizedHref = normalizeBioLinkHref(href);
+    if (normalizedHref.startsWith('#')) {
+      return getCvRootHashHref(normalizedHref);
+    }
+    return resolveBiosAssetPath(normalizedHref);
+  }
+
+  async function maybeInitRootCvFromHash() {
+    if (!isCvRootPage() || filtersInitialized) return false;
+
+    if (!(await refreshRootHashTargetState())) {
+      syncNoBioClass();
+      syncBioSection(true);
+      return false;
+    }
+
+    syncNoBioClass();
+    syncBioSection(true);
+
+    init({
+      defaultJson: 'detailed.json',
+      syncResumeParam: false,
+      autoDetectJsonFiles: false
+    });
+    return true;
   }
 
   function shouldShowBioList() {
-    return hasTeamToken(getWhoTokens()) || isCvRootPage();
+    return hasTeamToken(getWhoTokens()) || (isCvRootPage() && !rootHashTargetsPerson);
   }
 
   function shouldKeepBioListVisible() {
-    return isCvRootPage();
+    return isCvRootPage() && !rootHashTargetsPerson;
   }
 
   function cleanupBioSummary(target) {
@@ -353,8 +532,7 @@
     target.querySelectorAll('a[href]').forEach((link) => {
       const href = link.getAttribute('href');
       if (!href || /^(?:[a-z]+:|\/|#)/i.test(href)) return;
-      const normalizedHref = href.replace(/^\.\//, '').replace(/^bios\//, '');
-      link.setAttribute('href', resolveCvRootAssetPath(normalizedHref));
+      link.setAttribute('href', resolveBioLinkUrl(href));
     });
   }
 
@@ -416,6 +594,17 @@
     observer.observe(target, { childList: true });
     target.dataset.bioExpandBound = 'true';
     target._bioExpandObserver = observer;
+
+    target.addEventListener('click', function (event) {
+      const link = event.target.closest('a[href]');
+      if (!link) return;
+
+      const rawHref = link.getAttribute('href');
+      if (!rawHref || /^(?:[a-z]+:|\/|#)/i.test(rawHref)) return;
+
+      event.preventDefault();
+      window.location.href = resolveBioLinkUrl(rawHref);
+    });
   }
 
   function syncBioSection(forceReload) {
@@ -426,20 +615,40 @@
     const keepVisible = shouldKeepBioListVisible();
 
     if (!shouldShowBioList() && !keepVisible) {
+      bioList.classList.add('bioListForceHidden');
       bioList.style.display = 'none';
       bioList.innerHTML = '';
       bioList.dataset.loadedMarkdown = '';
+      bioList.dataset.bioLoading = '';
       cleanupBioSummary(bioList);
       return;
     }
 
+    bioList.classList.remove('bioListForceHidden');
     bioList.style.display = 'block';
+    if (bioList.dataset.bioLoading === 'team') return;
     if (!forceReload && bioList.dataset.loadedMarkdown === 'team' && bioList.innerHTML.trim()) return;
 
-    bioList.dataset.loadedMarkdown = 'team';
+    bioList.dataset.bioLoading = 'team';
+    bioList.dataset.loadedMarkdown = '';
+    bioList.innerHTML = '';
+    cleanupBioSummary(bioList);
     if (typeof loadMarkdown === 'function') {
-      loadMarkdown(getBioMarkdownPath(), bioList.id, '_parent');
+      loadMarkdown(getBioMarkdownPath(), bioList.id, '_parent', undefined, function () {
+        bioList.dataset.bioLoading = '';
+        if (!shouldShowBioList() && !shouldKeepBioListVisible()) {
+          bioList.classList.add('bioListForceHidden');
+          bioList.style.display = 'none';
+          bioList.innerHTML = '';
+          bioList.dataset.loadedMarkdown = '';
+          cleanupBioSummary(bioList);
+          return;
+        }
+        bioList.dataset.loadedMarkdown = 'team';
+        refreshBioSummary(bioList);
+      });
     } else {
+      bioList.dataset.bioLoading = '';
       bioList.innerHTML = `<p style='color:red;'>Failed to load ${getBioMarkdownPath()}.</p>`;
     }
   }
@@ -451,16 +660,27 @@
 
   function bindStandaloneBioMode() {
     if (standaloneBioModeBound || filtersInitialized) return;
+    ensureBioListElement();
     if (!getBioTarget()) return;
 
     standaloneBioModeBound = true;
     ensureBioStyles();
-    syncTeamUiFromHash(true);
+    (async function () {
+      const initialized = await maybeInitRootCvFromHash();
+      if (!initialized) {
+        syncNoBioClass();
+        syncTeamUiFromHash(true);
+      }
+    })();
 
-    document.addEventListener('hashChangeEvent', function () {
+    document.addEventListener('hashChangeEvent', async function () {
       if (filtersInitialized) return;
       const priorWho = window.priorHash && window.priorHash.who ? window.priorHash.who : '';
-      syncTeamUiFromHash(getHashParam('who', '') !== priorWho);
+      const initialized = await maybeInitRootCvFromHash();
+      if (!initialized) {
+        syncNoBioClass();
+        syncTeamUiFromHash(getHashParam('who', '') !== priorWho);
+      }
     });
   }
 
@@ -475,6 +695,9 @@
       #bioList {
         container-type: inline-size;
         display: none;
+      }
+      #bioList.bioListForceHidden {
+        display: none !important;
       }
       .bioList {
         --bio-image-size: 180px;
@@ -555,6 +778,52 @@
       }
     `;
     document.head.appendChild(styleEl);
+  }
+
+  function clearReadmeDisplay() {
+    const userBioDiv = getUserBioTarget();
+    const readmeContent = select('#cvReadmeContent');
+    const readmeSection = select('#cvReadmeSection');
+    if (userBioDiv) {
+      userBioDiv.innerHTML = '';
+      userBioDiv.dataset.loadedMarkdown = '';
+      userBioDiv.dataset.readmeLoading = '';
+      userBioDiv.style.display = 'none';
+    }
+    if (readmeContent) {
+      readmeContent.innerHTML = '';
+      readmeContent.dataset.loadedMarkdown = '';
+      readmeContent.dataset.readmeLoading = '';
+    }
+    if (readmeSection && config.showReadme) {
+      readmeSection.style.display = 'none';
+    }
+  }
+
+  function clearResumeDisplay() {
+    const resumeContainer = select('#resumeContainer');
+    const dataPreview = select('#cvDataPreview');
+    const dataStatus = select('#cvDataStatus');
+    if (resumeContainer) resumeContainer.innerHTML = '';
+    if (dataPreview) dataPreview.textContent = '';
+    if (dataStatus) dataStatus.textContent = '';
+    currentResumeData = null;
+  }
+
+  function insertFiltersContainer(container) {
+    const externalBioList = getExternalBioTarget();
+    if (externalBioList && externalBioList.parentNode) {
+      externalBioList.parentNode.insertBefore(container, externalBioList.nextSibling);
+      return;
+    }
+
+    const contentShell = document.querySelector('.content.contentpadding');
+    if (contentShell) {
+      contentShell.insertBefore(container, contentShell.firstChild);
+      return;
+    }
+
+    document.body.insertBefore(container, document.body.firstChild);
   }
 
   function generateFilterHTML() {
@@ -729,16 +998,18 @@
       </style>
       
         <div class="cv-filters-row content">
-          <label><a id="cvOurTeamLink" href="${getTeamLinkHref(config.personFolder)}">Our Team</a></label>
+          <div class="hide-when-bio">
+            <label><a id="cvOurTeamLink" class="hide-when-bio" href="${getTeamLinkHref(config.personFolder)}">Our Team</a></label>
 
-          <label style="margin-left:12px;">Theme:</label>
-          <select id="themeSelect">
-            <option value="">Base</option>
-            ${THEMES.map(theme =>
-      `<option value="${theme.value}">${theme.label}</option>`
-    ).join('\n            ')}
-          </select>
-
+            <label style="margin-left:12px;">Theme:</label>
+            <select id="themeSelect">
+              <option value="">Base</option>
+              ${THEMES.map(theme =>
+        `<option value="${theme.value}">${theme.label}</option>`
+      ).join('\n            ')}
+            </select>
+          </div>
+        
           <select id="sourceSelect" style="margin-left:8px;display:none">
             ${renderJsonOptions(config.defaultJson)}
           </select>
@@ -747,15 +1018,15 @@
           <div id="map-print-download-icons"></div>
         </div>
 
-        <div id="bioList" class="content bioList"></div>
-        <div id="resumeContainer" class="content">Loading...</div>
+        <div id="resumeContainer" class="content hide-when-bio">Loading...</div>
+        <div id="userBioDiv" class="content" style="display:none"></div>
 
           <div id="cvReadmeSection">
             <div id="cvReadmeContent" class="content"></div>
           </div>
           <pre id="cvDataPreview" class="content contentPanel" style="display:none">Loading JSON\u2026</pre>
           <div id="cvParseReport" class="content cv-report-panel" style="display:none"></div>
-          <div class="content" style="display:flex;align-items:center;gap:8px;">
+          <div id="cvFooter" class="content hide-when-bio" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
             <div id="cvDataStatus" class="cv-data-status"></div>
             <button type="button" id="cvToggleJsonBtn" class="btn-sm">View json</button>
             <button type="button" id="cvParseReportBtn" class="btn-sm" style="display:none">Parse Report</button>
@@ -867,9 +1138,16 @@
   async function loadAll(jsonFile, theme) {
     currentJsonFile = jsonFile;
     currentTheme = theme;
+    await refreshRootHashTargetState();
     activePersonFolder = await resolveActivePersonFolder();
+    syncNoBioClass();
     updateTeamLink();
     syncBioSection(false);
+    if (!activePersonFolder) {
+      clearResumeDisplay();
+      clearReadmeDisplay();
+      return;
+    }
     await loadJson(jsonFile);
     loadTheme(jsonFile, theme);
   }
@@ -1361,15 +1639,40 @@
 
   // Load README.md into the existing #cvReadmeContent container.
   function loadReadme() {
-    const readmeContent = select('#cvReadmeContent');
-    if (!readmeContent) return;
-    const readmePath = resolvePersonAssetPath(activePersonFolder || config.personFolder, 'README.md');
-
-    if (typeof loadMarkdown === 'function') {
-      loadMarkdown(readmePath, 'cvReadmeContent', '_parent');
+    const personFolder = activePersonFolder || config.personFolder;
+    if (!personFolder) {
+      clearReadmeDisplay();
       return;
     }
 
+    const useUserBioDiv = isCvRootPage();
+    const readmeContent = useUserBioDiv ? getUserBioTarget() : select('#cvReadmeContent');
+    const readmeSection = select('#cvReadmeSection');
+    if (!readmeContent) return;
+    const readmePath = resolvePersonAssetPath(personFolder, 'README.md');
+    if (readmeContent.dataset.readmeLoading === readmePath) return;
+    if (readmeContent.dataset.loadedMarkdown === readmePath && readmeContent.innerHTML.trim()) return;
+
+    if (useUserBioDiv) {
+      if (readmeSection) readmeSection.style.display = 'none';
+      readmeContent.style.display = 'block';
+    } else if (readmeSection && config.showReadme) {
+      readmeSection.style.display = '';
+    }
+
+    readmeContent.innerHTML = '';
+    readmeContent.dataset.loadedMarkdown = '';
+    readmeContent.dataset.readmeLoading = readmePath;
+
+    if (typeof loadMarkdown === 'function') {
+      loadMarkdown(readmePath, readmeContent.id, '_parent', undefined, function () {
+        readmeContent.dataset.readmeLoading = '';
+        readmeContent.dataset.loadedMarkdown = readmePath;
+      });
+      return;
+    }
+
+    readmeContent.dataset.readmeLoading = '';
     readmeContent.innerHTML = `<p style='color:red;'>Failed to load ${readmePath}.</p>`;
   }
 
@@ -1439,14 +1742,18 @@
         event.preventDefault();
         const showingTeam = hasTeamToken(getWhoTokens());
         if (showingTeam) {
-          const whoWithoutTeam = buildWhoValueWithoutTeam();
-          if (whoWithoutTeam) {
-            goHash({ who: whoWithoutTeam, team: '' }, 'team');
+          const restoreWho = getRestoreWhoValue(activePersonFolder || config.personFolder);
+          if (restoreWho) {
+            goHash({ who: restoreWho, team: '' }, 'team');
           } else {
             goHash({ team: '' }, ['team', 'who']);
           }
         } else {
-          goHash({ who: buildTeamWhoValue(activePersonFolder || config.personFolder) });
+          if (isCvRootPage() && hasBareWhoHash()) {
+            goHash({ '': '' });
+            return;
+          }
+          goHash({ who: buildTeamWhoValue() });
         }
       });
     }
@@ -1499,11 +1806,12 @@
     if (!container) {
       container = document.createElement('div');
       container.id = 'cvFiltersContainer';
-      document.body.insertBefore(container, document.body.firstChild);
+      insertFiltersContainer(container);
     }
 
     // Generate and insert HTML
     container.innerHTML = generateFilterHTML();
+    ensureBioListElement();
 
     // Hide optional sections if configured
     if (!config.showReadme) {

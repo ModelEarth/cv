@@ -1,11 +1,11 @@
 ## Lead Engineers
 
 <div markdown="1">
-[Yash Gondkar](YashGondkar)
-[Noor Fathima](NoorFathima)
-[Loren Heyns](LorenHeyns)
-[Mohammed Saalim](MohammedSaalim)
-[Shanmuga Priya Kannan](ShanmugaPriyaKannan)<!-- Projects section -->
+[Yash Gondkar](../#YashGondkar)
+[Noor Fathima](../#NoorFathima)
+[Loren Heyns](../#LorenHeyns)
+[Mohammed Saalim](../#MohammedSaalim)
+[Shanmuga Priya Kannan](../#ShanmugaPriyaKannan)<!-- Projects section -->
 
 <!--
 [Satvik Praveen](extract) - JSON drop to convert-->
