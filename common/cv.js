@@ -110,7 +110,7 @@
     defaultJson: '',
     defaultTheme: '',
     defaultPDF: '',
-    educationColumn: 'side',
+    educationColumn: 'main',
     syncResumeParam: false,
     autoDetectJsonFiles: false,
     showReadme: true,
@@ -304,6 +304,7 @@
   }
 
   function getTeamLinkHref(personFolder) {
+    if (isCvRootPage()) return getCvPageHref('');
     if (!isCvRootPage()) {
       return getCvRootRelativePrefix() || getCvRootPathname();
     }
@@ -1335,6 +1336,10 @@
       return (value || '').toString();
     }
 
+    function normalizeInlineText(value) {
+      return stringifyValue(value).replace(/\s+/g, ' ').trim().toLowerCase();
+    }
+
     function toHref(url) {
       if (!url) return url;
       const value = url.trim();
@@ -1372,9 +1377,12 @@
       const projects = data.projects || [];
       const certifications = data.certifications || data.certificates || [];
       const languages = data.languages || [];
+      const customSections = data.customSections || [];
+      const meta = data.meta || {};
       const profiles = basics.profiles || data.profiles || [];
-      const educationColumn = String(config.educationColumn || 'side').toLowerCase();
+      const educationColumn = String(config.educationColumn || 'main').toLowerCase();
       const educationInSideColumn = ['side', 'left', 'right'].includes(educationColumn);
+      const skillsInMain = String(meta.skillsPlacement || '').toLowerCase() === 'main';
 
       const resumeContainer = document.getElementById('resumeContainer');
       if (!resumeContainer) return;
@@ -1388,7 +1396,22 @@
       const displayExtras = profiles
         .filter((profile) => profile.display && !profile.url)
         .map((profile) => (profile.display || '').trim())
-        .filter(Boolean);
+        .filter(Boolean)
+        .filter((extra) => {
+          const normalizedExtra = normalizeInlineText(extra);
+          const normalizedSummary = normalizeInlineText(basics.summary);
+          if (!normalizedExtra) return false;
+          if (normalizedSummary && (
+            normalizedExtra === normalizedSummary
+            || normalizedExtra === `summary ${normalizedSummary}`
+          )) {
+            return false;
+          }
+          if ((skills.length || work.length || education.length || projects.length) && /^(?:summary|technical\s+skills|skills|experience|education|projects)\b/i.test(extra)) {
+            return false;
+          }
+          return true;
+        });
       const displayExtrasCharacters = displayExtras.reduce((sum, extra) => sum + extra.length, 0);
       const displayExtrasText = displayExtras.join(' · ');
       const extrasInTopMain = displayExtrasCharacters > 50;
@@ -1446,6 +1469,98 @@
                   <div class="item-sub">${stringifyValue(entry.institution)}${entry.location ? ` · ${stringifyValue(entry.location)}` : ''}</div>
                 </div>`).join(''));
 
+      const skillsSection = renderSection('Skills', skills.map((skill) => `
+                <div class="item">
+                  ${skill.name ? `<div class="item-title">${stringifyValue(skill.name)}</div>` : ''}
+                  ${skill.summary ? `<div class="item-summary">${stringifyValue(skill.summary)}</div>` : ''}
+                  ${(skill.keywords || []).length ? `<div class="chips">${(skill.keywords || []).map((keyword) => `<span class="chip">${stringifyValue(keyword)}</span>`).join('')}</div>` : ''}
+                </div>`).join(''));
+
+      function renderCustomSection(section) {
+        if (!section) return '';
+        const rawLines = Array.isArray(section.lines) ? section.lines : [];
+        const content = rawLines.map((line) => {
+          const text = stringifyValue(line);
+          if (!text.trim()) return '';
+          if (/^[•·▪\-–*]\s*/.test(text)) {
+            return `<div class="item-sub">• ${stringifyValue(text.replace(/^[•·▪\-–*]\s*/, ''))}</div>`;
+          }
+          return `<div class="item-summary">${text}</div>`;
+        }).join('');
+        return renderSection(stringifyValue(section.title || section.key || 'Section'), content);
+      }
+
+      const customSectionMap = new Map(customSections.map((section) => [section.key, section]));
+      const orderedKeys = Array.isArray(meta.sectionOrder) ? meta.sectionOrder : [];
+
+      const mainSectionsByKey = {
+        summary: renderSection('Summary', basics.summary ? `<div class="summary-text">${stringifyValue(basics.summary)}</div>` : ''),
+        experience: renderSection('Experience', work.map((job) => {
+          const organization = stringifyValue(job.organization || job.company || job.position);
+          const role = stringifyValue((job.organization || job.company) ? job.position : '');
+          const dates = job.startDate ? `${stringifyValue(job.startDate)} – ${stringifyValue(job.endDate || 'Present')}` : '';
+          const highlights = (job.highlights || []).length
+            ? `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--text-main);">${job.highlights.map((highlight) => `<li>${stringifyValue(highlight)}</li>`).join('')}</ul>`
+            : '';
+          return `
+                <div class="item">
+                  <div class="item-header">
+                    <div class="item-sub">${organization}</div>
+                    ${dates ? `<div class="item-date">${dates}</div>` : ''}
+                  </div>
+                  ${role ? `<div class="item-role">${role}</div>` : ''}
+                  <div class="item-summary">${stringifyValue(job.summary)}</div>
+                  ${highlights}
+                </div>`;
+        }).join(''), 'section-experience'),
+        projects: renderSection('Projects', projects.map((project) => `
+                <div class="item pill-section">
+                  <div class="item-title">${stringifyValue(project.name)}</div>
+                  <div class="item-summary">${stringifyValue(project.summary)}</div>
+                  ${project.keywords && project.keywords.length ? `
+                    <div class="chips">
+                      ${project.keywords.map((keyword) => `<span class="chip">${stringifyValue(keyword)}</span>`).join('')}
+                    </div>` : ''}
+                </div>`).join('')),
+        education: !educationInSideColumn ? educationSection : '',
+        skills: skillsInMain ? skillsSection : '',
+      };
+
+      const sideSectionsByKey = {
+        skills: !skillsInMain ? skillsSection : '',
+        education: educationInSideColumn ? educationSection : '',
+        certifications: renderSection('Certifications', certifications.map((certification) => `
+                <div class="item-sub">• ${stringifyValue(certification.name)}</div>`).join('')),
+        languages: renderSection('Languages', languages.map((language) => `
+                <div class="item-sub">• ${stringifyValue(language.language)}${language.fluency ? ` — ${stringifyValue(language.fluency)}` : ''}</div>`).join('')),
+      };
+
+      customSections.forEach((section) => {
+        const placement = String(section.placement || 'main').toLowerCase();
+        if (placement === 'side') {
+          sideSectionsByKey[section.key] = renderCustomSection(section);
+        } else {
+          mainSectionsByKey[section.key] = renderCustomSection(section);
+        }
+      });
+
+      function buildOrderedColumnHtml(sectionsByKey) {
+        const seen = new Set();
+        const orderedHtml = [];
+        orderedKeys.forEach((key) => {
+          if (sectionsByKey[key]) {
+            orderedHtml.push(sectionsByKey[key]);
+            seen.add(key);
+          }
+        });
+        Object.keys(sectionsByKey).forEach((key) => {
+          if (sectionsByKey[key] && !seen.has(key)) {
+            orderedHtml.push(sectionsByKey[key]);
+          }
+        });
+        return orderedHtml.join('');
+      }
+
       resumeContainer.innerHTML = `
       <div class="containingDiv">
         <div class="top-row">
@@ -1462,51 +1577,11 @@
 
         <div class="layout">
           <div class="col-main">
-            ${renderSection('Summary', basics.summary ? `<div class="summary-text">${stringifyValue(basics.summary)}</div>` : '')}
-
-            ${renderSection('Experience', work.map((job) => {
-      const organization = stringifyValue(job.organization || job.company);
-      const dates = job.startDate ? ` · ${stringifyValue(job.startDate)} – ${stringifyValue(job.endDate || 'Present')}` : '';
-      const highlights = (job.highlights || []).length
-        ? `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--text-main);">${job.highlights.map((highlight) => `<li>${stringifyValue(highlight)}</li>`).join('')}</ul>`
-        : '';
-      return `
-                <div class="item">
-                  <div class="item-title">${stringifyValue(job.position)}</div>
-                  <div class="item-sub">${organization}${dates}</div>
-                  <div class="item-summary">${stringifyValue(job.summary)}</div>
-                  ${highlights}
-                </div>`;
-    }).join(''), 'section-experience')}
-
-            ${!educationInSideColumn ? educationSection : ''}
-
-            ${renderSection('Projects', projects.map((project) => `
-                <div class="item pill-section">
-                  <div class="item-title">${stringifyValue(project.name)}</div>
-                  <div class="item-summary">${stringifyValue(project.summary)}</div>
-                  ${project.keywords && project.keywords.length ? `
-                    <div class="chips">
-                      ${project.keywords.map((keyword) => `<span class="chip">${stringifyValue(keyword)}</span>`).join('')}
-                    </div>` : ''}
-                </div>`).join(''))}
+            ${buildOrderedColumnHtml(mainSectionsByKey)}
           </div>
 
           <div class="col-side">
-            ${renderSection('Skills', skills.map((skill) => `
-                <div class="item">
-                  ${skill.name ? `<div class="item-title">${stringifyValue(skill.name)}</div>` : ''}
-                  ${skill.summary ? `<div class="item-summary">${stringifyValue(skill.summary)}</div>` : ''}
-                  ${(skill.keywords || []).length ? `<div class="chips">${(skill.keywords || []).map((keyword) => `<span class="chip">${stringifyValue(keyword)}</span>`).join('')}</div>` : ''}
-                </div>`).join(''))}
-
-            ${educationInSideColumn ? educationSection : ''}
-
-            ${renderSection('Certifications', certifications.map((certification) => `
-                <div class="item-sub">• ${stringifyValue(certification.name)}</div>`).join(''))}
-
-            ${renderSection('Languages', languages.map((language) => `
-                <div class="item-sub">• ${stringifyValue(language.language)}${language.fluency ? ` — ${stringifyValue(language.fluency)}` : ''}</div>`).join(''))}
+            ${buildOrderedColumnHtml(sideSectionsByKey)}
           </div>
         </div>
       </div>
@@ -1582,35 +1657,33 @@
       const ms = (performance.now() - start).toFixed(1);
       if (statusBox) statusBox.textContent = theme ? `Theme "${theme}" loaded in ${ms} ms` : `Loaded in ${ms} ms`;
 
-      // Append "View PDF" link only for the page's native resume source.
+      // Append "View PDF" whenever the active profile has a PDF source.
       const topSide = document.querySelector('#resumeContainer .top-side');
       if (topSide) {
         const existing = topSide.querySelector('.cv-source-link');
         if (existing) existing.remove();
       }
-      if (config.defaultPDF && (activePersonFolder || config.personFolder) === config.personFolder) {
-        if (topSide) {
-          const a = document.createElement('a');
-          a.href = config.defaultPDF;
-          a.textContent = 'View PDF';
-          a.className = 'cv-source-link';
-          a.target = '_blank';
-          a.rel = 'noopener';
-          // Place on the same line as the phone number if present, else append a new row
-          const phoneRow = topSide.querySelector('.contact-item-phone');
-          if (phoneRow) {
-            phoneRow.appendChild(document.createTextNode('\u00a0\u00b7\u00a0'));
-            phoneRow.appendChild(a);
-          } else {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'contact-item';
-            wrapper.appendChild(a);
-            topSide.appendChild(wrapper);
-          }
-          fetch(config.defaultPDF, { method: 'HEAD' })
-            .then(res => { if (res.status === 404) a.remove(); })
-            .catch(() => {});
+      if (config.defaultPDF && topSide) {
+        const a = document.createElement('a');
+        a.href = config.defaultPDF;
+        a.textContent = 'View PDF';
+        a.className = 'cv-source-link';
+        a.target = '_blank';
+        a.rel = 'noopener';
+        // Place on the same line as the phone number if present, else append a new row
+        const phoneRow = topSide.querySelector('.contact-item-phone');
+        if (phoneRow) {
+          phoneRow.appendChild(document.createTextNode('\u00a0\u00b7\u00a0'));
+          phoneRow.appendChild(a);
+        } else {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'contact-item';
+          wrapper.appendChild(a);
+          topSide.appendChild(wrapper);
         }
+        fetch(config.defaultPDF, { method: 'HEAD' })
+          .then(res => { if (res.status === 404) a.remove(); })
+          .catch(() => {});
       }
     };
 
@@ -2277,11 +2350,7 @@
             goHash({ team: '' }, ['team', 'who']);
           }
         } else {
-          if (isCvRootPage() && hasBareWhoHash()) {
-            goHash({ '': '' });
-            return;
-          }
-          goHash({ who: buildTeamWhoValue() });
+          goHash({}, ['', 'who', 'source', 'theme', 'resume', 'team']);
         }
       });
     }

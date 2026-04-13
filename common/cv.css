@@ -123,6 +123,26 @@
   font-size: 13px;
   color: var(--text-muted);
 }
+#resumeContainer .item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+#resumeContainer .item-header .item-sub {
+  font-weight: 600;
+  color: var(--text-main);
+}
+#resumeContainer .item-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  text-align: right;
+}
+#resumeContainer .item-role {
+  font-size: 13px;
+  color: var(--text-muted);
+}
 #resumeContainer .item-summary {
   margin-top: 4px;
   font-size: 13px;
