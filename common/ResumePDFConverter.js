@@ -32,6 +32,7 @@ const ResumePDFConverter = {
   pdfMetadata: {},
   pdfNumPages: 0,
   lastResponseHeaders: {},
+  parseWarnings: [],
 
   /**
    * Initialize CVFilters with PDF source
@@ -55,6 +56,8 @@ const ResumePDFConverter = {
       } else {
         throw new Error("Either pdfUrl or pdfFile must be provided");
       }
+
+      this.parseWarnings = [];
 
       // Extract text from PDF
       const text = await this._extractTextFromPdf(arrayBuffer);
@@ -487,7 +490,7 @@ const ResumePDFConverter = {
     // --- 2. Collect pieces: split each line on tab and pipe ---
     const pieces = [];
     for (const line of headerText.split('\n')) {
-      const trimmed = line.trim();
+      const trimmed = this._normalizeHeaderLineText(line).trim();
       if (!trimmed) continue;
       for (const piece of trimmed.split(/\t|\s*\|\s*/)) {
         const p = piece.trim();
@@ -495,12 +498,14 @@ const ResumePDFConverter = {
       }
     }
 
-    if (!pieces.length) {
+    const normalizedPieces = this._mergeBrokenHeaderPieces(pieces);
+
+    if (!normalizedPieces.length) {
       return { name: 'Resume', label: '', email: '', phone: '', url: '', location: '', profiles: [] };
     }
 
     // --- 3. Name = first piece (may contain pipe/bullet separators before tab) ---
-    let name = pieces[0].split(/\s*[•·]\s*/)[0].trim() || 'Resume';
+    let name = normalizedPieces[0].split(/\s*[•·]\s*/)[0].trim() || 'Resume';
     // Strip trailing phone-like digits from name
     name = name.replace(/\s+\d[\d\s\-().]{5,}$/, '').trim() || 'Resume';
 
@@ -518,7 +523,7 @@ const ResumePDFConverter = {
     const phones = [];
     const profiles = [];
 
-    for (const piece of pieces.slice(1)) {
+    for (const piece of normalizedPieces.slice(1)) {
       if (this._looksLikeSectionLeak(piece)) {
         continue;
       }
@@ -534,14 +539,17 @@ const ResumePDFConverter = {
         continue;
       }
       // URL
-      if (knownDomainRe.test(piece) || looksLikeUrlRe.test(piece)) {
-        const fullUrl = /^https?:\/\//i.test(piece) ? piece : 'https://' + piece.replace(/^www\./i, '');
+      const normalizedUrlPiece = this._normalizeUrlLikeString(piece);
+      if (knownDomainRe.test(normalizedUrlPiece) || looksLikeUrlRe.test(normalizedUrlPiece)) {
+        const fullUrl = /^https?:\/\//i.test(normalizedUrlPiece)
+          ? normalizedUrlPiece
+          : 'https://' + normalizedUrlPiece.replace(/^www\./i, '');
         if (!url) {
           url = fullUrl;
         } else {
           // Derive a human-readable network name from the domain
-          const domainMatch = piece.replace(/^https?:\/\//i, '').match(/^(?:www\.)?([^./]+)/);
-          const network = domainMatch ? domainMatch[1] : piece;
+          const domainMatch = normalizedUrlPiece.replace(/^https?:\/\//i, '').match(/^(?:www\.)?([^./]+)/);
+          const network = domainMatch ? domainMatch[1] : normalizedUrlPiece;
           profiles.push({ network, url: fullUrl });
         }
         continue;
@@ -561,6 +569,61 @@ const ResumePDFConverter = {
     }
 
     return { name, label, email, phone: phones[0] || '', phones, url, location, profiles };
+  },
+
+  _mergeBrokenHeaderPieces(pieces) {
+    const normalized = [];
+    const sourcePieces = Array.isArray(pieces) ? pieces.slice() : [];
+    const phonePrefixRe = /^(?:\+?1[\s.-]*)?\(?\d{3}\)?[\s.-]*\d{3}$/;
+    const phoneSuffixRe = /^[-.\s]*\d{4}$/;
+
+    for (let i = 0; i < sourcePieces.length; i++) {
+      const current = String(sourcePieces[i] || '').trim();
+      const next = String(sourcePieces[i + 1] || '').trim();
+      if (current && next && phonePrefixRe.test(current) && phoneSuffixRe.test(next)) {
+        const merged = this._normalizePhoneString(`${current} ${next}`);
+        normalized.push(merged);
+        this.parseWarnings.push({
+          type: 'split-phone',
+          message: `Phone number was split across header fields as "${current}" and "${next}".`,
+          fix: `Use a single phone string such as "${merged}" in the source document.`,
+        });
+        i += 1;
+        continue;
+      }
+      normalized.push(current);
+    }
+
+    return normalized.filter(Boolean);
+  },
+
+  _normalizeHeaderLineText(value) {
+    const gapRe = "[\\s\\u00a0\\u2000-\\u200b\\u202f\\u205f\\u3000]*";
+    return String(value || "")
+      .replace(/\s+/g, " ")
+      // Repair phone numbers before header token splitting.
+      .replace(new RegExp(`((?:\\+?1[\\s.-]*)?\\(?\\d{3}\\)?[\\s.-]*\\d{3})${gapRe}-${gapRe}(\\d{4})\\b`, "g"), (_m, prefix, suffix) => `${this._normalizePhoneString(prefix)}-${suffix}`)
+      // Repair URL slugs/usernames split around hyphens before token splitting.
+      .replace(new RegExp(`((?:https?:\\/\\/)?(?:www\\.)?(?:linkedin\\.com|github\\.com|gitlab\\.com|twitter\\.com|x\\.com)\\/[^\\s|]*)${gapRe}-${gapRe}([A-Za-z0-9][^\\s|]*)`, "gi"), '$1-$2')
+      .trim();
+  },
+
+  _normalizeUrlLikeString(value) {
+    return String(value || "")
+      .replace(/\s+/g, " ")
+      .replace(/\s*-\s*/g, "-")
+      .trim();
+  },
+
+  _normalizePhoneString(value) {
+    const digits = String(value || '').replace(/\D/g, '');
+    if (digits.length === 11 && digits.startsWith('1')) {
+      return `+1 (${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7, 11)}`;
+    }
+    if (digits.length === 10) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+    }
+    return String(value || '').replace(/\s+/g, ' ').replace(/\s*-\s*/g, '-').trim();
   },
 
   /**
@@ -1345,10 +1408,12 @@ const ResumePDFConverter = {
    * Returns an array of { type, message, fix } objects.
    */
   detectIssues() {
-    const issues = [];
+    const issues = Array.isArray(this.parseWarnings) ? this.parseWarnings.slice() : [];
     if (!this.rawText) return issues;
 
     const lines = this.rawText.split('\n').filter(l => l.trim());
+    const normalizedHeaderLines = lines.slice(0, 3).map((line) => this._normalizeHeaderLineText(line));
+    const normalizedHeaderText = normalizedHeaderLines.join('\n');
 
     // Tab or multi-space in the name line causes name to bleed into adjacent content.
     // After extraction: column separators become '\t'; as a fallback also detect 3+ spaces.
@@ -1381,6 +1446,24 @@ const ResumePDFConverter = {
         message: `Year "${year}" appears as ${displayed} — an invisible character is splitting the digits.`,
         fix: `Select and delete "${year}" in your source document, then retype it.`
       });
+    }
+
+    if (!issues.some((issue) => issue.type === 'split-phone')) {
+      const malformedPhoneRe = /(?:\+?1[\s.-]*)?\(?\d{3}\)?[\s.-]*\d{3}(?:\s+-\s*|\s*-\s+|(?:\||·)\s*-\s*)\d{4}\b/g;
+      const foundPhones = new Set();
+      let phoneMatch;
+      while ((phoneMatch = malformedPhoneRe.exec(normalizedHeaderText)) !== null) {
+        const source = phoneMatch[0].replace(/\s+/g, ' ').trim();
+        const repaired = this._normalizePhoneString(source);
+        const key = `${source}|${repaired}`;
+        if (foundPhones.has(key)) continue;
+        foundPhones.add(key);
+        issues.push({
+          type: 'split-phone',
+          message: `Phone number appears split or malformed as "${source}".`,
+          fix: `Use one continuous phone string, for example "${repaired}".`
+        });
+      }
     }
 
     return issues;
