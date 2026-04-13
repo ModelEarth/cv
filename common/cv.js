@@ -254,13 +254,13 @@
       options.push({ value: 'json', label: 'From JSON' });
     }
     if (config.defaultPDF) {
-      options.push({ value: 'pdf', label: 'PDF' });
+      options.push({ value: 'pdf', label: 'From PDF' });
     }
 
     if (!options.length && preferredSource) {
       options.push({
         value: preferredSource,
-        label: preferredSource === 'pdf' ? 'PDF' : 'From JSON'
+        label: preferredSource === 'pdf' ? 'From PDF' : 'From JSON'
       });
     }
 
@@ -1262,11 +1262,9 @@
           </div>
         
           <div class="hide-when-no-bio">
-          <div class="local" style="display:none">
           <select id="sourceSelect" style="margin-left:8px;display:none">
             ${renderJsonOptions()}
           </select>
-          </div>
           </div>
 
           <div class="cv-filters-spacer"></div>
@@ -1465,9 +1463,9 @@
 
       const educationSection = renderSection('Education', education.map((entry) => `
                 <div class="item">
-                  <div class="item-title">${stringifyValue(entry.studyType)} — ${stringifyValue(entry.area)}</div>
-                  <div class="item-sub">${stringifyValue(entry.institution)}${entry.location ? ` · ${stringifyValue(entry.location)}` : ''}</div>
-                </div>`).join(''));
+                  <div class="item-title">${stringifyValue(entry.institution)}${entry.location ? ` · ${stringifyValue(entry.location)}` : ''}</div>
+                  ${(entry.studyType || entry.area) ? `<div class="item-sub">${stringifyValue([entry.studyType, entry.area].filter(Boolean).join(' — '))}</div>` : ''}
+                </div>`).join(''), 'section-education');
 
       const skillsSection = renderSection('Skills', skills.map((skill) => `
                 <div class="item">
@@ -1487,7 +1485,11 @@
           }
           return `<div class="item-summary">${text}</div>`;
         }).join('');
-        return renderSection(stringifyValue(section.title || section.key || 'Section'), content);
+        return renderSection(
+          stringifyValue(section.title || section.key || 'Section'),
+          content,
+          section.key ? `section-${stringifyValue(section.key)}` : ''
+        );
       }
 
       const customSectionMap = new Map(customSections.map((section) => [section.key, section]));
@@ -2454,7 +2456,7 @@
       if (!Array.from(jsonSelect.options).some((option) => option.value === 'pdf')) {
         const pdfOpt = document.createElement('option');
         pdfOpt.value = 'pdf';
-        pdfOpt.textContent = 'PDF';
+        pdfOpt.textContent = 'From PDF';
         jsonSelect.appendChild(pdfOpt);
       }
       if (source === 'pdf') jsonSelect.value = 'pdf';

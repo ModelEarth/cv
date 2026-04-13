@@ -104,6 +104,15 @@
 #resumeContainer .section-experience {
   margin-bottom: 30px;
 }
+#resumeContainer .section-education {
+  margin-top: -2px;
+}
+#resumeContainer .section-education + .section {
+  margin-top: 22px;
+}
+#resumeContainer .section-awards {
+  margin-top: 4px;
+}
 #resumeContainer .section-title {
   font-size: 13px;
   letter-spacing: 0.14em;
