@@ -250,16 +250,20 @@ const ResumePDFConverter = {
 
     // Identify sections
     const sections = this._identifySections(cleanedText);
+    const experienceText = this._removeRepeatedHeaderLines(sections.experience || sections.work || "", basics.name);
+    const educationText = this._removeRepeatedHeaderLines(sections.education || "", basics.name);
+    const skillsText = this._removeRepeatedHeaderLines(sections.skills || sections["technical skills"] || "", basics.name);
+    const projectsText = this._removeRepeatedHeaderLines(sections.projects || "", basics.name);
 
     return {
       basics: {
         ...basics,
         summary: sections.summary || sections.about || "",
       },
-      work: this._parseWorkExperience(sections.experience || sections.work || ""),
-      education: this._parseEducation(sections.education || ""),
-      skills: this._parseSkills(sections.skills || sections["technical skills"] || ""),
-      projects: this._parseProjects(sections.projects || ""),
+      work: this._parseWorkExperience(experienceText),
+      education: this._parseEducation(educationText),
+      skills: this._parseSkills(skillsText),
+      projects: this._parseProjects(projectsText),
       certificates: this._parseSimpleList(sections.certifications || ""),
       awards: this._parseSimpleList(sections.awards || ""),
       volunteer: this._parseSimpleList(sections.volunteer || ""),
@@ -533,45 +537,52 @@ const ResumePDFConverter = {
     const entries = [];
     if (!text) return entries;
 
-    const lines = text.split("\n").map(l => l.trim()).filter(l => l);
-    const degreeRe = /\b(Bachelor[^,\n]*|Master[^,\n]*|Ph\.?D[^,\n]*|M\.?B\.?A[^,\n]*|B\.?S\.?|M\.?S\.?|B\.?A\.?|M\.?A\.?|Associate[^,\n]*|Doctor[^,\n]*)\b/i;
-    const yearRe = /\b(\d{4})\b/g;
-    const bulletRe = /^[•·▪\-–*]\s+/;
+    const lines = text
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line && !this._isEducationNoiseLine(line));
 
+    const blocks = [];
     let current = null;
 
     const flush = () => {
-      if (current && current.institution) entries.push(current);
-      current = { institution: "", studyType: "", area: "", startDate: "", endDate: "" };
+      if (current && current.institution) {
+        blocks.push(current);
+      }
+      current = null;
     };
 
     for (const line of lines) {
-      if (bulletRe.test(line)) continue;
-
-      const degreeMatch = line.match(degreeRe);
-      const years = [...line.matchAll(yearRe)].map(m => m[1]);
-
-      if (degreeMatch) {
-        if (!current) flush();
-        current.studyType = degreeMatch[0].trim();
-        // "in Computer Science" following the degree
-        const areaMatch = line.match(/\bin\s+([A-Z][^,\n]+)/i);
-        if (areaMatch) current.area = areaMatch[1].trim();
-        if (years.length) {
-          current.startDate = years[0];
-          current.endDate = years[1] || "";
-        }
-      } else if (years.length && current) {
-        if (!current.startDate) current.startDate = years[0];
-        if (!current.endDate && years[1]) current.endDate = years[1];
-      } else if (line.length > 2) {
-        // Institution or area line
+      if (this._looksLikeInstitutionLine(line)) {
         flush();
-        current.institution = line;
+        current = { institution: line, lines: [line] };
+        continue;
       }
+      if (!current) {
+        current = { institution: "", lines: [] };
+      }
+      current.lines.push(line);
     }
 
     flush();
+
+    for (const block of blocks) {
+      const institution = block.institution || this._findInstitutionLine(block.lines);
+      if (!institution) continue;
+
+      const detailLines = block.lines.filter((line) => line !== institution);
+      const blockText = [institution, ...detailLines].join(" ").replace(/\s+/g, " ").trim();
+      const years = [...blockText.matchAll(/\b((?:19|20)\d{2})\b/g)].map((match) => match[1]);
+
+      entries.push({
+        institution,
+        studyType: this._extractEducationStudyType(blockText),
+        area: this._extractEducationArea(detailLines, blockText),
+        startDate: years[0] || "",
+        endDate: years[1] || "",
+      });
+    }
+
     return entries;
   },
 
@@ -600,18 +611,35 @@ const ResumePDFConverter = {
   _parseSkills(text) {
     const skills = [];
     if (!text) return skills;
-    const lines = text.split("\n").filter(l => l.trim());
+    const lines = text
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
 
-    let currentCategory = "Skills";
+    let currentCategory = "";
     let keywords = [];
     let foundFirstCategory = false;
     const introLines = [];
 
     const pushCurrent = () => {
       if (keywords.length > 0) {
-        skills.push({ name: currentCategory, keywords: [...keywords] });
+        skills.push({
+          name: currentCategory || "Skills",
+          keywords: this._dedupePreserveOrder(keywords),
+        });
         keywords = [];
       }
+    };
+
+    const pushIntro = () => {
+      if (!introLines.length) return;
+      const introKeywords = this._splitSkillKeywords(introLines.join(", "));
+      if (introKeywords.length > 0) {
+        skills.push({ name: "Core Skills", keywords: introKeywords });
+      } else {
+        skills.push({ name: "", summary: introLines.join(" "), keywords: [] });
+      }
+      introLines.length = 0;
     };
 
     for (const line of lines) {
@@ -622,18 +650,16 @@ const ResumePDFConverter = {
 
       // Category header: "Something:" or "Something Name: optional keywords..."
       const catMatch = mainPart.match(/^([A-Z][^:\n]{0,33}):\s*(.*)$/);
-      if (catMatch) {
-        if (!foundFirstCategory && introLines.length > 0) {
-          // Flush accumulated intro text as a header-less entry before first category
-          skills.push({ name: '', summary: introLines.join(' '), keywords: [] });
-          introLines.length = 0;
-        }
+      if (catMatch || this._looksLikeSkillCategory(mainPart)) {
+        if (!foundFirstCategory) pushIntro();
         foundFirstCategory = true;
         pushCurrent();
-        currentCategory = catMatch[1].trim();
-        const inlineContent = (catMatch[2] + (tabRest ? ' ' + tabRest : '')).trim();
+        currentCategory = catMatch ? catMatch[1].trim() : mainPart.replace(/:$/, "").trim();
+        const inlineContent = catMatch
+          ? (catMatch[2] + (tabRest ? ' ' + tabRest : '')).trim()
+          : tabRest;
         if (inlineContent) {
-          keywords.push(...inlineContent.split(/[,•]/).map(w => w.trim()).filter(w => w));
+          keywords.push(...this._splitSkillKeywords(inlineContent));
         }
       } else if (!foundFirstCategory) {
         // Before first category header: accumulate as intro text
@@ -642,12 +668,136 @@ const ResumePDFConverter = {
       } else {
         // After first category header: plain keywords line
         const fullLine = tabRest ? `${mainPart}, ${tabRest}` : mainPart;
-        keywords.push(...fullLine.split(/[,•]/).map(w => w.trim()).filter(w => w));
+        keywords.push(...this._splitSkillKeywords(fullLine));
       }
     }
 
+    if (!foundFirstCategory) pushIntro();
     pushCurrent();
     return skills;
+  },
+
+  _removeRepeatedHeaderLines(text, headerText) {
+    if (!text) return "";
+    const normalizedHeader = String(headerText || "").replace(/\s+/g, " ").trim().toLowerCase();
+    return text
+      .split("\n")
+      .filter((line) => {
+        const normalizedLine = line.replace(/\s+/g, " ").trim().toLowerCase();
+        return normalizedLine && normalizedLine !== normalizedHeader;
+      })
+      .join("\n")
+      .trim();
+  },
+
+  _isEducationNoiseLine(line) {
+    if (/^(?:education|skills|work experience|experience|projects|awards|certifications|---+)$/i.test(line)) {
+      return true;
+    }
+    return /^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}$/.test(line) && !/\b(university|institute|college|academy|school)\b/i.test(line);
+  },
+
+  _looksLikeInstitutionLine(line) {
+    if (!line) return false;
+    if (/\b(university|institute|college|academy|school)\b/i.test(line)) return true;
+    if (this._looksLikeDegreeLine(line)) return false;
+    if (/\b(?:dept|department|lab|foundation|company|inc|llc|corp)\b/i.test(line)) return false;
+    if (this._looksLikeSkillCategory(line)) return false;
+    return /^[A-Z][A-Za-z&.'()/-]+(?:\s+[A-Z][A-Za-z&.'()/-]+){1,6}$/.test(line) && line.length <= 90;
+  },
+
+  _findInstitutionLine(lines) {
+    return (lines || []).find((line) => this._looksLikeInstitutionLine(line)) || "";
+  },
+
+  _extractEducationStudyType(text) {
+    const normalized = String(text || "").replace(/[’`]/g, "'");
+    const durationMatch = normalized.match(/(\d+(?:\.\d+)?)\s+(semester|semesters|year|years)/i);
+    const durationLabel = durationMatch
+      ? ` (${durationMatch[1]} ${
+          durationMatch[2].toLowerCase().startsWith("semester")
+            ? (durationMatch[1] === "1" ? "semester" : "semesters")
+            : (durationMatch[1] === "1" ? "year" : "years")
+        })`
+      : "";
+    const isCoursework = /\b(toward|coursework|semester|semesters|year|years)\b/i.test(normalized);
+
+    if (/\b(ph\.?d|doctorate)\b/i.test(normalized)) {
+      return isCoursework ? `PhD Coursework${durationLabel}` : "PhD";
+    }
+    if (/\b(m\.?b\.?a)\b/i.test(normalized)) {
+      return "MBA";
+    }
+    if (/\b(master'?s?|m\.?s\.?|m\.?a\.?)\b/i.test(normalized)) {
+      return isCoursework ? `Master's Coursework${durationLabel}` : "Master's";
+    }
+    if (/\b(bachelor'?s?|b\.?s\.?)\b/i.test(normalized)) {
+      return "Bachelor's";
+    }
+    if (/\b(b\.?a\.?)\b/i.test(normalized)) {
+      return "BA";
+    }
+    if (/\bassociate\b/i.test(normalized)) {
+      return "Associate's";
+    }
+    return "";
+  },
+
+  _extractEducationArea(detailLines, blockText) {
+    const cleanedDetailLine = (detailLines || [])
+      .filter((line) => line && !/^(?:gpa|score)\b/i.test(line))
+      .map((line) => this._cleanEducationAreaText(line))
+      .find(Boolean);
+    const primaryText = (cleanedDetailLine || this._cleanEducationAreaText(blockText || "") || "").split(/(?<=[.!?])\s+/)[0];
+    return primaryText
+      .replace(/\s+/g, " ")
+      .replace(/\s*,\s*/g, ", ")
+      .replace(/^[-,.;\s]+|[-,.;\s]+$/g, "");
+  },
+
+  _cleanEducationAreaText(text) {
+    return String(text || "")
+      .replace(/[’`]/g, "'")
+      .replace(/\b\d+(?:\.\d+)?\s+(?:semester|semesters|year|years)\s+toward\s+(?:a\s+)?(?:ph\.?d|doctorate|master'?s?|bachelor'?s?)\b/ig, "")
+      .replace(/\btoward\s+(?:a\s+)?(?:ph\.?d|doctorate|master'?s?|bachelor'?s?)\b/ig, "")
+      .replace(/\b(?:Bachelor'?s?|Master'?s?|Doctorate|Ph\.?D|B\.?A\.?|B\.?S\.?|M\.?A\.?|M\.?S\.?|MBA)\b/ig, "")
+      .replace(/\s+/g, " ")
+      .replace(/\s*,\s*/g, ", ")
+      .replace(/^[-,.;\s]+|[-,.;\s]+$/g, "");
+  },
+
+  _looksLikeDegreeLine(text) {
+    return /\b(?:Bachelor'?s?|Master'?s?|Doctorate|Ph\.?D|B\.?A\.?|B\.?S\.?|M\.?A\.?|M\.?S\.?|MBA|Associate(?:'s)?)\b/i.test(text || "");
+  },
+
+  _looksLikeSkillCategory(text) {
+    const trimmed = String(text || "").replace(/:$/, "").trim();
+    if (!trimmed || trimmed.length > 48) return false;
+    if (/[,.]/.test(trimmed)) return false;
+    if (/^(?:skills|loren kevin heyns)$/i.test(trimmed)) return false;
+    if (/\b(university|institute|college|academy|school)\b/i.test(trimmed)) return false;
+    if (!/^[A-Z][A-Za-z0-9&+/.() -]+$/.test(trimmed)) return false;
+    return trimmed.includes("/") || /\b(?:and|&)\b/.test(trimmed) || trimmed.split(/\s+/).length <= 5;
+  },
+
+  _splitSkillKeywords(text) {
+    return this._dedupePreserveOrder(
+      String(text || "")
+        .replace(/\.\s+(?=[A-Z])/g, ", ")
+        .split(/[,;•]/)
+        .map((word) => word.trim())
+        .filter((word) => word && word.length > 1)
+    );
+  },
+
+  _dedupePreserveOrder(items) {
+    const seen = new Set();
+    return (items || []).filter((item) => {
+      const key = String(item).toLowerCase();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   },
 
   /**
