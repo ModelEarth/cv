@@ -1705,6 +1705,7 @@
     updateTeamLink();
     syncBioSection(false);
     if (!activePersonFolder) {
+      clearParseReport();
       clearResumeDisplay();
       clearReadmeDisplay();
       return;
@@ -1725,6 +1726,7 @@
 
     currentPdfData = null;
     revokePdfBlobUrl();
+    clearParseReport();
     await loadJson(effectiveJsonFile);
     loadTheme(effectiveJsonFile, theme);
   }
@@ -1816,6 +1818,17 @@
     } else {
       btn.classList.remove('btn-alert');
     }
+  }
+
+  function clearParseReport() {
+    const btn = select('#cvParseReportBtn');
+    const panel = select('#cvParseReport');
+    if (!btn || !panel) return;
+    panel.innerHTML = '';
+    panel.style.display = 'none';
+    btn.style.display = 'none';
+    btn.textContent = 'Parse Report';
+    btn.classList.remove('btn-alert');
   }
 
   function isEmptyParseResult(parsed) {
@@ -1912,6 +1925,7 @@
     if (!config.defaultPDF) {
       currentPdfData = null;
       revokePdfBlobUrl();
+      clearParseReport();
       clearResumeDisplay();
       return false;
     }
