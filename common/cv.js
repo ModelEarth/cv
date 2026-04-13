@@ -9,6 +9,7 @@
  *     defaultJson: 'detailed.json',
  *     defaultTheme: 'elegant',
  *     defaultPDF: 'https://example.com/resume.pdf',
+ *     educationColumn: 'main',
  *     syncResumeParam: false
  *   });
  */
@@ -109,6 +110,7 @@
     defaultJson: '',
     defaultTheme: '',
     defaultPDF: '',
+    educationColumn: 'side',
     syncResumeParam: false,
     autoDetectJsonFiles: false,
     showReadme: true,
@@ -230,7 +232,8 @@
       const profileConfig = {
         defaultJson: resolvePersonPageConfigUrl(candidate, parseQuotedConfigValue(html, 'defaultJson')),
         defaultPDF: resolvePersonPageConfigUrl(candidate, parseQuotedConfigValue(html, 'defaultPDF')),
-        defaultTheme: parseQuotedConfigValue(html, 'defaultTheme')
+        defaultTheme: parseQuotedConfigValue(html, 'defaultTheme'),
+        educationColumn: parseQuotedConfigValue(html, 'educationColumn')
       };
 
       personProfileConfigCache.set(candidate, profileConfig);
@@ -281,6 +284,7 @@
     config.defaultJson = baseConfig.defaultJson;
     config.defaultPDF = baseConfig.defaultPDF;
     config.defaultTheme = baseConfig.defaultTheme;
+    config.educationColumn = baseConfig.educationColumn;
 
     if (!isCvRootPage() || !personFolder) return;
 
@@ -293,6 +297,9 @@
     }
     if (profileConfig.defaultTheme) {
       config.defaultTheme = profileConfig.defaultTheme;
+    }
+    if (profileConfig.educationColumn) {
+      config.educationColumn = profileConfig.educationColumn;
     }
   }
 
@@ -1347,10 +1354,10 @@
       return value;
     }
 
-    function renderSection(title, content) {
+    function renderSection(title, content, className) {
       if (!content || !content.trim()) return '';
       return `
-      <div class="section">
+      <div class="section${className ? ` ${className}` : ''}">
         <div class="section-title">${title}</div>
         ${content}
       </div>
@@ -1366,6 +1373,8 @@
       const certifications = data.certifications || data.certificates || [];
       const languages = data.languages || [];
       const profiles = basics.profiles || data.profiles || [];
+      const educationColumn = String(config.educationColumn || 'side').toLowerCase();
+      const educationInSideColumn = ['side', 'left', 'right'].includes(educationColumn);
 
       const resumeContainer = document.getElementById('resumeContainer');
       if (!resumeContainer) return;
@@ -1431,6 +1440,12 @@
         });
       }
 
+      const educationSection = renderSection('Education', education.map((entry) => `
+                <div class="item">
+                  <div class="item-title">${stringifyValue(entry.studyType)} — ${stringifyValue(entry.area)}</div>
+                  <div class="item-sub">${stringifyValue(entry.institution)}${entry.location ? ` · ${stringifyValue(entry.location)}` : ''}</div>
+                </div>`).join(''));
+
       resumeContainer.innerHTML = `
       <div class="containingDiv">
         <div class="top-row">
@@ -1462,7 +1477,9 @@
                   <div class="item-summary">${stringifyValue(job.summary)}</div>
                   ${highlights}
                 </div>`;
-    }).join(''))}
+    }).join(''), 'section-experience')}
+
+            ${!educationInSideColumn ? educationSection : ''}
 
             ${renderSection('Projects', projects.map((project) => `
                 <div class="item pill-section">
@@ -1483,11 +1500,7 @@
                   ${(skill.keywords || []).length ? `<div class="chips">${(skill.keywords || []).map((keyword) => `<span class="chip">${stringifyValue(keyword)}</span>`).join('')}</div>` : ''}
                 </div>`).join(''))}
 
-            ${renderSection('Education', education.map((entry) => `
-                <div class="item">
-                  <div class="item-title">${stringifyValue(entry.studyType)} — ${stringifyValue(entry.area)}</div>
-                  <div class="item-sub">${stringifyValue(entry.institution)}${entry.location ? ` · ${stringifyValue(entry.location)}` : ''}</div>
-                </div>`).join(''))}
+            ${educationInSideColumn ? educationSection : ''}
 
             ${renderSection('Certifications', certifications.map((certification) => `
                 <div class="item-sub">• ${stringifyValue(certification.name)}</div>`).join(''))}

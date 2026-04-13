@@ -101,6 +101,9 @@
 #resumeContainer .section {
   margin-bottom: 4px;
 }
+#resumeContainer .section-experience {
+  margin-bottom: 26px;
+}
 #resumeContainer .section-title {
   font-size: 13px;
   letter-spacing: 0.14em;
