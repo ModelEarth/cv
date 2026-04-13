@@ -128,6 +128,23 @@
   let baseConfig = null;
   const personFolderExistsCache = new Map();
   const personProfileConfigCache = new Map();
+  const CV_DYNAMIC_STYLES = `
+    @container (min-width: 600px) {
+      .containingDiv.layout-wide-top-main .top-side {
+        flex: 0 1 232px;
+        max-width: 232px;
+      }
+    }
+    @media print {
+      .cv-source-link-group,
+      .cv-source-link-row {
+        display: none !important;
+      }
+      #resumeContainer .chip {
+        padding: 0 !important;
+      }
+    }
+  `;
 
   // Theme options (12 local custom themes)
   const THEMES = [
@@ -174,6 +191,23 @@
       .split(',')
       .map((token) => token.trim())
       .filter(Boolean);
+  }
+
+  function ensureCvDynamicStyles(targetDocument = document) {
+    if (!targetDocument || !targetDocument.head) return;
+    if (targetDocument.getElementById('cvDynamicStyles')) return;
+    const style = targetDocument.createElement('style');
+    style.id = 'cvDynamicStyles';
+    style.textContent = CV_DYNAMIC_STYLES;
+    targetDocument.head.appendChild(style);
+  }
+
+  function getResumeLayoutClass(personFolder) {
+    const folder = String(personFolder || activePersonFolder || config.personFolder || '').trim();
+    if (folder === 'LorenHeyns') {
+      return ' layout-wide-top-main';
+    }
+    return '';
   }
 
   function hasTeamToken(tokens) {
@@ -1564,7 +1598,7 @@
       }
 
       resumeContainer.innerHTML = `
-      <div class="containingDiv">
+      <div class="containingDiv${getResumeLayoutClass(activePersonFolder || config.personFolder)}">
         <div class="top-row">
           <div class="top-main">
             <h1 class="name">${stringifyValue(basics.name)}</h1>
@@ -1662,8 +1696,7 @@
       // Append "View PDF" whenever the active profile has a PDF source.
       const topSide = document.querySelector('#resumeContainer .top-side');
       if (topSide) {
-        const existing = topSide.querySelector('.cv-source-link');
-        if (existing) existing.remove();
+        topSide.querySelectorAll('.cv-source-link-group, .cv-source-link-row').forEach((element) => element.remove());
       }
       if (config.defaultPDF && topSide) {
         const a = document.createElement('a');
@@ -1672,19 +1705,26 @@
         a.className = 'cv-source-link';
         a.target = '_blank';
         a.rel = 'noopener';
+        let sourceAttachment;
         // Place on the same line as the phone number if present, else append a new row
         const phoneRow = topSide.querySelector('.contact-item-phone');
         if (phoneRow) {
-          phoneRow.appendChild(document.createTextNode('\u00a0\u00b7\u00a0'));
-          phoneRow.appendChild(a);
+          sourceAttachment = document.createElement('span');
+          sourceAttachment.className = 'cv-source-link-group';
+          const separator = document.createElement('span');
+          separator.className = 'cv-source-separator';
+          separator.textContent = '\u00a0\u00b7\u00a0';
+          sourceAttachment.appendChild(separator);
+          sourceAttachment.appendChild(a);
+          phoneRow.appendChild(sourceAttachment);
         } else {
-          const wrapper = document.createElement('div');
-          wrapper.className = 'contact-item';
-          wrapper.appendChild(a);
-          topSide.appendChild(wrapper);
+          sourceAttachment = document.createElement('div');
+          sourceAttachment.className = 'contact-item cv-source-link-row';
+          sourceAttachment.appendChild(a);
+          topSide.appendChild(sourceAttachment);
         }
         fetch(config.defaultPDF, { method: 'HEAD' })
-          .then(res => { if (res.status === 404) a.remove(); })
+          .then(res => { if (res.status === 404 && sourceAttachment) sourceAttachment.remove(); })
           .catch(() => {});
       }
     };
@@ -2059,6 +2099,7 @@
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
+          ${CV_DYNAMIC_STYLES}
         </style>
       </head>
       <body>${resumeRoot.outerHTML}</body>
@@ -2406,6 +2447,7 @@
   function init(options = {}) {
     filtersInitialized = true;
     ensureBioStyles();
+    ensureCvDynamicStyles();
 
     // Merge config
     config = Object.assign({}, config, options);
