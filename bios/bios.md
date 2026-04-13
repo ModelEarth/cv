@@ -73,15 +73,18 @@ Mohammad is a Data Analyst and Full Stack Developer with a Master's in MIS from 
 
 
 <div markdown="1">
-**CV Pages**
-[Yash Gondkar](../#YashGondkar)
+**More CV Pages**
 [Noor Fathima](../#NoorFathima)
-[Loren Heyns](../#LorenHeyns)
-[Mohammed Saalim](../#MohammedSaalim)
-[Satvik Praveen](../#SatvikPraveen)
 [Shanmuga Priya Kannan](../#ShanmugaPriyaKannan)<!-- Projects section -->
 
 <!--
+Bug: Satvik links to ShanmugaPriyaKannan resume
+[Satvik Praveen](../#SatvikPraveen)
+
+[Yash Gondkar](../#YashGondkar)
+[Loren Heyns](../#LorenHeyns)
+[Mohammed Saalim](../#MohammedSaalim)
+
 [Satvik Praveen](extract) - JSON drop to convert-->
 <!--
 [Thanmayi Sai](ThanmayiSai)-->
