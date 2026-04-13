@@ -3,7 +3,7 @@
 ![Loren Heyns](https://dreamstudio.com/earth/img/team/Loren-Heyns.jpg)
 <div class="bioText" markdown="1" bio="LorenHeyns">
 ## Loren Heyns
-Loren is a Full-Stack Developer with 25 years experience building collaborative websites that combine data visualizations and interactive maps with fast static hosting using GitHub and Cloudflare. Loren enjoys building open frameworks and immersive data science websites combining industry data analysis, Google Data Common API timelines and LLM interfaces.
+Loren is a Full-Stack Developer with 25 years experience building collaborative websites that combine data visualizations, AI insights, and interactive maps with fast static hosting using GitHub and Cloudflare. Loren enjoys building open frameworks and immersive data science websites combining industry data analysis, Google Data Common API timelines and LLM interfaces.
 [My Recent Work ~ Get In Touch](https://dreamstudio.com/loren)
 </div>
 ---
@@ -56,51 +56,21 @@ Priyanka is a Data Scientist / Research Data Analyst with a PhD in Computer Mana
 Ivy is a Senior Programmer and Data Analytics Specialist with degrees in Applied Machine Learning from Northeastern University and Mathematics from the University of Washington, Seattle. She applies Python, SQL and R in data visualization, strategy optimization decision-making, and statistical analysis.
 [My Recent Work ~ Get In Touch](https://contra.com/dreamstudioteam)
 </div>
-
-<!--
-
-To add once we automate
-
 ---
-
-![Loren Heyns](https://dreamstudio.com/earth/img/team/Loren-Heyns.jpg)
-
-<div class="bioText" markdown="1">
-
-## Loren Heyns
-Loren is a Full-Stack Developer with 20 years experience building collaborative websites that combine data visualizations and interactive maps with fast static hosting using GitHub and Cloudflare. Loren enjoys building open frameworks and immersive data science websites combining industry data analysis, Google Data Common API timelines and LLM interfaces.
-[My Recent Work ~ Get In Touch](https://dreamstudio.com//loren)
-</div>
-
-![Gary Martirosyan](https://dreamstudio.com/earth/img/team/gary.jpg)
-
-<div class="bioText" markdown="1">
-
-## Gary Martirosyan
-Gary is a Data Engineer and Database Developer, specializing in designing, creating, and maintaining relational databases, ensuring their efficiency, reliability, and scalability. Gary optimizes database performance through applying best practices, query tuning, and stored procedure enhancements, ensuring fast and efficient data retrieval.
-</div>
-
----
-
 ![Yogesh Gajula](https://dreamstudio.com/earth/img/team/Yogesh-Gajula.jpg)
-
 <div class="bioText" markdown="1">
-
 ## Yogesh Gajula
 Yogesh is a Data Scientist & Full-Stack Developer on a mission to unlock data's full potential. Holding an M.S. in CS and expertise in Data Science & Autonomous Systems, he's a pro at using Python, SQL, and cloud tech. Yogesh builds scalable ML solutions, dynamic visualizations, and insightful statistical models, bridging the gap between data and development for real business growth.
-
-[My Recent Work ~ Get In Touch](https://yogeshgajula.com)
+<!-- broken [My Recent Work ~ Get In Touch](https://yogeshgajula.com) -->
 </div>
-
 ---
 ![Mohammad Thousif Udayagiri](https://avatars.githubusercontent.com/ThousifMd)
-<div class="bioText" markdown="1">
+<div class="bioText" markdown="1" bio="ThousifMd">
 ## Mohammad Thousif Udayagiri
-Mohammad is a Data Analyst and Full Stack Developer with a Master's in MIS from Oklahoma State University. At DreamStudio Earth he built the interactive Exiobase Sankey diagram and trade flow map now live on model.earth, contributing to the platform's push toward real-time international environmental impact visualization. He is currently a Technology Analyst at Northern Arizona University.
-[CV Page](https://thousifmd.github.io/cv/ThousifMd/)
+Mohammad is a Data Analyst and Full Stack Developer with a Master's in MIS from Oklahoma State University. At DreamStudio Earth he built the interactive [Exiobase Sankey](/profile/charts/sankey/) diagram and trade flow map now live on model.earth, contributing to the platform's push toward real-time international environmental impact visualization. He is currently a Technology Analyst at Northern Arizona University.
 </div>
 
--->
+
 
 <div markdown="1">
 **CV Pages**
