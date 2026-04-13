@@ -167,7 +167,7 @@ const ResumePDFConverter = {
       const colThreshold = (pageView[2] - pageView[0]) * 0.15;
 
       // Group text by line, using horizontal gaps to decide separators:
-      //   end-to-start gap < 0.5 pt       → no separator  (split word, e.g. "Presen"+"t")
+      //   end-to-start gap <= 0.75 pt     → no separator  (split word, e.g. "Presen"+"t")
       //   start-to-start gap > 15% pw     → tab            (column jump, e.g. name → contact)
       //   wide pure-whitespace item        → tab flag       (explicit spacer in the PDF)
       //   narrow pure-whitespace item      → skipped       (word space — don't emit '\t')
@@ -178,24 +178,30 @@ const ResumePDFConverter = {
       // that forces '\t' on the next real text item regardless of gap size.
       const lines = [];
       let currentLine = {
-        y: null, parts: [], items: [], lastEndX: null, lastStartX: null, pendingColumnSep: false
+        y: null, parts: [], items: [], lastEndX: null, lastStartX: null, pendingColumnSep: false, pendingWordSep: false
       };
+      const tinyGapThreshold = 0.75;
 
       for (const item of items) {
+        const itemText = this._sanitizeExtractedTextFragment(item.str);
+        if (!itemText) {
+          continue;
+        }
         const y = (item.transform && item.transform[5]) || 0;
         const x = (item.transform && item.transform[4]) || 0;
         const endX = x + (item.width || 0);
-        const isSpacer = item.str.length > 0 && item.str.trim() === '';
+        const isSpacer = itemText.length > 0 && itemText.trim() === '';
 
         if (currentLine.y !== null && Math.abs(y - currentLine.y) > 2) {
           // New line — flush the current one
           this._flushExtractedLine(lines, currentLine, pageNum);
           currentLine = {
-            y, parts: isSpacer ? [] : [item.str],
-            items: isSpacer ? [] : [this._createLineItem(item, x, endX)],
+            y, parts: isSpacer ? [] : [itemText],
+            items: isSpacer ? [] : [this._createLineItem(item, x, endX, itemText)],
             lastEndX: isSpacer ? null : endX,
             lastStartX: isSpacer ? null : x,
-            pendingColumnSep: false
+            pendingColumnSep: false,
+            pendingWordSep: false
           };
         } else if (isSpacer) {
           // Spacer within a line: advance lastEndX but don't add to parts.
@@ -205,28 +211,46 @@ const ResumePDFConverter = {
           }
           if ((item.width || 0) > colThreshold * 0.5) {
             currentLine.pendingColumnSep = true;
+            currentLine.pendingWordSep = false;
+          } else if (currentLine.items.length > 0) {
+            currentLine.pendingWordSep = true;
           }
         } else if (currentLine.parts.length === 0) {
           // First real text item on this line
           currentLine.y = y;
-          currentLine.parts.push(item.str);
-          currentLine.items.push(this._createLineItem(item, x, endX));
+          currentLine.parts.push(itemText);
+          currentLine.items.push(this._createLineItem(item, x, endX, itemText));
           currentLine.lastEndX = endX;
           currentLine.lastStartX = x;
         } else {
           const endGap   = x - currentLine.lastEndX;    // gap after previous word ends
           const startGap = x - currentLine.lastStartX;  // distance between start positions
+          const movedBackwardAcrossColumns = currentLine.lastStartX !== null && x < (currentLine.lastStartX - (colThreshold * 0.5));
+          const previousText = String(currentLine.items[currentLine.items.length - 1]?.str || '');
+          const isDotTokenStart = itemText === '.' && /[-–—]$/.test(previousText);
+          const shouldAttachAfterDot = !currentLine.pendingWordSep
+            && /\.$/.test(previousText)
+            && /^[A-Z0-9]/.test(itemText);
+          const shouldMergeTinyGap = !currentLine.pendingWordSep
+            && /[A-Za-z0-9]$/.test(previousText)
+            && /^[A-Za-z0-9]/.test(itemText)
+            && endGap <= tinyGapThreshold;
           let prefix;
-          if (currentLine.pendingColumnSep || startGap > colThreshold) {
+          if (currentLine.pendingColumnSep || startGap > colThreshold || movedBackwardAcrossColumns) {
             prefix = '\t';          // wide spacer flag or large positional jump = column
-          } else if (endGap < 0) {
-            prefix = '';            // overlapping items = split character in font encoding
+          } else if (isDotTokenStart) {
+            prefix = ' ';           // keep the space before token starters like ".NET" after a dash
+          } else if (currentLine.pendingWordSep) {
+            prefix = ' ';           // explicit narrow whitespace in the PDF
+          } else if (endGap < 0 || shouldMergeTinyGap || shouldAttachAfterDot) {
+            prefix = '';            // overlapping/tiny-gap items stay in the same word
           } else {
             prefix = ' ';           // normal inter-word space
           }
           currentLine.pendingColumnSep = false;
-          currentLine.parts.push(prefix + item.str);
-          currentLine.items.push(this._createLineItem(item, x, endX));
+          currentLine.pendingWordSep = false;
+          currentLine.parts.push(prefix + itemText);
+          currentLine.items.push(this._createLineItem(item, x, endX, itemText));
           currentLine.y = y;
           currentLine.lastEndX = endX;
           currentLine.lastStartX = x;
@@ -241,11 +265,18 @@ const ResumePDFConverter = {
     return fullText.trim();
   },
 
-  _createLineItem(item, x, endX) {
+  _sanitizeExtractedTextFragment(value) {
+    return String(value || '')
+      .replace(/[\u200b-\u200d\u2060\ufeff]/g, '')
+      .replace(/\u00ad/g, '')
+      .replace(/[\u00a0\u2000-\u200a\u202f\u205f\u3000]/g, ' ');
+  },
+
+  _createLineItem(item, x, endX, itemText) {
     const transform = item.transform || [];
     const size = Math.max(Math.abs(transform[0] || 0), Math.abs(transform[3] || 0), 0);
     return {
-      str: item.str || "",
+      str: typeof itemText === 'string' ? itemText : this._sanitizeExtractedTextFragment(item.str),
       fontName: item.fontName || "",
       x,
       endX,
@@ -256,7 +287,11 @@ const ResumePDFConverter = {
 
   _flushExtractedLine(lines, currentLine, pageNum) {
     if (!currentLine || !currentLine.parts || currentLine.parts.length === 0) return;
-    const text = currentLine.parts.join('').replace(/ {2,}/g, ' ').trim();
+    const text = this._repairSuspiciousWordSpacing(currentLine.parts.join('')
+      .replace(/ {2,}/g, ' ')
+      .replace(/[ \u00a0\u2000-\u200a\u202f\u205f\u3000]+([,;:!?])/g, '$1')
+      .replace(/[ \u00a0\u2000-\u200a\u202f\u205f\u3000]+\.(?=$|[\s)\]},"'])/g, '.')
+      .trim());
     if (!text) return;
     lines.push(text);
     this.structuredLines.push({
@@ -690,20 +725,57 @@ const ResumePDFConverter = {
 
   _normalizeHeaderLineText(value) {
     const gapRe = "[\\s\\u00a0\\u2000-\\u200b\\u202f\\u205f\\u3000]*";
-    return String(value || "")
+    return this._normalizeDomainLikeText(String(value || "")
       .replace(/[ \u00a0\u2000-\u200b\u202f\u205f\u3000]+/g, " ")
       // Repair phone numbers before header token splitting.
       .replace(new RegExp(`((?:\\+?1[\\s.-]*)?\\(?\\d{3}\\)?[\\s.-]*\\d{3})${gapRe}-${gapRe}(\\d{4})\\b`, "g"), (_m, prefix, suffix) => `${this._normalizePhoneString(prefix)}-${suffix}`)
       // Repair URL slugs/usernames split around hyphens before token splitting.
       .replace(new RegExp(`((?:https?:\\/\\/)?(?:www\\.)?(?:linkedin\\.com|github\\.com|gitlab\\.com|twitter\\.com|x\\.com)\\/[^\\s|]*)${gapRe}-${gapRe}([A-Za-z0-9][^\\s|]*)`, "gi"), '$1-$2')
-      .trim();
+      .trim());
   },
 
   _normalizeUrlLikeString(value) {
-    return String(value || "")
+    return this._normalizeDomainLikeText(String(value || "")
       .replace(/\s+/g, " ")
       .replace(/\s*-\s*/g, "-")
-      .trim();
+      .trim());
+  },
+
+  _isLikelyDomainToken(rawValue, normalizedValue) {
+    const commonDomainTlds = new Set([
+      'ai', 'app', 'biz', 'ca', 'cloud', 'co', 'com', 'consulting', 'design', 'dev', 'digital',
+      'edu', 'email', 'fm', 'gov', 'info', 'io', 'live', 'ly', 'me', 'media', 'net', 'online',
+      'org', 'site', 'solutions', 'studio', 'systems', 'tech', 'tv', 'uk', 'us', 'xyz'
+    ]);
+    const raw = String(rawValue || '').trim();
+    const normalized = String(normalizedValue || rawValue || '').trim();
+    const host = normalized
+      .replace(/^https?:\/\//i, '')
+      .replace(/^www\./i, '')
+      .split('/')[0];
+    const dotCount = (host.match(/\./g) || []).length;
+    const hasSpacedDot = /\s*\.\s+|\s+\.\s*/.test(raw);
+    const rawTld = raw.replace(/\/.*$/, '').replace(/^.*\.\s*/, '').trim();
+
+    if (dotCount < 1 || dotCount > 3) return false;
+    if (/^(?:\+?1[\s.-]*)?(?:\(?\d{3}\)?[\s.-]*){2}\d{4}$/.test(host)) return false;
+    if (!/[A-Za-z]/.test(host)) return false;
+    if (hasSpacedDot) {
+      if (!/^[a-z]{2,12}$/.test(rawTld)) return false;
+      if (!commonDomainTlds.has(rawTld)) return false;
+    }
+    return true;
+  },
+
+  _normalizeDomainLikeText(value) {
+    return String(value || "").replace(
+      /\b((?:https?:\/\/)?(?:www\.)?(?:[A-Za-z0-9-]+\s*\.\s*){1,3}[A-Za-z]{2,24}(?:\/[^\s|]*)?)/g,
+      (match) => {
+        const normalized = match.replace(/\s*\.\s*/g, '.').replace(/\s*\/\s*/g, '/').trim();
+        if (!this._isLikelyDomainToken(match, normalized)) return match;
+        return normalized;
+      }
+    );
   },
 
   _normalizePhoneString(value) {
@@ -721,13 +793,23 @@ const ResumePDFConverter = {
    * Clean and normalize text
    */
   _cleanText(text) {
-    return text
+    return this._repairSuspiciousWordSpacing(text
+      .replace(/[\u200b-\u200d\u2060\ufeff]/g, '')
+      .replace(/\u00ad/g, '')
       .replace(/\b((?:19|20))[\s\u00a0\u2000-\u200d\u202f\u205f\u3000\ufeff]+(\d{2})\b/g, '$1$2')
-      .replace(/ +/g, " ")
-      .replace(/[-–—]/g, "-")
+      .replace(/[ \u00a0\u2000-\u200a\u202f\u205f\u3000]+/g, " ")
       .replace(/\n\s*\n\s*\n+/g, "\n\n")
-      .replace(/\s+([.,;:])/g, "$1")
-      .trim();
+      .replace(/[ \u00a0\u2000-\u200a\u202f\u205f\u3000]+([,;:!?])/g, "$1")
+      .replace(/[ \u00a0\u2000-\u200a\u202f\u205f\u3000]+\.(?=$|[\s)\]},"'])/g, ".")
+      .trim());
+  },
+
+  _repairSuspiciousWordSpacing(text) {
+    return String(text || '')
+      // Repair split plural/suffix endings like "timeline s".
+      .replace(/\b([A-Za-z]{3,})\s+([a-z])\b/g, '$1$2')
+      // Repair split leading capitals inside comma-separated/location-style lists like "Grant Park".
+      .replace(/([,;/(\[]\s*)([A-Z])\s+([a-z]{3,})\b/g, '$1$2$3');
   },
 
   /**
@@ -841,10 +923,14 @@ const ResumePDFConverter = {
   },
 
   _extractTrailingDateRange(text) {
-    const normalized = String(text || "")
+    const headerSource = String(text || "")
       .replace(/\t+/g, " ")
       .replace(/\s+/g, " ")
       .replace(/\b((?:19|20))[\s\u00a0\u2000-\u200d\u202f\u205f\u3000\ufeff]+(\d{2})\b/g, '$1$2')
+      .trim();
+    const normalized = headerSource
+      .replace(/\t+/g, " ")
+      .replace(/\s+/g, " ")
       .replace(/[–—]/g, "-")
       .trim();
     const monthToken = "(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\\.?" ;
@@ -853,25 +939,29 @@ const ResumePDFConverter = {
     const yearOnly = "\\d{4}";
     const startToken = `(?:${monthYear}|${yearOnly}|${monthOnly})`;
     const endToken = `(?:${monthYear}|${yearOnly}|Present|Current)`;
-    const dateRangeRe = new RegExp(`(${startToken}\\s*-\\s*${endToken})$`, "i");
+    const dateRangeRe = new RegExp(`(${startToken}\\s*(?:-|to)\\s*${endToken})$`, "i");
     const match = normalized.match(dateRangeRe);
     if (!match) return null;
     const rangeText = match[1].trim();
-    const cleanedRange = rangeText.replace(/[–—]/g, "-");
+    const cleanedRange = rangeText.replace(/[–—]/g, "-").replace(/\bto\b/i, "-");
     const parts = cleanedRange.split(/\s*-\s*/);
     return {
       full: rangeText,
-      headerText: normalized.slice(0, match.index).trim().replace(/[,\s]+$/, ""),
+      headerText: headerSource.slice(0, match.index).trim().replace(/[,\s]+$/, ""),
       startDate: (parts[0] || "").trim(),
       endDate: /present|current/i.test(parts[1] || "") ? "" : (parts[1] || "").trim(),
     };
   },
 
   _extractLeadingDateRange(text) {
-    const normalized = String(text || "")
+    const headerSource = String(text || "")
       .replace(/\t+/g, " ")
       .replace(/\s+/g, " ")
       .replace(/\b((?:19|20))[\s\u00a0\u2000-\u200d\u202f\u205f\u3000\ufeff]+(\d{2})\b/g, '$1$2')
+      .trim();
+    const normalized = headerSource
+      .replace(/\t+/g, " ")
+      .replace(/\s+/g, " ")
       .replace(/[–—]/g, "-")
       .trim();
     const monthToken = "(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\\.?" ;
@@ -886,7 +976,7 @@ const ResumePDFConverter = {
     const parts = cleanedRange.split(/\s*-\s*/);
     return {
       full: match[1].trim(),
-      headerText: (match[2] || "").trim().replace(/^[,\s]+|[,\s]+$/g, ""),
+      headerText: headerSource.slice(match[1].length).trim().replace(/^[,\s]+|[,\s]+$/g, ""),
       startDate: (parts[0] || "").trim(),
       endDate: /present|current/i.test(parts[1] || "") ? "" : (parts[1] || "").trim(),
     };

@@ -1311,15 +1311,13 @@
           <div id="cvReadmeSection">
             <div id="cvReadmeContent" class="content"></div>
           </div>
+          <div id="cvFooter" class="content hide-when-bio" style="display:flex;align-items:center;gap:8px;margin-top:5px;margin-bottom:10px;">
+            <div id="cvDataStatus" class="cv-data-status"></div>
+            <button type="button" id="cvToggleJsonBtn" class="btn-sm">Show json</button>
+            <button type="button" id="cvParseReportBtn" class="btn-sm" style="display:none">Show Specs</button>
+          </div>
           <pre id="cvDataPreview" class="content contentPanel" style="display:none">Loading JSON\u2026</pre>
           <div id="cvParseReport" class="content cv-report-panel" style="display:none"></div>
-          <div id="cvFooter" class="content hide-when-bio" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-            <div id="cvDataStatus" class="cv-data-status"></div>
-            <button type="button" id="cvToggleJsonBtn" class="btn-sm">View json</button>
-            <button type="button" id="cvParseReportBtn" class="btn-sm" style="display:none">Parse Report</button>
-          </div>
-
-      
     `;
   }
 
@@ -1368,13 +1366,84 @@
       return (value || '').toString();
     }
 
+    function escapeHtml(value) {
+      return stringifyValue(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    const commonDomainTlds = new Set([
+      'ai', 'app', 'biz', 'ca', 'cloud', 'co', 'com', 'consulting', 'design', 'dev', 'digital',
+      'edu', 'email', 'fm', 'gov', 'info', 'io', 'live', 'ly', 'me', 'media', 'net', 'online',
+      'org', 'site', 'solutions', 'studio', 'systems', 'tech', 'tv', 'uk', 'us', 'xyz'
+    ]);
+
     function normalizeInlineText(value) {
       return stringifyValue(value).replace(/\s+/g, ' ').trim().toLowerCase();
     }
 
+    function isLikelyDomainToken(rawValue, normalizedValue) {
+      const raw = stringifyValue(rawValue).trim();
+      const normalized = stringifyValue(normalizedValue || rawValue).trim();
+      const host = normalized
+        .replace(/^https?:\/\//i, '')
+        .replace(/^www\./i, '')
+        .split('/')[0];
+      const dotCount = (host.match(/\./g) || []).length;
+      const hasSpacedDot = /\s*\.\s+|\s+\.\s*/.test(raw);
+      const rawTld = raw.replace(/\/.*$/, '').replace(/^.*\.\s*/, '').trim();
+
+      if (dotCount < 1 || dotCount > 3) return false;
+      if (/^(?:\+?1[\s.-]*)?(?:\(?\d{3}\)?[\s.-]*){2}\d{4}$/.test(host)) return false;
+      if (!/[A-Za-z]/.test(host)) return false;
+      if (hasSpacedDot) {
+        if (!/^[a-z]{2,12}$/.test(rawTld)) return false;
+        if (!commonDomainTlds.has(rawTld)) return false;
+      }
+      return true;
+    }
+
+    function normalizeDomainSpacing(value) {
+      return stringifyValue(value).replace(
+        /\b((?:https?:\/\/)?(?:www\.)?(?:[A-Za-z0-9-]+\s*\.\s*){1,3}[A-Za-z]{2,24}(?:\/[^\s<]*)?)/g,
+        (match, token, offset, source) => {
+          const prevChar = source[offset - 1] || '';
+          if (prevChar === '@') return match;
+          const normalized = token.replace(/\s*\.\s*/g, '.').replace(/\s*\/\s*/g, '/').trim();
+          if (!isLikelyDomainToken(token, normalized)) return match;
+          return normalized;
+        }
+      );
+    }
+
+    function renderTextWithDetectedLinks(value) {
+      const normalized = normalizeDomainSpacing(value);
+      const domainRe = /\b((?:https?:\/\/)?(?:www\.)?(?:[A-Za-z0-9-]+\.){1,3}[A-Za-z]{2,24}(?:\/[^\s<]*)?)/g;
+      let html = '';
+      let lastIndex = 0;
+
+      normalized.replace(domainRe, (match, token, offset, source) => {
+        const prevChar = source[offset - 1] || '';
+        if (prevChar === '@') return match;
+        if (!isLikelyDomainToken(token, token)) return match;
+
+        html += escapeHtml(normalized.slice(lastIndex, offset));
+        html += `<a class="cv-domain-link" href="${escapeHtml(toHref(token))}" target="_blank" rel="noopener">${escapeHtml(token)}</a>`;
+        lastIndex = offset + token.length;
+        return match;
+      });
+
+      if (!html) return escapeHtml(normalized);
+      html += escapeHtml(normalized.slice(lastIndex));
+      return html;
+    }
+
     function toHref(url) {
       if (!url) return url;
-      const value = url.trim();
+      const value = normalizeDomainSpacing(url).trim();
       if (/^[a-zA-Z][a-zA-Z0-9+\-.]*:\/\//.test(value)) return value;
       if (
         value.startsWith('/')
@@ -1455,19 +1524,20 @@
       const contactRows = [];
       if (basics.email) {
         contactRows.push({
-          html: `<a href="mailto:${stringifyValue(basics.email)}">${stringifyValue(basics.email)}</a>`,
+          html: `<a href="mailto:${escapeHtml(stringifyValue(basics.email))}">${escapeHtml(stringifyValue(basics.email))}</a>`,
           cls: ''
         });
       }
       if (basics.url) {
         contactRows.push({
-          html: `<a href="${stringifyValue(toHref(basics.url))}" target="_blank" rel="noopener">${stringifyValue(basics.url)}</a>`,
+          html: `<a class="cv-domain-link" href="${escapeHtml(stringifyValue(toHref(basics.url)))}" target="_blank" rel="noopener">${escapeHtml(normalizeDomainSpacing(basics.url))}</a>`,
           cls: ''
         });
       }
       urlProfiles.forEach((profile) => {
+        const profileLabel = normalizeDomainSpacing(profile.network || profile.url);
         contactRows.push({
-          html: `<a href="${stringifyValue(toHref(profile.url))}" target="_blank" rel="noopener">${stringifyValue(profile.network || profile.url)}</a>`,
+          html: `<a class="cv-domain-link" href="${escapeHtml(stringifyValue(toHref(profile.url)))}" target="_blank" rel="noopener">${escapeHtml(profileLabel)}</a>`,
           cls: ''
         });
       });
@@ -1475,7 +1545,7 @@
       if (phoneList.length > 0 || (!extrasInTopMain && displayExtrasText)) {
         const phonePart = phoneList.map((phone) => `<span class="contact-phone">${stringifyValue(phone)}</span>`).join(', ');
         const extraPart = (!extrasInTopMain && displayExtrasText)
-          ? `<span class="contact-extra">${stringifyValue(displayExtrasText)}</span>`
+          ? `<span class="contact-extra">${renderTextWithDetectedLinks(displayExtrasText)}</span>`
           : '';
         let rowHtml;
         if (phoneList.length === 1 && extraPart) {
@@ -1490,22 +1560,22 @@
 
       if (locationShort) {
         contactRows.push({
-          html: `<span class="contact-location">${stringifyValue(locationString)}</span>`,
+          html: `<span class="contact-location">${escapeHtml(stringifyValue(locationString))}</span>`,
           cls: 'contact-item-meta'
         });
       }
 
       const educationSection = renderSection('Education', education.map((entry) => `
                 <div class="item">
-                  <div class="item-title">${stringifyValue(entry.institution)}${entry.location ? ` · ${stringifyValue(entry.location)}` : ''}</div>
-                  ${(entry.studyType || entry.area) ? `<div class="item-sub">${stringifyValue([entry.studyType, entry.area].filter(Boolean).join(' — '))}</div>` : ''}
+                  <div class="item-title">${renderTextWithDetectedLinks(entry.institution)}${entry.location ? ` · ${escapeHtml(stringifyValue(entry.location))}` : ''}</div>
+                  ${(entry.studyType || entry.area) ? `<div class="item-sub">${renderTextWithDetectedLinks([entry.studyType, entry.area].filter(Boolean).join(' — '))}</div>` : ''}
                 </div>`).join(''), 'section-education');
 
       const skillsSection = renderSection('Skills', skills.map((skill) => `
                 <div class="item">
-                  ${skill.name ? `<div class="item-title">${stringifyValue(skill.name)}</div>` : ''}
-                  ${skill.summary ? `<div class="item-summary">${stringifyValue(skill.summary)}</div>` : ''}
-                  ${(skill.keywords || []).length ? `<div class="chips">${(skill.keywords || []).map((keyword) => `<span class="chip">${stringifyValue(keyword)}</span>`).join('')}</div>` : ''}
+                  ${skill.name ? `<div class="item-title">${renderTextWithDetectedLinks(skill.name)}</div>` : ''}
+                  ${skill.summary ? `<div class="item-summary">${renderTextWithDetectedLinks(skill.summary)}</div>` : ''}
+                  ${(skill.keywords || []).length ? `<div class="chips">${(skill.keywords || []).map((keyword) => `<span class="chip">${renderTextWithDetectedLinks(keyword)}</span>`).join('')}</div>` : ''}
                 </div>`).join(''));
 
       function renderCustomSection(section) {
@@ -1515,14 +1585,14 @@
           const text = stringifyValue(line);
           if (!text.trim()) return '';
           if (/^[•·▪\-–*]\s*/.test(text)) {
-            return `<div class="item-sub">• ${stringifyValue(text.replace(/^[•·▪\-–*]\s*/, ''))}</div>`;
+            return `<div class="item-sub">• ${renderTextWithDetectedLinks(text.replace(/^[•·▪\-–*]\s*/, ''))}</div>`;
           }
-          return `<div class="item-summary">${text}</div>`;
+          return `<div class="item-summary">${renderTextWithDetectedLinks(text)}</div>`;
         }).join('');
         return renderSection(
-          stringifyValue(section.title || section.key || 'Section'),
+          escapeHtml(stringifyValue(section.title || section.key || 'Section')),
           content,
-          section.key ? `section-${stringifyValue(section.key)}` : ''
+          section.key ? `section-${escapeHtml(stringifyValue(section.key))}` : ''
         );
       }
 
@@ -1530,13 +1600,13 @@
       const orderedKeys = Array.isArray(meta.sectionOrder) ? meta.sectionOrder : [];
 
       const mainSectionsByKey = {
-        summary: renderSection('Summary', basics.summary ? `<div class="summary-text">${stringifyValue(basics.summary)}</div>` : ''),
+        summary: renderSection('Summary', basics.summary ? `<div class="summary-text">${renderTextWithDetectedLinks(basics.summary)}</div>` : ''),
         experience: renderSection('Experience', work.map((job) => {
-          const organization = stringifyValue(job.organization || job.company || job.position);
-          const role = stringifyValue((job.organization || job.company) ? job.position : '');
-          const dates = job.startDate ? `${stringifyValue(job.startDate)} – ${stringifyValue(job.endDate || 'Present')}` : '';
+          const organization = renderTextWithDetectedLinks(job.organization || job.company || job.position);
+          const role = renderTextWithDetectedLinks((job.organization || job.company) ? job.position : '');
+          const dates = job.startDate ? `${escapeHtml(stringifyValue(job.startDate))} – ${escapeHtml(stringifyValue(job.endDate || 'Present'))}` : '';
           const highlights = (job.highlights || []).length
-            ? `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--text-main);">${job.highlights.map((highlight) => `<li>${stringifyValue(highlight)}</li>`).join('')}</ul>`
+            ? `<ul style="margin:4px 0 0 16px;padding:0;font-size:13px;color:var(--text-main);">${job.highlights.map((highlight) => `<li>${renderTextWithDetectedLinks(highlight)}</li>`).join('')}</ul>`
             : '';
           return `
                 <div class="item">
@@ -1545,17 +1615,17 @@
                     ${dates ? `<div class="item-date">${dates}</div>` : ''}
                   </div>
                   ${role ? `<div class="item-role">${role}</div>` : ''}
-                  <div class="item-summary">${stringifyValue(job.summary)}</div>
+                  <div class="item-summary">${renderTextWithDetectedLinks(job.summary)}</div>
                   ${highlights}
                 </div>`;
         }).join(''), 'section-experience'),
         projects: renderSection('Projects', projects.map((project) => `
                 <div class="item pill-section">
-                  <div class="item-title">${stringifyValue(project.name)}</div>
-                  <div class="item-summary">${stringifyValue(project.summary)}</div>
+                  <div class="item-title">${renderTextWithDetectedLinks(project.name)}</div>
+                  <div class="item-summary">${renderTextWithDetectedLinks(project.summary)}</div>
                   ${project.keywords && project.keywords.length ? `
                     <div class="chips">
-                      ${project.keywords.map((keyword) => `<span class="chip">${stringifyValue(keyword)}</span>`).join('')}
+                      ${project.keywords.map((keyword) => `<span class="chip">${renderTextWithDetectedLinks(keyword)}</span>`).join('')}
                     </div>` : ''}
                 </div>`).join('')),
         education: !educationInSideColumn ? educationSection : '',
@@ -1566,9 +1636,9 @@
         skills: !skillsInMain ? skillsSection : '',
         education: educationInSideColumn ? educationSection : '',
         certifications: renderSection('Certifications', certifications.map((certification) => `
-                <div class="item-sub">• ${stringifyValue(certification.name)}</div>`).join('')),
+                <div class="item-sub">• ${renderTextWithDetectedLinks(certification.name)}</div>`).join('')),
         languages: renderSection('Languages', languages.map((language) => `
-                <div class="item-sub">• ${stringifyValue(language.language)}${language.fluency ? ` — ${stringifyValue(language.fluency)}` : ''}</div>`).join('')),
+                <div class="item-sub">• ${renderTextWithDetectedLinks(language.language)}${language.fluency ? ` — ${renderTextWithDetectedLinks(language.fluency)}` : ''}</div>`).join('')),
       };
 
       customSections.forEach((section) => {
@@ -1601,10 +1671,10 @@
       <div class="containingDiv${getResumeLayoutClass(activePersonFolder || config.personFolder)}">
         <div class="top-row">
           <div class="top-main">
-            <h1 class="name">${stringifyValue(basics.name)}</h1>
-            ${basics.label ? `<div class="label">${stringifyValue(basics.label)}</div>` : ''}
-            ${extrasInTopMain && displayExtrasText ? `<div class="contact-extra contact-extra-main">${stringifyValue(displayExtrasText)}</div>` : ''}
-            ${!locationShort && locationString ? `<div class="location-long">${stringifyValue(locationString)}</div>` : ''}
+            <h1 class="name">${escapeHtml(stringifyValue(basics.name))}</h1>
+            ${basics.label ? `<div class="label">${renderTextWithDetectedLinks(basics.label)}</div>` : ''}
+            ${extrasInTopMain && displayExtrasText ? `<div class="contact-extra contact-extra-main">${renderTextWithDetectedLinks(displayExtrasText)}</div>` : ''}
+            ${!locationShort && locationString ? `<div class="location-long">${escapeHtml(stringifyValue(locationString))}</div>` : ''}
           </div>
           <div class="top-side">
             ${contactRows.map(({ html, cls }) => `<div class="contact-item${cls ? ` ${cls}` : ''}">${html}</div>`).join('')}
@@ -1867,7 +1937,7 @@
     panel.innerHTML = '';
     panel.style.display = 'none';
     btn.style.display = 'none';
-    btn.textContent = 'Parse Report';
+    btn.textContent = 'Show Specs';
     btn.classList.remove('btn-alert');
   }
 
@@ -2044,6 +2114,13 @@
 
   function closeIconPopups() {
     selectAll('.cv-icon-popup').forEach((popup) => popup.classList.remove('open'));
+  }
+
+  function scrollToRevealedPanel(panel) {
+    if (!panel || typeof panel.scrollIntoView !== 'function') return;
+    requestAnimationFrame(() => {
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   function toggleIconPopup(popupId) {
@@ -2337,7 +2414,8 @@
       toggleJsonBtn.addEventListener('click', () => {
         const visible = dataPreview.style.display !== 'none';
         dataPreview.style.display = visible ? 'none' : 'block';
-        toggleJsonBtn.textContent = visible ? 'View json' : 'Hide json';
+        toggleJsonBtn.textContent = visible ? 'Show json' : 'Hide json';
+        if (!visible) scrollToRevealedPanel(dataPreview);
       });
     }
 
@@ -2347,7 +2425,8 @@
       parseReportBtn.addEventListener('click', () => {
         const visible = parseReport.style.display !== 'none';
         parseReport.style.display = visible ? 'none' : 'block';
-        parseReportBtn.textContent = visible ? 'Parse Report' : 'Hide Report';
+        parseReportBtn.textContent = visible ? 'Show Specs' : 'Hide Specs';
+        if (!visible) scrollToRevealedPanel(parseReport);
       });
     }
 

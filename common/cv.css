@@ -56,6 +56,17 @@
   overflow-wrap: anywhere;
   word-break: break-word;
 }
+.containingDiv .cv-domain-link,
+#resumeContainer .cv-domain-link,
+#resumeContainer .cv-domain-link:visited {
+  color: inherit;
+  text-decoration: none;
+  cursor: inherit;
+}
+.containingDiv .cv-domain-link:hover,
+#resumeContainer .cv-domain-link:hover {
+  cursor: pointer;
+}
 #resumeContainer .name {
   font-size: 30px;
   font-weight: 700;
