@@ -3,7 +3,7 @@
 ![Loren Heyns](https://dreamstudio.com/earth/img/team/Loren-Heyns.jpg)
 <div class="bioText" markdown="1" bio="LorenHeyns">
 ## Loren Heyns
-Loren is a Full-Stack Developer with 25 years experience building collaborative websites that combine data visualizations, AI insights, and interactive maps with fast static hosting using GitHub and Cloudflare. Loren enjoys building open frameworks and immersive data science websites combining industry data analysis, Google Data Common API timelines and LLM interfaces.
+Loren is a Full-Stack Developer with 25 years experience building collaborative websites that combine data visualizations, interactive maps and AI insight chat with fast static hosting using GitHub and Cloudflare. Loren enjoys building open frameworks and immersive data science websites combining industry data analysis, Google Data Common API timelines and LLM interfaces.
 [My Recent Work ~ Get In Touch](https://dreamstudio.com/loren)
 </div>
 ---
