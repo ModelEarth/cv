@@ -7,18 +7,18 @@ Loren is a Full-Stack Developer with 25 years experience building collaborative 
 [My Recent Work ~ Get In Touch](https://dreamstudio.com/loren)
 </div>
 ---
-![Gary Martirosyan](https://dreamstudio.com/earth/img/team/gary.jpg)
-<div class="bioText" markdown="1" website="https://gary-mart.com">
-## Gary Martirosyan
-Gary is a Data Engineer and Database Developer, specializing in designing, creating, and maintaining relational databases, ensuring their efficiency, reliability, and scalability. Gary optimizes database performance through applying best practices, query tuning, and stored procedure enhancements, ensuring fast and efficient data retrieval.
-[My Recent Work ~ Get In Touch](https://gary-mart.com)
-</div>
----
 ![Mohammed Saalim ](/io/team/img/Mohammed-Saalim-K.jpg)
 <div class="bioText" markdown="1" bio="MohammedSaalim">
 ## Mohammed Saalim K
 Mohammed Saalim K is a full-stack developer specializing in React, TypeScript, and data visualization. As Lead Developer for our USEEIO updates at model.earth, he implemented v2 model integration with dynamic state-specific conversions, built interactive D3.js bubble charts with real-time GitHub API data loading, and developed matrix-based job quantity calculations. Key contributions include fixing a critical legacy hash retention bug in React widgets and implementing comprehensive UX improvements.
 <a href="https://mohammed-saalim.vercel.app/">My Recent Work ~ Get In Touch</a><!--| <a href="https://www.linkedin.com/in/mohammed-saalim/">LinkedIn</a> | <a href="https://github.com/mohammed-saalim">GitHub</a>-->
+</div>
+---
+![Gary Martirosyan](https://dreamstudio.com/earth/img/team/gary.jpg)
+<div class="bioText" markdown="1" website="https://gary-mart.com">
+## Gary Martirosyan
+Gary is a Data Engineer and Database Developer, specializing in designing, creating, and maintaining relational databases, ensuring their efficiency, reliability, and scalability. Gary optimizes database performance through applying best practices, query tuning, and stored procedure enhancements, ensuring fast and efficient data retrieval.
+[My Recent Work ~ Get In Touch](https://gary-mart.com)
 </div>
 
 ---
@@ -29,6 +29,12 @@ Alumni
 ## Sugandha Bhandari
 Sugandha is a software engineer with an MS in Computer Science, experienced in taking microservices from backend development to containerized pods and serving them with frontend applications. I thrive on designing, coding, and deploying robust systems—if you want your vision to become a tangible product, 
 [Let's connect!](https://www.linkedin.com/in/sugandha-bhandari27/)
+</div>
+---
+![Mohammad Thousif Udayagiri](https://avatars.githubusercontent.com/ThousifMd)
+<div class="bioText" markdown="1" bio="ThousifMd">
+## Mohammad Thousif Udayagiri
+Mohammad is a Data Analyst and Full Stack Developer with a Master's in MIS from Oklahoma State University. At DreamStudio Earth he built the interactive [Exiobase Sankey](/profile/charts/sankey/) diagram and upgraded our trade flow map. Mohammad is currently a Technology Analyst at Northern Arizona University.
 </div>
 ---
 ![Dhananjay Surti](https://dreamstudio.com/earth/img/team/dj.jpg)
@@ -62,12 +68,6 @@ Ivy is a Senior Programmer and Data Analytics Specialist with degrees in Applied
 ## Yogesh Gajula
 Yogesh is a Data Scientist & Full-Stack Developer on a mission to unlock data's full potential. Holding an M.S. in CS and expertise in Data Science & Autonomous Systems, he's a pro at using Python, SQL, and cloud tech. Yogesh builds scalable ML solutions, dynamic visualizations, and insightful statistical models, bridging the gap between data and development for real business growth.
 <!-- broken [My Recent Work ~ Get In Touch](https://yogeshgajula.com) -->
-</div>
----
-![Mohammad Thousif Udayagiri](https://avatars.githubusercontent.com/ThousifMd)
-<div class="bioText" markdown="1" bio="ThousifMd">
-## Mohammad Thousif Udayagiri
-Mohammad is a Data Analyst and Full Stack Developer with a Master's in MIS from Oklahoma State University. At DreamStudio Earth he built the interactive [Exiobase Sankey](/profile/charts/sankey/) diagram and trade flow map now live on model.earth, contributing to the platform's push toward real-time international environmental impact visualization. He is currently a Technology Analyst at Northern Arizona University.
 </div>
 
 

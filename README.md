@@ -1,8 +1,10 @@
 # About CV Automation
 
-[Drag to parse resume PDF into json](extract/) - [About Extract Process](extract.html)
+Parse your resume PDF in real-time by adding its external link in your cv/bios/[you]/index.html page.
 
-[Team PRs and AI Insights](/team/projects/#list=modelteam&showrepos=true)
+Or [drag to parse resume PDF into json](extract/) - [About Extract Process](extract.html)
+
+[Model.earth Team](/team/projects/#list=modelteam&showrepos=true) - Repo PRs and AI Insights
 
 
 ### 1. Embeddable Module: `cv/common/cv.js`
