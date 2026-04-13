@@ -769,6 +769,18 @@
     window.location.href = target;
   }
 
+  function hasSelectedTextWithin(element) {
+    if (!element || typeof window.getSelection !== 'function') return false;
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || !selection.toString().trim()) return false;
+
+    const anchorNode = selection.anchorNode;
+    const focusNode = selection.focusNode;
+    if (!anchorNode || !focusNode) return false;
+
+    return element.contains(anchorNode) || element.contains(focusNode);
+  }
+
   function applyBioAction(bioText) {
     const bioValue = getBioHashValue(bioText);
     const websiteValue = getBioWebsiteValue(bioText);
@@ -789,6 +801,7 @@
     bioText.title = `Open ${actionLabel}`;
     bioText.onclick = function (event) {
       if (event.target.closest('a')) return;
+      if (hasSelectedTextWithin(bioText)) return;
       navigateToBioTarget(actionTarget);
     };
 
@@ -852,6 +865,7 @@
       bioText.title = 'Click to expand';
       bioText.onclick = function (event) {
         if (event.target.closest('a')) return;
+        if (hasSelectedTextWithin(bioText)) return;
         toggleBioParagraph(paragraph);
       };
 
@@ -886,6 +900,7 @@
     target.addEventListener('click', function (event) {
       const link = event.target.closest('a[href]');
       if (!link) return;
+      if (hasSelectedTextWithin(link)) return;
 
       const rawHref = link.getAttribute('href');
       if (!rawHref || /^(?:[a-z]+:|\/|#)/i.test(rawHref)) return;
@@ -1014,6 +1029,8 @@
       .bioList .bioText {
         overflow: auto;
         margin-bottom: 28px;
+        -webkit-user-select: text;
+        user-select: text;
       }
       .bioList .bioText h2 {
         margin: 0 0 8px;
