@@ -133,7 +133,7 @@
 }
 
 #resumeContainer .item {
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 #resumeContainer .item-title {
   font-weight: 600;
@@ -161,12 +161,12 @@
 }
 #resumeContainer .item-role {
   font-size: 13px;
-  color: var(--text-muted);
+  color: var(--text-main);
 }
 #resumeContainer .item-summary {
-  margin-top: 4px;
+  margin-top: 2px;
   font-size: 13px;
-  color: var(--text-main);
+  color: var(--text-muted);
 }
 
 #resumeContainer .chips {

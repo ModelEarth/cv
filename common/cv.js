@@ -1113,6 +1113,23 @@
     if (dataPreview) dataPreview.textContent = '';
     if (dataStatus) dataStatus.textContent = '';
     currentResumeData = null;
+    restoreDefaultTitle();
+  }
+
+  // Returns the title prefix ending with "- " (e.g. "Model Earth - ").
+  // If the current title has no dash, uses the current domain + " - ".
+  function getTitlePrefix() {
+    const t = document.title;
+    const dashIdx = t.indexOf(' - ');
+    if (dashIdx !== -1) return t.slice(0, dashIdx + 3);
+    const domain = window.location.hostname || t;
+    return domain + ' - ';
+  }
+
+  // Saves the original page title on first call so it can be restored later.
+  let _defaultTitle = null;
+  function restoreDefaultTitle() {
+    if (_defaultTitle !== null) document.title = _defaultTitle;
   }
 
   function insertFiltersContainer(container) {
@@ -1489,6 +1506,13 @@
 
     function renderResume(data) {
       const basics = data.basics || {};
+
+      // Update browser title: preserve prefix up to and including the first " - ",
+      // then append the person's name. Save the original title the first time.
+      if (_defaultTitle === null) _defaultTitle = document.title;
+      const personName = String(basics.name || '').trim();
+      if (personName) document.title = getTitlePrefix() + personName;
+
       const work = data.work || [];
       const education = data.education || [];
       const skills = data.skills || [];

@@ -995,30 +995,29 @@ const ResumePDFConverter = {
     };
   },
 
-  _splitHeaderText(headerText) {
+  _splitHeaderText(headerText, { splitOnRole = false, splitOnOrg = false } = {}) {
     const normalized = String(headerText || "").trim().replace(/\s+/g, " ");
-    if (!normalized) return { company: "", position: "" };
+    if (!normalized) return { company: normalized, position: "" };
+
+    // Comma splitting is opt-in via parameters — company and institution names often
+    // contain commas (e.g. "Seaside Institute, Glenwood Park, Grant Park") and
+    // splitting by default produces incorrect results.
+    const roleRe = /\b(?:assistant|engineer|developer|manager|analyst|scientist|author|researcher|consultant|designer|intern|lead|director|coordinator|specialist)\b/i;
+    const orgRe  = /\b(?:institute|university|college|school|foundation|center|centre|association|society|academy|laboratory|labs?|group|studio|studios)\b/i;
+
     const commaIndex = normalized.indexOf(",");
-    const companySuffixRe = /,\s*(?:Inc\.?|LLC|Ltd\.?|Corp\.?|Co\.?)\b/i;
-    if (companySuffixRe.test(normalized)) {
-      return { company: "", position: normalized };
-    }
     if (commaIndex > 0) {
-      const firstPart = normalized.slice(0, commaIndex).trim();
-      const remainder = normalized.slice(commaIndex + 1).trim();
-      const roleFirstRe = /\b(?:assistant|engineer|developer|manager|analyst|scientist|author|researcher|consultant|designer|intern|lead|director|coordinator|specialist)\b/i;
-      if (roleFirstRe.test(firstPart) && remainder) {
-        return {
-          company: remainder,
-          position: firstPart,
-        };
+      const beforeComma = normalized.slice(0, commaIndex).trim();
+      const afterComma  = normalized.slice(commaIndex + 1).trim();
+      if (splitOnRole && roleRe.test(beforeComma) && afterComma) {
+        return { company: afterComma, position: beforeComma };
       }
-      return {
-        company: firstPart,
-        position: remainder,
-      };
+      if (splitOnOrg && orgRe.test(beforeComma)) {
+        return { company: normalized, position: "" };
+      }
     }
-    return { company: "", position: normalized };
+
+    return { company: normalized, position: "" };
   },
 
   _parseWorkExperienceFromLines(lines) {
@@ -1062,10 +1061,12 @@ const ResumePDFConverter = {
 
       if (line.startsBullet) {
         current.highlights.push(cleanText);
-      } else if (!current.position) {
-        current.position = cleanText;
       } else if (current.highlights.length) {
+        // Continuation of a wrapped bullet — append to the last highlight.
         current.highlights[current.highlights.length - 1] = `${current.highlights[current.highlights.length - 1]} ${cleanText}`.trim();
+      } else if (!current.position) {
+        // Position/title line that appears on its own line after the date header.
+        current.position = cleanText;
       } else {
         current.summary = `${current.summary ? `${current.summary} ` : ""}${cleanText}`.trim();
       }
@@ -1210,10 +1211,26 @@ const ResumePDFConverter = {
 
     const startEntry = (headerText, dateMatch = null) => {
       flush();
-      const headerParts = this._splitHeaderText(headerText);
+      // Research subcategory headers are often organization names that happen to contain
+      // commas (e.g. "Teaching Assistant, UMass Boston"). Only split on comma when the
+      // text before the first comma is a recognized role keyword. Do NOT fall back to the
+      // generic first-comma split used for work experience, to avoid treating the second
+      // half of a company name as a position.
+      const roleFirstRe = /\b(?:assistant|engineer|developer|manager|analyst|scientist|author|researcher|consultant|designer|intern|lead|director|coordinator|specialist)\b/i;
+      const normalized = String(headerText || "").replace(/\s+/g, " ").trim();
+      let position = "";
+      let company = normalized;
+      const commaIdx = normalized.indexOf(",");
+      if (commaIdx > 0) {
+        const beforeComma = normalized.slice(0, commaIdx).trim();
+        if (roleFirstRe.test(beforeComma)) {
+          position = beforeComma;
+          company = normalized.slice(commaIdx + 1).trim();
+        }
+      }
       current = {
-        position: headerParts.position,
-        company: headerParts.company,
+        position,
+        company,
         startDate: dateMatch?.startDate || "",
         endDate: dateMatch?.endDate || "",
         summary: "",
@@ -1559,7 +1576,7 @@ const ResumePDFConverter = {
     if (this._looksLikeDegreeLine(line)) return false;
     if (/\b(?:dept|department|lab|foundation|company|inc|llc|corp)\b/i.test(line)) return false;
     if (this._looksLikeSkillCategory(line)) return false;
-    return /^[A-Z][A-Za-z&.'()/-]+(?:\s+[A-Z][A-Za-z&.'()/-]+){1,6}$/.test(line) && line.length <= 90;
+    return /^[A-Z][A-Za-z&.'()/-]+(?:(?:,\s*|\s+)[A-Z][A-Za-z&.'()/-]+){1,6}$/.test(line) && line.length <= 90;
   },
 
   _findInstitutionLine(lines) {
