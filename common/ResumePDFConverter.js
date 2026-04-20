@@ -358,7 +358,7 @@ const ResumePDFConverter = {
     const orderedKeys = structuredSections?.ordered?.map((section) => section.key) || [];
     const workEntries = experienceSection ? this._parseWorkExperienceFromLines(experienceSection.lines) : this._parseWorkExperience(experienceText);
     if (researchSection) {
-      workEntries.push(...this._parseResearchExperienceFromLines(researchSection.lines));
+      workEntries.push(...this._parseResearchExperienceFromLines(researchSection.lines, structuredSections.bodyFont));
     }
 
     return {
@@ -1190,7 +1190,7 @@ const ResumePDFConverter = {
     return this._looksLikeSkillCategory(normalized);
   },
 
-  _parseResearchExperienceFromLines(lines) {
+  _parseResearchExperienceFromLines(lines, bodyFont = "") {
     const entries = [];
     const sourceLines = (lines || []).map((line) => ({ ...line, text: String(line.text || "").trim() })).filter((line) => line.text);
     if (!sourceLines.length) return entries;
@@ -1225,13 +1225,22 @@ const ResumePDFConverter = {
       }
     };
 
-    const isLikelyResearchHeader = (text, nextLine, currentEntry) => {
+    // Returns true if the line's primary font differs from the body font, indicating bold/heading text.
+    const isBoldLine = (line) => {
+      if (!bodyFont) return false;
+      const sig = this._getLineStyleSignature(line);
+      return !!sig.primaryFont && sig.primaryFont !== bodyFont;
+    };
+
+    const isLikelyResearchHeader = (text, nextLine, currentEntry, isBold) => {
       const normalized = String(text || "").replace(/\t+/g, " ").replace(/\s+/g, " ").trim();
       if (!normalized) return false;
       if (/[.;]$/.test(normalized)) return false;
       if (nextLine && !nextLine.startsBullet && this._extractTrailingDateRange(nextLine.text)) return true;
       if (!nextLine?.startsBullet) return false;
       if (normalized.length > 120) return false;
+      // A bold non-bullet line immediately before bullets is a subcategory heading.
+      if (isBold) return true;
       return !currentEntry || !currentEntry.highlights.length;
     };
 
@@ -1256,7 +1265,7 @@ const ResumePDFConverter = {
             continue;
           }
         }
-        if (isLikelyResearchHeader(cleanText, nextLine, current)) {
+        if (isLikelyResearchHeader(cleanText, nextLine, current, isBoldLine(line))) {
           startEntry(cleanText, null);
           continue;
         }
