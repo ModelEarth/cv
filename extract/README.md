@@ -1,17 +1,17 @@
 # Resume Template Generator
 
-**Transform your resume into 12 beautiful, professionally-designed formats with a single click.**
+**Transform your resume into beautiful, professionally-designed formats with a single click.**
 
-A powerful, locally-run web application that extracts data from PDF resumes and renders them through multiple distinct template designs. No data leaves your device—all processing happens in your browser.
+Our app extracts data from PDF resumes and renders them in multiple css design themes.
+No data leaves your device—all processing happens in your browser.
 
-<!-- Rename SatvikPraveen to "extract" -->
 
 ## 🎓 Resources / Theme Source
 
-- [JSON Resume Standard](https://jsonresume.org/) - [docs.jsonresume.org/](https://docs.jsonresume.org/)
-- [Resume Best Practices](https://www.indeed.com/career-advice/resumes)
+- [Convert your resume PDF to JSON](./)
+- [JSON Resume Standard](https://jsonresume.org/) - [docs.jsonresume.org](https://docs.jsonresume.org)
 
-### We've added PDF parsing
+### More about PDF parsing
 
 - [PDF.js Documentation](https://mozilla.github.io/pdf.js/)
 - [GitHub Pages Guide](https://pages.github.com/)
@@ -22,7 +22,7 @@ A powerful, locally-run web application that extracts data from PDF resumes and 
 ## 📋 Features
 
 ✅ **PDF Resume Parsing** - Extract text, work experience, education, skills, and projects from PDF files  
-✅ **12 Unique Templates** - Tech, Dark, Modern, Creative, Executive, Compact, Minimal, Colorful, ATS-Friendly, Academic, Corporate, Classic  
+✅ **Unique Templates** - Tech, Dark, Modern, Creative, Executive, Compact, Minimal, Colorful, ATS-Friendly, Academic, Corporate, Classic  
 ✅ **Real-time Preview** - See your resume rendered instantly in any template  
 ✅ **Export Options** - Save as HTML, JSON, or print-ready PDF  
 ✅ **Print-Friendly** - Clean, borderless output optimized for professional documents  
@@ -107,7 +107,7 @@ Professional standard layout. Always reliable.
 ## 🔧 Project Structure
 
 ```
-resume-template-generator/
+cv/extract
 ├── index.html              # Main UI
 ├── app.js                  # Application logic & PDF parsing
 ├── styles.css              # Global styling
@@ -305,26 +305,4 @@ This project is licensed under the **MIT License** - see the LICENSE file for de
 
 ---
 
-## 🔮 Roadmap
-
-### v1.1 (Planned)
-
-- [ ] Drag-and-drop file upload
-- [ ] Additional templates (Gradient, Minimalist, Startup)
-- [ ] Custom color themes
-- [ ] Section reordering
-- [ ] Field editing before export
-
-### v2.0 (Future)
-
-- [ ] Multi-resume management
-- [ ] Template builder UI
-- [ ] Cloud sync (optional)
-- [ ] Browser extensions
-- [ ] Mobile app
-
----
-
 **Made with ❤️ for job seekers everywhere**
-
-Last Updated: November 24, 2025
