@@ -17,11 +17,6 @@
  *     pdfFile: fileInputElement.files[0],
  *     onSuccess: (jsonData) => { console.log(jsonData); }
  *   })
- * 
- * Integration with SatvikPraveen page:
- *   The ResumePDFConverter module can be used alongside SatvikPraveen's existing
- *   PDF parsing. Simply include ResumePDFConverter.js and use it for external URL
- *   loading while keeping the existing file upload functionality.
  */
 
 const ResumePDFConverter = {
@@ -235,14 +230,32 @@ const ResumePDFConverter = {
             && /[A-Za-z0-9]$/.test(previousText)
             && /^[A-Za-z0-9]/.test(itemText)
             && endGap <= tinyGapThreshold;
+          // Merge compound-word hyphens: e.g. "one" + "-step" or "one-" + "step".
+          // Only when no explicit spacer was emitted, the gap is tight (< 2 pt — much less
+          // than a typical word space), and at least one adjacent character is a letter so
+          // we don't accidentally join digit-hyphen-digit date ranges like "2020-2021".
+          const shouldMergeAroundHyphen = !currentLine.pendingWordSep
+            && endGap < 2.0
+            && ((/[A-Za-z]$/.test(previousText) && /^-/.test(itemText))
+                || ((previousText === '-' || /[A-Za-z0-9]-$/.test(previousText)) && /^[A-Za-z]/.test(itemText)));
+          // A large start-to-start gap only indicates a true column jump when the
+          // end-to-start gap is also large.  If the items are physically adjacent
+          // (endGap ≈ 0) the previous item was simply a long text run — e.g. a full
+          // bullet-point line ending with a compound-word hyphen — and the next item
+          // continues on the same visual word.  Without this guard, long body-text
+          // items (x=39 → x=312) would cause the "-" in "one-step" to be flagged as
+          // a column separator and receive a '\t' prefix instead of no prefix.
+          const isColumnJump = currentLine.pendingColumnSep
+            || movedBackwardAcrossColumns
+            || (startGap > colThreshold && endGap > colThreshold * 0.1);
           let prefix;
-          if (currentLine.pendingColumnSep || startGap > colThreshold || movedBackwardAcrossColumns) {
+          if (isColumnJump) {
             prefix = '\t';          // wide spacer flag or large positional jump = column
           } else if (isDotTokenStart) {
             prefix = ' ';           // keep the space before token starters like ".NET" after a dash
           } else if (currentLine.pendingWordSep) {
             prefix = ' ';           // explicit narrow whitespace in the PDF
-          } else if (endGap < 0 || shouldMergeTinyGap || shouldAttachAfterDot) {
+          } else if (endGap < 0 || shouldMergeTinyGap || shouldAttachAfterDot || shouldMergeAroundHyphen) {
             prefix = '';            // overlapping/tiny-gap items stay in the same word
           } else {
             prefix = ' ';           // normal inter-word space
