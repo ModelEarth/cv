@@ -27,7 +27,7 @@ Alumni
 ![Yash Gondkar](YashGondkar/YashGondkar.jpg)
 <div class="bioText" markdown="1" bio="YashGondkar">
 ## Yash Gondkar
-Yash architected our CodeChat RAG's concurrent three-stage ingestion pipeline (chunking → embedding → upserting), dramatically reducing processing time for large repository syncs. Built scikit-learn compatible Random Bits Forest wrapper achieving top accuracy.
+Yash architected our CodeChat RAG's concurrent three-stage [ingestion pipeline](/chat/ingestion/) (chunking → embedding → upserting), dramatically reducing processing time for large repository syncs. Built scikit-learn compatible Random Bits Forest wrapper achieving top accuracy.
 </div>
 ---
 ![Sugandha Bhandari](https://dreamstudio.com/earth/img/team/Sugandha-Bhandari.jpg)
