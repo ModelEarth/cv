@@ -1249,8 +1249,12 @@ const ResumePDFConverter = {
 
       if (!line.startsBullet) {
         if (nextLine && !nextLine.startsBullet && this._extractTrailingDateRange(nextLine.text)) {
-          pendingHeadline = cleanText;
-          continue;
+          // Only treat as a pending headline if the line looks like a title, not a bullet
+          // continuation. Lines ending in . or ; or starting with lowercase are continuations.
+          if (!/[.;]$/.test(cleanText) && !/^[a-z]/.test(cleanText)) {
+            pendingHeadline = cleanText;
+            continue;
+          }
         }
         if (isLikelyResearchHeader(cleanText, nextLine, current)) {
           startEntry(cleanText, null);
