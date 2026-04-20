@@ -24,6 +24,12 @@ Gary is a Data Engineer and Database Developer, specializing in designing, creat
 ---
 Alumni
 ---
+![Yash Gondkar](YashGondkar/YashGondkar.jpg)
+<div class="bioText" markdown="1" bio="YashGondkar">
+## Yash Gondkar
+Yash architected our CodeChat RAG's concurrent three-stage ingestion pipeline (chunking → embedding → upserting), dramatically reducing processing time for large repository syncs. Built scikit-learn compatible Random Bits Forest wrapper achieving top accuracy.
+</div>
+---
 ![Sugandha Bhandari](https://dreamstudio.com/earth/img/team/Sugandha-Bhandari.jpg)
 <div class="bioText" markdown="1">
 ## Sugandha Bhandari
@@ -81,7 +87,7 @@ Yogesh is a Data Scientist & Full-Stack Developer on a mission to unlock data's 
 Bug: Satvik links to ShanmugaPriyaKannan resume
 [Satvik Praveen](../#SatvikPraveen)
 
-[Yash Gondkar](../#YashGondkar)
+
 [Loren Heyns](../#LorenHeyns)
 [Mohammed Saalim](../#MohammedSaalim)
 
