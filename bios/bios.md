@@ -75,12 +75,17 @@ Ivy is a Senior Programmer and Data Analytics Specialist with degrees in Applied
 Yogesh is a Data Scientist & Full-Stack Developer on a mission to unlock data's full potential. Holding an M.S. in CS and expertise in Data Science & Autonomous Systems, he's a pro at using Python, SQL, and cloud tech. Yogesh builds scalable ML solutions, dynamic visualizations, and insightful statistical models, bridging the gap between data and development for real business growth.
 <!-- broken [My Recent Work ~ Get In Touch](https://yogeshgajula.com) -->
 </div>
+---
+![Noor Fathima](NoorFathima/Noor-bio.jpeg)
+<div class="bioText" markdown="1" bio="NoorFathima">
+## Noor Fathima
+Noor Fathima is a Software Developer and Data Engineer specializing in environmental data processing, API integration, and data pipeline automation. At ModelEarth/DreamStudio, she built a comprehensive EPD (Environmental Product Declaration) data pipeline processing 184,614+ products, integrated BuildingTransparency.org's EC3 and openEPD APIs, and developed Flask-based admin interfaces for running pipeline nodes from a web admin UI. Her work spans emissions data across 50 US states and 7 additional countries.
+</div>
 
 
 
 <div markdown="1">
 **More CV Pages**
-[Noor Fathima](../#NoorFathima)
 [Shanmuga Priya Kannan](../#ShanmugaPriyaKannan)<!-- Projects section -->
 
 <!--
