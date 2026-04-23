@@ -2,13 +2,21 @@
   "basics": {
     "name": "Noor Fathima",
     "label": "Software Developer / Data Engineer",
-    "email": "",
+    "email": "noorrizwankhan10@gmail.com",
     "phone": "",
     "url": "",
     "location": "",
     "summary": "Software Developer and Data Engineer specializing in environmental data processing, API integration, and data pipeline automation. Built comprehensive EPD (Environmental Product Declaration) data pipelines, integrated BuildingTransparency.org APIs (EC3 and openEPD), and developed Flask-based admin interfaces for data management at ModelEarth/DreamStudio."
   },
   "work": [
+    {
+      "position": "Instructor (Quantum Computing / AI / ML)",
+      "company": "Central New Mexico Community College",
+      "location": "Albuquerque, New Mexico",
+      "startDate": "July 2026",
+      "endDate": "Present",
+      "summary": "Incoming Instructor teaching Quantum Computing, AI, and Machine Learning (Fall 2026 start)."
+    },
     {
       "position": "Software Developer / Data Engineer",
       "company": "ModelEarth / DreamStudio",
