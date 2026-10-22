@@ -2,7 +2,7 @@
   "basics": {
     "name": "Shanmuga Priya Kannan",
     "label": "Senior ServiceNow Developer",
-    "email": "shanmugapriyakannan019@gmail.com",
+    "email": "",
     "phone": "",
     "url": "",
     "summary": "ServiceNow Developer specializing in ITSM, integrations, and workflow automation. Skilled in Java, Python, cloud platforms, and data analytics with hands-on project experience in machine learning and market analysis."
@@ -96,11 +96,6 @@
     { "language": "Tamil", "fluency": "Native" }
   ],
   "profiles": [
-    {
-      "network": "LinkedIn",
-      "username": "shanmuga",
-      "url": "https://linkedin.com/in/shanmuga-priya-k-95400a194"
-    },
     {
       "network": "GitHub",
       "username": "shan-789",

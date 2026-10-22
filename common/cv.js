@@ -806,7 +806,7 @@
     };
 
     const mediaBlock = bioText.previousElementSibling;
-    if (mediaBlock && mediaBlock.querySelector('img')) {
+    if (mediaBlock && mediaBlock.classList.contains('bioMedia')) {
       mediaBlock.classList.add('bioMedia', 'bioRowExpandable');
       mediaBlock.title = `Open ${actionLabel}`;
       mediaBlock.onclick = function (event) {
@@ -833,6 +833,34 @@
       if (!href || /^(?:[a-z]+:|\/|#)/i.test(href)) return;
       link.setAttribute('href', resolveBioLinkUrl(href));
     });
+
+    // Bios without an image get a circle with their initials in the image's place
+    target.querySelectorAll('.bioText').forEach((bioText) => {
+      const prior = bioText.previousElementSibling;
+      if (prior && prior.classList.contains('bioMedia')) return;
+      const initials = getBioInitials(bioText);
+      if (!initials) return;
+      if (typeof includeCSS3 === 'function') {
+        includeCSS3('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');
+      }
+      const mediaBlock = document.createElement('div');
+      mediaBlock.className = 'bioMedia bioInitials';
+      // Each circle takes the next color in the theme's series (.bioInitials[data-color] styles)
+      mediaBlock.dataset.color = target.querySelectorAll('.bioInitials').length % 6;
+      mediaBlock.setAttribute('aria-hidden', 'true');
+      const circleText = document.createElement('span');
+      circleText.textContent = initials;
+      mediaBlock.appendChild(circleText);
+      bioText.before(mediaBlock);
+    });
+  }
+
+  function getBioInitials(bioText) {
+    const heading = bioText.querySelector('h2');
+    const words = heading ? heading.textContent.trim().split(/\s+/).filter(Boolean) : [];
+    if (!words.length) return '';
+    const letters = words.length > 1 ? [words[0], words[words.length - 1]] : [words[0]];
+    return letters.map((word) => word.charAt(0).toUpperCase()).join('');
   }
 
   function toggleBioParagraph(paragraph) {
@@ -870,7 +898,7 @@
       };
 
       const mediaBlock = bioText.previousElementSibling;
-      if (mediaBlock && mediaBlock.querySelector('img')) {
+      if (mediaBlock && mediaBlock.classList.contains('bioMedia')) {
         mediaBlock.classList.add('bioMedia', 'bioRowExpandable');
         mediaBlock.title = 'Click to expand';
         mediaBlock.onclick = function (event) {
@@ -1026,6 +1054,31 @@
         object-fit: cover !important;
         object-position: center top !important;
       }
+      .bioList .bioInitials {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: var(--bio-image-size);
+        border-radius: 50%;
+        --initials-color: var(--badge-primary-text, #235d39);
+        background: color-mix(in srgb, var(--initials-color) 24%, white);
+        color: var(--initials-color);
+        font-family: 'Varela Round', sans-serif;
+        font-size: calc(var(--bio-image-size) * 0.32);
+        font-weight: 400;
+        letter-spacing: 0.03em;
+        text-indent: 0.03em; /* balances the spacing browsers add after the last letter */
+        user-select: none;
+      }
+      /* Primary and success are both green in some themes (openai), so they're kept apart */
+      .bioList .bioInitials[data-color="1"] { --initials-color: var(--badge-warning-text, #b8860b); }
+      .bioList .bioInitials[data-color="2"] { --initials-color: var(--badge-info-text, #2563a8); }
+      .bioList .bioInitials[data-color="3"] { --initials-color: var(--badge-secondary-text, #b5426e); }
+      .bioList .bioInitials[data-color="4"] { --initials-color: var(--badge-success-text, #2e7d52); }
+      .bioList .bioInitials[data-color="5"] { --initials-color: var(--badge-danger-text, #c0392b); }
+      .dark .bioList .bioInitials {
+        background: color-mix(in srgb, var(--initials-color) 28%, transparent);
+      }
       .bioList .bioText {
         overflow: auto;
         margin-bottom: 28px;
@@ -1075,6 +1128,9 @@
           clear: both;
           width: auto;
           margin: 0 0 12px 0;
+        }
+        .bioList .bioInitials {
+          width: var(--bio-image-size); /* images size themselves, the initials circle doesn't */
         }
         .bioList .bioText {
           overflow: visible;
@@ -2281,36 +2337,13 @@
     downloadBlob(json, `${makeBaseFilename()}.json`, 'application/json;charset=utf-8');
   }
 
-  // Dark mode toggle (shared with project/index.html #pageConfigDarkToggle technique)
-  function isDarkActive() {
-    if (document.body.classList.contains('dark')) return true;
-    if (typeof Cookies === 'undefined') return false;
-    const sitelook = Cookies.get('sitelook') || 'default';
-    if (sitelook === 'dark') return true;
-    if (sitelook === 'computer') return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (sitelook === 'default') {
-      return (typeof Cookies !== 'undefined' && Cookies.get('modelsite') === 'dreamstudio')
-        || location.host.indexOf('dreamstudio') >= 0
-        || location.host.indexOf('planet.live') >= 0;
-    }
-    return false;
-  }
-
-  function updateDarkToggleIcon(btn) {
-    if (!btn) return;
-    const icon = btn.querySelector('.material-icons');
-    const dark = isDarkActive();
-    btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
-    if (icon) icon.textContent = dark ? 'dark_mode' : 'light_mode';
-  }
-
   function setupPrintDownloadIcons() {
     const target = select('#map-print-download-icons');
     if (!target || target.dataset.ready === 'true') return;
 
     target.innerHTML = `
       <div class="cv-icon-menu">
-        <button id="cvDarkToggleBtn" class="cv-icon-btn" type="button" title="Toggle dark mode" aria-pressed="false">
+        <button id="cvDarkToggleBtn" class="cv-icon-btn darkModeToggle" type="button" title="Toggle dark mode" aria-pressed="false">
           <span class="material-icons">light_mode</span>
         </button>
       </div>
@@ -2334,24 +2367,8 @@
       </div>
     `;
 
-    const darkToggleBtn = select('#cvDarkToggleBtn');
-    if (darkToggleBtn) {
-      updateDarkToggleIcon(darkToggleBtn);
-      if (typeof waitForElm === 'function') {
-        waitForElm('#bodyloaded').then(() => updateDarkToggleIcon(darkToggleBtn));
-      }
-      darkToggleBtn.addEventListener('click', () => {
-        const newLook = document.body.classList.contains('dark') ? 'default' : 'dark';
-        if (typeof Cookies !== 'undefined') Cookies.set('sitelook', newLook);
-        if (typeof setSitelook === 'function') setSitelook(newLook);
-        updateDarkToggleIcon(darkToggleBtn);
-      });
-      if (window.matchMedia) {
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-          updateDarkToggleIcon(darkToggleBtn);
-        });
-      }
-    }
+    // Dark mode toggle: darkModeToggle in localsite.js handles clicks and sitelook changes
+    if (typeof updateDarkModeToggles === 'function') updateDarkModeToggles();
 
     const printBtn = select('#cvPrintMenuBtn');
     const downloadBtn = select('#cvDownloadMenuBtn');

@@ -7,34 +7,25 @@ Loren is a Full-Stack Developer with 25 years experience building collaborative 
 [My Recent Work ~ Get In Touch](https://dreamstudio.com/loren)
 </div>
 ---
-![Mohammed Saalim ](/io/team/img/Mohammed-Saalim-K.jpg)
-<div class="bioText" markdown="1" bio="MohammedSaalim">
-## Mohammed Saalim K
-Mohammed Saalim K is a full-stack developer specializing in React, TypeScript, and data visualization. As Lead Developer for our USEEIO updates at model.earth, he implemented v2 model integration with dynamic state-specific conversions, built interactive D3.js bubble charts with real-time GitHub API data loading, and developed matrix-based job quantity calculations. Key contributions include fixing a critical legacy hash retention bug in React widgets and implementing comprehensive UX improvements.
-<a href="https://mohammed-saalim.vercel.app/">My Recent Work ~ Get In Touch</a><!--| <a href="https://www.linkedin.com/in/mohammed-saalim/">LinkedIn</a> | <a href="https://github.com/mohammed-saalim">GitHub</a>-->
-</div>
----
 ![Gary Martirosyan](https://dreamstudio.com/earth/img/team/gary.jpg)
 <div class="bioText" markdown="1" website="https://gary-mart.com">
 ## Gary Martirosyan
 Gary is a Data Engineer and Database Developer, specializing in designing, creating, and maintaining relational databases, ensuring their efficiency, reliability, and scalability. Gary optimizes database performance through applying best practices, query tuning, and stored procedure enhancements, ensuring fast and efficient data retrieval.
 [My Recent Work ~ Get In Touch](https://gary-mart.com)
 </div>
-
 ---
 <div class="bioText" markdown="1" bio="MounikaMullukuntla">
 ## Mounika Mullukuntla
 Mounika is a Full-Stack Developer and AI/ML enthusiast with enterprise experience building responsive web applications, Python-backed REST APIs, and modern UI workflows. She has delivered production-grade retail and e-commerce platforms using React, Angular, and database-backed microservices, optimizing page performance, reducing load latency, and supporting real-time inventory and operations workflows.
 [My Recent Work ~ Get In Touch](../bios/MounikaMullukuntla/)
 </div>
-
 ---
 Alumni
 ---
-![Yash Gondkar](YashGondkar/YashGondkar.jpg)
-<div class="bioText" markdown="1" bio="YashGondkar">
-## Yash Gondkar
-Yash architected our CodeChat RAG's concurrent three-stage [ingestion pipeline](/chat/ingestion/) (chunking → embedding → upserting), dramatically reducing processing time for large repository syncs. Built scikit-learn compatible Random Bits Forest wrapper achieving top accuracy.
+![Dhananjay Surti](https://dreamstudio.com/earth/img/team/dj.jpg)
+<div class="bioText" markdown="1">
+## Dhananjay Surti
+Dhananjay is a recent Computer Science graduate from Case Western University. He likes to dabble in Web Development, Computer Vision, ML and IoT devices. He is currently learning how to use LLMs to gain meaningful insights from files in GitHub repositories.
 </div>
 ---
 ![Sugandha Bhandari](https://dreamstudio.com/earth/img/team/Sugandha-Bhandari.jpg)
@@ -44,16 +35,17 @@ Sugandha is a software engineer with an MS in Computer Science, experienced in t
 [Let's connect!](https://www.linkedin.com/in/sugandha-bhandari27/)
 </div>
 ---
+![Mohammed Saalim ](/io/team/img/Mohammed-Saalim-K.jpg)
+<div class="bioText" markdown="1" bio="MohammedSaalim">
+## Mohammed Saalim K
+Mohammed Saalim K is a full-stack developer specializing in React, TypeScript, and data visualization. As Lead Developer for our USEEIO updates at model.earth, he implemented v2 model integration with dynamic state-specific conversions, built interactive D3.js bubble charts with real-time GitHub API data loading, and developed matrix-based job quantity calculations. Key contributions include fixing a critical legacy hash retention bug in React widgets and implementing comprehensive UX improvements.
+<a href="https://mohammed-saalim.vercel.app/">My Recent Work ~ Get In Touch</a><!--| <a href="https://www.linkedin.com/in/mohammed-saalim/">LinkedIn</a> | <a href="https://github.com/mohammed-saalim">GitHub</a>-->
+</div>
+---
 ![Mohammad Thousif Udayagiri](https://avatars.githubusercontent.com/ThousifMd)
 <div class="bioText" markdown="1" bio="ThousifMd">
 ## Mohammad Thousif Udayagiri
 Mohammad is a Data Analyst and Full Stack Developer with a Master's in MIS from Oklahoma State University. At DreamStudio Earth he built the interactive [Exiobase Sankey](/profile/charts/sankey/) diagram and upgraded our trade flow map. Mohammad is currently a Technology Analyst at Northern Arizona University.
-</div>
----
-![Dhananjay Surti](https://dreamstudio.com/earth/img/team/dj.jpg)
-<div class="bioText" markdown="1">
-## Dhananjay Surti
-Dhananjay is a recent Computer Science graduate from Case Western University. He likes to dabble in Web Development, Computer Vision, ML and IoT devices. He is currently learning how to use LLMs to gain meaningful insights from files in GitHub repositories.
 </div>
 ---
 ![Melody Yang](https://dreamstudio.com/earth/img/team/Melody-Yang.jpg)
@@ -83,17 +75,27 @@ Yogesh is a Data Scientist & Full-Stack Developer on a mission to unlock data's 
 <!-- broken [My Recent Work ~ Get In Touch](https://yogeshgajula.com) -->
 </div>
 ---
+![Yash Gondkar](YashGondkar/YashGondkar.jpg)
+<div class="bioText" markdown="1" bio="YashGondkar">
+## Yash Gondkar
+Yash architected our CodeChat RAG's concurrent three-stage [ingestion pipeline](/chat/ingestion/) (chunking → embedding → upserting), dramatically reducing processing time for large repository syncs. Built scikit-learn compatible Random Bits Forest wrapper achieving top accuracy.
+</div>
+---
 ![Noor Fathima](NoorFathima/Noor-bio.jpeg)
 <div class="bioText" markdown="1" bio="NoorFathima">
 ## Noor Fathima
 Noor Fathima is a Software Developer and Data Engineer specializing in environmental data processing, API integration, and data pipeline automation. At ModelEarth/DreamStudio, she built a comprehensive EPD (Environmental Product Declaration) data pipeline processing 184,614+ products, integrated BuildingTransparency.org's EC3 and openEPD APIs, and developed Flask-based admin interfaces for running pipeline nodes from a web admin UI. Her work spans emissions data across 50 US states and 7 additional countries.
 </div>
+---
+<div class="bioText" markdown="1" bio="ShanmugaPriyaKannan">
+## Shanmuga Priya Kannan
+Shanmuga Priya is a ServiceNow Developer specializing in ITSM, integrations and workflow automation, with a Master's in Computer Science from DePaul University. At Cognizant, for clients including Autodesk and Fortive, Shanmuga Priya developed REST APIs and 30+ custom workflows and catalog items, and integrated SAP, QlikView and Azure. Projects include a distributed PySpark pipeline on AWS EMR for 12M+ NYC taxi trip records and machine learning classifiers for lung cancer risk prediction.
+</div>
 
 
 
 <div markdown="1">
-**More CV Pages**
-[Shanmuga Priya Kannan](../#ShanmugaPriyaKannan)<!-- Projects section -->
+<!-- Projects section -->
 
 <!--
 Bug: Satvik links to ShanmugaPriyaKannan resume
