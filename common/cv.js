@@ -110,6 +110,7 @@
     defaultJson: '',
     defaultTheme: '',
     defaultPDF: '',
+    bioimg: '', // Photo beside the name, set in each person's index.html (their .json may be regenerated)
     educationColumn: 'main',
     syncResumeParam: false,
     autoDetectJsonFiles: false,
@@ -267,7 +268,8 @@
         defaultJson: resolvePersonPageConfigUrl(candidate, parseQuotedConfigValue(html, 'defaultJson')),
         defaultPDF: resolvePersonPageConfigUrl(candidate, parseQuotedConfigValue(html, 'defaultPDF')),
         defaultTheme: parseQuotedConfigValue(html, 'defaultTheme'),
-        educationColumn: parseQuotedConfigValue(html, 'educationColumn')
+        educationColumn: parseQuotedConfigValue(html, 'educationColumn'),
+        bioimg: resolvePersonPageConfigUrl(candidate, parseQuotedConfigValue(html, 'bioimg'))
       };
 
       personProfileConfigCache.set(candidate, profileConfig);
@@ -319,6 +321,7 @@
     config.defaultPDF = baseConfig.defaultPDF;
     config.defaultTheme = baseConfig.defaultTheme;
     config.educationColumn = baseConfig.educationColumn;
+    config.bioimg = baseConfig.bioimg;
 
     if (!isCvRootPage() || !personFolder) return;
 
@@ -334,6 +337,9 @@
     }
     if (profileConfig.educationColumn) {
       config.educationColumn = profileConfig.educationColumn;
+    }
+    if (profileConfig.bioimg) {
+      config.bioimg = profileConfig.bioimg;
     }
   }
 
@@ -1040,7 +1046,8 @@
       .bioList .bioMedia {
         float: left;
         width: var(--bio-image-size);
-        margin: 0 30px 28px 0;
+        /* 18px down to the top of the name: the h2's 12px top padding (base.css) plus half its extra line height */
+        margin: 18px 30px 28px 0;
       }
       .bioList img {
         padding: 0 !important;
@@ -1098,10 +1105,10 @@
         overflow: hidden;
       }
       .bioList.bioListSm {
-        --bio-image-size: 64px;
+        --bio-image-size: 130px;
       }
       .bioList.bioListSm .bioMedia {
-        margin: 0 14px 12px 0;
+        margin: 18px 21px 12px 0; /* .bioText's 2px top padding, the h2's 12px, and half of its 27px line height less 18px text */
       }
       .bioList.bioListSm .bioText {
         position: relative;
@@ -1117,24 +1124,69 @@
         cursor: pointer;
       }
       .bioList.bioListSm .bioText.bioRowExpandable:hover {
-        background: rgba(11, 99, 201, 0.08);
+        --bio-hover-bg: rgba(11, 99, 201, 0.08);
+        background: var(--bio-hover-bg);
       }
       .dark .bioList.bioListSm .bioText.bioRowExpandable:hover {
-        background: rgba(127, 192, 255, 0.14);
+        --bio-hover-bg: rgba(127, 192, 255, 0.14);
+      }
+      /* The hover background reaches 12px further left while the text stays put. An outer shadow
+      only paints outside the box, so the translucent color doesn't double where they meet. */
+      .bioList.bioListSm .bioText:hover {
+        box-shadow: -12px 0 0 0 var(--bio-hover-bg, transparent);
       }
       @container (max-width: 760px) {
-        .bioList .bioMedia {
+        /* Above the text. .bioListSm is included since its .bioMedia margin outranks .bioList .bioMedia. */
+        .bioList .bioMedia,
+        .bioList.bioListSm .bioMedia {
           float: none;
           clear: both;
           width: auto;
-          margin: 0 0 12px 0;
+          /* The top margin stays as in the wide layout, so the image doesn't move when the list narrows.
+          The h2's top padding (base.css) already spaces the name below the image. */
+          margin-right: 0;
+          margin-bottom: 0;
         }
-        .bioList .bioInitials {
-          width: var(--bio-image-size); /* images size themselves, the initials circle doesn't */
+        .bioList .bioMedia.bioInitials {
+          width: var(--bio-image-size); /* images size themselves, the initials circle doesn't. Outranks width: auto above. */
         }
         .bioList .bioText {
           overflow: visible;
-          margin-bottom: 22px;
+          margin-bottom: 2px;
+        }
+        /* Hovering the text makes it a speech bubble from the person above: a tint of the theme's --accent
+        behind the text plus a tail in the same tint pointing up at the center of the image.
+        The 5px top margin leaves 5px between the image and the text.
+        The 14.4px tail reaches up behind the image's lower edge. */
+        .bioList.bioListSm .bioText {
+          margin-top: 5px;
+          z-index: 1; /* Above the image, which passes behind the tail and background */
+          /* Opaque, mixed with the page's background (body in base.css), so the image doesn't show through */
+          --bubble-color: color-mix(in srgb, var(--accent, #235d39) 14%, #fafafa);
+        }
+        .dark .bioList.bioListSm .bioText {
+          --bubble-color: color-mix(in srgb, var(--accent, #235d39) 26%, #333);
+        }
+        .bioList.bioListSm .bioText:hover,
+        .bioList.bioListSm .bioText.bioRowExpandable:hover,
+        .dark .bioList.bioListSm .bioText.bioRowExpandable:hover {
+          --bio-hover-bg: var(--bubble-color);
+          background: var(--bio-hover-bg);
+        }
+        /* The image passes behind the tail and the text's background. Spacing below it comes from the
+        text's margin, since a bottom margin here would collapse into it. */
+        .bioList.bioListSm .bioMedia {
+          position: relative;
+          z-index: 0;
+        }
+        .bioList.bioListSm .bioText:hover::before {
+          content: "";
+          position: absolute;
+          top: -14.4px;
+          left: calc(var(--bio-image-size) / 2 - 14.4px);
+          border: 14.4px solid transparent;
+          border-top: 0;
+          border-bottom-color: var(--bubble-color);
         }
       }
     `;
@@ -1764,10 +1816,13 @@
         return orderedHtml.join('');
       }
 
+      const bioImageUrl = resolvePersonPageConfigUrl(activePersonFolder || config.personFolder, config.bioimg);
+
       resumeContainer.innerHTML = `
       <div class="containingDiv${getResumeLayoutClass(activePersonFolder || config.personFolder)}">
         <div class="top-row">
           <div class="top-main">
+            ${bioImageUrl ? `<img class="bio-photo" src="${escapeHtml(bioImageUrl)}" alt="${escapeHtml(personName)}">` : ''}
             <h1 class="name">${escapeHtml(stringifyValue(basics.name))}</h1>
             ${basics.label ? `<div class="label">${renderTextWithDetectedLinks(basics.label)}</div>` : ''}
             ${extrasInTopMain && displayExtrasText ? `<div class="contact-extra contact-extra-main">${renderTextWithDetectedLinks(displayExtrasText)}</div>` : ''}

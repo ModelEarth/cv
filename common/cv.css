@@ -40,6 +40,19 @@
 .containingDiv .top-side {
   min-width: 0;
 }
+.containingDiv .top-main {
+  display: flow-root; /* contains the floated .bio-photo */
+}
+/* Person's photo left of the name area, from bioimg in their index.html */
+.containingDiv .bio-photo {
+  float: left;
+  width: 82px;
+  height: 82px;
+  margin: 0 16px 0 0;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+}
 .containingDiv .top-side {
   font-size: 13px;
   color: var(--text-muted);
