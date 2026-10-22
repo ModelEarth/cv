@@ -1,6 +1,9 @@
 const TEMPLATES = {
-  classic: {
-    name: "Classic",
+  // Colors and fonts come from the site theme variables (localsite/css/themes), from the theme class on
+  // #resumeContainer (#themeSelect in app.js). The fallbacks are the Claude theme, for exported HTML without it.
+  claude: {
+    name: "Claude",
+    themed: true,
     render: (data) => {
       const formatDate = (start, end) => {
         if (!end)
@@ -152,41 +155,43 @@ const TEMPLATES = {
 
       const css = `
         .resume-content {
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          font-family: var(--font-body, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif);
           line-height: 1.6;
-          color: #000;
-          background: linear-gradient(135deg, #C9B49A 0%, #D4C4B0 100%);
+          color: var(--text-main, #1a1815);
+          background: var(--bg-page, #faf9f7);
           padding: 40px;
-          border-radius: 8px;
+          border-radius: var(--panel-radius, 12px);
         }
         .resume-header {
-          border-bottom: 3px solid #5D4E37;
-          padding-bottom: 20px;
-          margin-bottom: 30px;
-          background: rgba(255, 255, 255, 0.7);
-          padding: 20px;
-          border-radius: 8px;
+          margin-bottom: 24px;
+          background: var(--bg-card, #ffffff);
+          padding: 24px;
+          border-radius: var(--panel-radius, 12px);
+          border: 1px solid var(--border-subtle, rgba(26, 24, 21, 0.08));
+          border-top: 4px solid var(--accent, #c96432);
         }
         .resume-header h1 {
+          font-family: var(--font-headline, inherit);
           font-size: 28px;
           margin: 0 0 5px 0;
-          font-weight: 700;
-          color: #000;
+          font-weight: 600;
+          letter-spacing: -0.01em;
+          color: var(--text-main, #1a1815);
         }
         .job-title {
           font-size: 14px;
-          color: #1a1a1a;
+          color: var(--accent, #c96432);
           margin: 0 0 10px 0;
         }
         .contact-info {
           display: flex;
           gap: 15px;
           font-size: 12px;
-          color: #1a1a1a;
+          color: var(--text-muted, #7a6d5e);
           flex-wrap: wrap;
         }
         .contact-info span {
-          border-right: 1px solid #5D4E37;
+          border-right: 1px solid var(--border-subtle, rgba(26, 24, 21, 0.08));
           padding-right: 15px;
         }
         .contact-info span:last-child {
@@ -196,22 +201,23 @@ const TEMPLATES = {
           font-size: 13px;
           margin-top: 10px;
           line-height: 1.5;
-          color: #000;
+          color: var(--text-main, #1a1815);
         }
         .resume-section {
-          margin-bottom: 25px;
-          background: rgba(255, 255, 255, 0.8);
-          padding: 20px;
-          border-radius: 8px;
-          border-left: 4px solid #5D4E37;
+          margin-bottom: 20px;
+          background: var(--bg-card, #ffffff);
+          padding: 20px 24px;
+          border-radius: var(--panel-radius, 12px);
+          border: 1px solid var(--border-subtle, rgba(26, 24, 21, 0.08));
         }
         .resume-section h2 {
+          font-family: var(--font-headline, inherit);
           font-size: 16px;
-          font-weight: 700;
-          border-bottom: 2px solid #5D4E37;
+          font-weight: 600;
+          border-bottom: 2px solid var(--accent-soft, #fef3ec);
           padding-bottom: 8px;
           margin-bottom: 15px;
-          color: #000;
+          color: var(--accent, #c96432);
           margin-top: 0;
         }
         .entry {
@@ -226,24 +232,24 @@ const TEMPLATES = {
         .entry h3 {
           font-size: 14px;
           margin: 0;
-          font-weight: 700;
-          color: #000;
+          font-weight: 600;
+          color: var(--text-main, #1a1815);
         }
         .date {
           font-size: 12px;
-          color: #1a1a1a;
+          color: var(--text-muted, #7a6d5e);
           flex-shrink: 0;
         }
         .company, .institution {
           font-size: 13px;
-          color: #1a1a1a;
+          color: var(--text-muted, #7a6d5e);
           margin: 3px 0 8px 0;
           font-style: italic;
         }
         .entry p {
           font-size: 12px;
           margin: 5px 0;
-          color: #000;
+          color: var(--text-main, #1a1815);
         }
         .skills-grid {
           display: grid;
@@ -251,24 +257,23 @@ const TEMPLATES = {
           gap: 12px;
         }
         .skill-item {
-          padding: 8px;
-          background: rgba(255, 255, 255, 0.2);
-          border-radius: 4px;
-          border: 1px solid #5D4E37;
+          padding: 8px 12px;
+          background: var(--chip-bg, #f0ede8);
+          border-radius: var(--button-radius, 8px);
         }
         .skill-item strong {
           font-size: 12px;
           display: block;
-          color: #000;
+          color: var(--text-main, #1a1815);
         }
         .skill-item p {
           font-size: 11px;
           margin: 3px 0 0 0;
-          color: #1a1a1a;
+          color: var(--chip-text, #7a6d5e);
         }
         .project-tech {
           font-size: 11px;
-          color: #1a1a1a;
+          color: var(--text-muted, #7a6d5e);
           margin: 5px 0 0 0;
           font-style: italic;
         }

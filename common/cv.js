@@ -163,6 +163,58 @@
     { value: 'striking', label: 'Striking' }
   ];
 
+  // Site themes listed in localsite/css/themes/themes.json, so a theme added there appears in #themeSelect.
+  // Each theme is CSS variables on a class (.claude). cv.css and the CV themes read those variables,
+  // so a site theme recolors the resume when its class is on #resumeContainer (applySiteTheme).
+  function localsiteRoot() {
+    return (typeof local_app !== 'undefined' && typeof local_app.localsite_root === 'function') ? local_app.localsite_root() : '/localsite/';
+  }
+  const siteThemesLoad = fetch(localsiteRoot() + 'css/themes/themes.json')
+    .then(response => response.ok ? response.json() : [])
+    .then(list => Array.isArray(list) ? list : [])
+    .catch(() => []);
+  function isCvTheme(theme) {
+    return THEMES.some(item => item.value === theme);
+  }
+  function addSiteThemeOptions() {
+    siteThemesLoad.then(list => {
+      const themeSelect = select('#themeSelect');
+      if (!themeSelect || !list.length || themeSelect.querySelector('optgroup[data-site-themes]')) return;
+      const group = document.createElement('optgroup');
+      group.label = 'Site Themes';
+      group.dataset.siteThemes = 'true';
+      list.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.value;
+        option.textContent = item.label || item.value;
+        group.appendChild(option);
+      });
+      themeSelect.appendChild(group);
+      if (currentTheme) themeSelect.value = currentTheme; // Set before the site theme options loaded
+    });
+  }
+  let appliedSiteTheme = '';
+  function applySiteTheme(theme) {
+    const container = select('#resumeContainer');
+    if (container && appliedSiteTheme) container.classList.remove(appliedSiteTheme);
+    let link = document.getElementById('cvSiteThemeStylesheet');
+    if (!theme || !/^[a-z0-9-]+$/.test(theme)) {
+      if (link) link.remove();
+      appliedSiteTheme = '';
+      return;
+    }
+    if (!link) {
+      link = document.createElement('link');
+      link.id = 'cvSiteThemeStylesheet';
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      document.head.appendChild(link);
+    }
+    link.href = localsiteRoot() + 'css/themes/' + theme + '.css';
+    if (container) container.classList.add(theme);
+    appliedSiteTheme = theme;
+  }
+
   // Hash-based state utilities (uses localsite.js getHash / goHash / updateHash)
   function getHashParam(key, fallback) {
     if (typeof getHash === 'function') {
@@ -1431,10 +1483,12 @@
             <label style="margin-left:12px;">Theme:</label>
             <select id="themeSelect">
               <option value="">Base</option>
+              <optgroup label="CV Themes">
               ${THEMES.map(theme =>
         `<option value="${theme.value}">${theme.label}</option>`
-      ).join('\n            ')}
-            </select>
+      ).join('\n              ')}
+              </optgroup>
+            </select><!-- addSiteThemeOptions() appends the Site Themes from themes.json -->
           </div>
         
           <div class="hide-when-no-bio">
@@ -1889,9 +1943,11 @@
     if (typeof jsonFile === 'string') currentJsonFile = jsonFile;
     currentTheme = theme || '';
 
-    // Update per-theme stylesheet using a managed <link> element
+    // Update per-theme stylesheet using a managed <link> element. Site themes (themes.json) use the base CV layout.
+    const siteTheme = theme && !isCvTheme(theme) ? theme : '';
+    applySiteTheme(siteTheme);
     const themeLink = document.getElementById('cvThemeStylesheet');
-    if (theme) {
+    if (theme && !siteTheme) {
       let link = themeLink;
       if (!link) {
         link = document.createElement('link');
@@ -2521,6 +2577,7 @@
   function setupEventListeners() {
     const jsonSelect = select('#sourceSelect');
     const themeSelect = select('#themeSelect');
+    addSiteThemeOptions();
     const toggleJsonBtn = select('#cvToggleJsonBtn');
     const dataPreview = select('#cvDataPreview');
     if (toggleJsonBtn && dataPreview) {

@@ -22,7 +22,7 @@ No data leaves your device—all processing happens in your browser.
 ## 📋 Features
 
 ✅ **PDF Resume Parsing** - Extract text, work experience, education, skills, and projects from PDF files  
-✅ **Unique Templates** - Tech, Dark, Modern, Creative, Executive, Compact, Minimal, Colorful, ATS-Friendly, Academic, Corporate, Classic  
+✅ **Unique Templates** - Tech, Dark, Modern, Creative, Executive, Compact, Minimal, Colorful, ATS-Friendly, Academic, Corporate, Claude  
 ✅ **Real-time Preview** - See your resume rendered instantly in any template  
 ✅ **Export Options** - Save as HTML, JSON, or print-ready PDF  
 ✅ **Print-Friendly** - Clean, borderless output optimized for professional documents  
@@ -84,9 +84,10 @@ Research publication style with centered layout. Scholarly presentations.
 
 Enterprise biography style. C-suite ready.
 
-### 12. **Classic** - LinkedIn Standard
+### 12. **Claude** - Themed
 
-Professional standard layout. Always reliable.
+Professional standard layout in the Claude theme colors (`localsite/css/themes/claude.css`). The Theme dropdown
+after "Resume Preview" swaps in another site theme from `localsite/css/themes/themes.json`.
 
 ---
 

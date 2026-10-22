@@ -123,16 +123,16 @@
       </div>
 
       <div class="template-grid">
-        <button class="template-card" data-template="classic">
-          <div class="template-preview classic-preview">
+        <button class="template-card" data-template="claude">
+          <div class="template-preview claude-preview">
             <div class="prev-header"></div>
             <div class="prev-line"></div>
             <div class="prev-line short"></div>
             <div class="prev-line"></div>
           </div>
           <div class="template-info">
-            <h3>Classic</h3>
-            <p>Traditional & Professional</p>
+            <h3>Claude</h3>
+            <p>Warm & Professional, follows the Theme</p>
           </div>
         </button>
 
@@ -289,6 +289,8 @@
     <section class="section preview-section">
       <div class="section-header">
         <h2><span class="step-num">4</span> Resume Preview</h2>
+        <!-- Site themes from localsite/css/themes/themes.json (app.js). They restyle the Claude template. -->
+        <select id="themeSelect" aria-label="Theme"></select>
         <div class="action-btns">
           <button id="exportBtn" class="btn btn-secondary" disabled>
             <span>💾</span> Export HTML

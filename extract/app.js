@@ -77,6 +77,7 @@ document.addEventListener("DOMContentLoaded", function () {
   console.log("[Init] DOMContentLoaded fired");
   initializeEventListeners();
   renderSamplePreview();
+  initThemeSelect();
   console.log("[Init] ✅ Initialization complete");
 });
 
@@ -132,7 +133,7 @@ function initializeEventListeners() {
 
 // Show a sample preview on page load so the resume container isn't blank
 function renderSamplePreview() {
-  const defaultTemplate = "classic";
+  const defaultTemplate = "claude";
   STATE.currentTemplate = defaultTemplate;
 
   // mark the default card active
@@ -312,14 +313,14 @@ async function handleParsePDF() {
     console.log("[PDF Parsing] ✅ Complete!");
 
     // Auto-select first template
-    console.log("[PDF Parsing] Clicking classic template...");
-    const classicBtn = document.querySelector(
-      '.template-card[data-template="classic"]'
+    console.log("[PDF Parsing] Clicking claude template...");
+    const claudeBtn = document.querySelector(
+      '.template-card[data-template="claude"]'
     );
-    if (classicBtn) {
-      classicBtn.click();
+    if (claudeBtn) {
+      claudeBtn.click();
     } else {
-      console.warn("[PDF Parsing] Classic template button not found");
+      console.warn("[PDF Parsing] Claude template button not found");
     }
   } catch (error) {
     console.error("[PDF Parsing] ❌ ERROR:", error);
@@ -1318,6 +1319,72 @@ function renderCurrentTemplate() {
   styleTag.textContent = result.css || "";
 
   STATE.lastRender = result;
+  updateThemeSelectState();
+}
+
+// ==================== THEMES ====================
+// #themeSelect lists the site themes in localsite/css/themes/themes.json, so a theme added there appears here.
+// Each theme is CSS variables on a class (.claude). The theme's class goes on #resumeContainer, and templates with
+// themed: true (Claude) read the variables. The theme's CSS text is kept for the exported HTML.
+let extractTheme = "claude";
+let extractThemeCss = "";
+function localsiteRoot() {
+  return typeof local_app !== "undefined" && typeof local_app.localsite_root === "function"
+    ? local_app.localsite_root()
+    : "/localsite/";
+}
+function initThemeSelect() {
+  const themeSelect = document.getElementById("themeSelect");
+  if (!themeSelect) return;
+  const hashTheme = typeof getHash === "function" ? getHash().theme : "";
+  fetch(localsiteRoot() + "css/themes/themes.json")
+    .then((response) => (response.ok ? response.json() : []))
+    .catch(() => [])
+    .then((list) => {
+      list = Array.isArray(list) ? list : [];
+      themeSelect.innerHTML = list
+        .map((item) => `<option value="${item.value}">${item.label || item.value}</option>`)
+        .join("");
+      if (hashTheme && list.some((item) => item.value === hashTheme)) extractTheme = hashTheme;
+      themeSelect.value = extractTheme;
+      applyExtractTheme(extractTheme);
+    });
+  themeSelect.addEventListener("change", () => {
+    if (typeof updateHash === "function") updateHash({ theme: themeSelect.value });
+    applyExtractTheme(themeSelect.value);
+  });
+}
+function applyExtractTheme(theme) {
+  if (!/^[a-z0-9-]+$/.test(theme || "")) return;
+  const container = document.getElementById("resumeContainer");
+  if (container) {
+    container.classList.remove(extractTheme);
+    container.classList.add(theme);
+  }
+  extractTheme = theme;
+  fetch(localsiteRoot() + "css/themes/" + theme + ".css")
+    .then((response) => (response.ok ? response.text() : ""))
+    .catch(() => "")
+    .then((css) => {
+      if (theme !== extractTheme) return; // Another theme was chosen while loading
+      extractThemeCss = css;
+      let styleTag = document.getElementById("extract-theme-styles");
+      if (!styleTag) {
+        styleTag = document.createElement("style");
+        styleTag.id = "extract-theme-styles";
+        document.head.appendChild(styleTag);
+      }
+      styleTag.textContent = css;
+    });
+}
+// The theme only changes templates that read the theme variables
+function updateThemeSelectState() {
+  const themeSelect = document.getElementById("themeSelect");
+  const template = TEMPLATES[STATE.currentTemplate];
+  if (!themeSelect) return;
+  const themed = !!(template && template.themed);
+  themeSelect.disabled = !themed;
+  themeSelect.title = themed ? "Theme" : "Themes apply to the Claude template";
 }
 
 // ==================== EXPORT & PRINT ====================
@@ -1329,6 +1396,7 @@ function handleExport() {
   const renderResult = renderTemplate(STATE.currentTemplate, STATE.resumeData);
   const resumeHTML = renderResult.html || "";
   const resumeCSS = renderResult.css || "";
+  const themed = !!(TEMPLATES[STATE.currentTemplate] && TEMPLATES[STATE.currentTemplate].themed); // Includes the site theme's variables
 
   const fullHTML = `
 <!DOCTYPE html>
@@ -1344,10 +1412,11 @@ function handleExport() {
       font-family: Arial, sans-serif;
     }
     @media print { body { padding: 0; } }
+    ${themed ? extractThemeCss : ""}
     ${resumeCSS}
   </style>
 </head>
-<body>
+<body${themed ? ` class="${extractTheme}"` : ""}>
   ${resumeHTML}
 </body>
 </html>
