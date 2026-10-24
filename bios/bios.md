@@ -11,7 +11,7 @@ Loren is a Full-Stack Developer with 25 years experience building collaborative 
 <div class="bioText" markdown="1" website="https://gary-mart.com">
 ## Gary Martirosyan
 Gary is a Data Engineer and Database Developer, specializing in designing, creating, and maintaining relational databases, ensuring their efficiency, reliability, and scalability. Gary optimizes database performance through applying best practices, query tuning, and stored procedure enhancements, ensuring fast and efficient data retrieval.
-[My Recent Work ~ Get In Touch](https://gary-mart.com)
+<!--[My Recent Work ~ Get In Touch](https://gary-mart.com)-->
 </div>
 ---
 <div class="bioText" markdown="1" bio="MounikaMullukuntla">
@@ -111,4 +111,3 @@ Bug: Satvik links to ShanmugaPriyaKannan resume
 <!--[Rekha Chimpiri](RekhaChimpiri) -->
 
 </div><br>
-
