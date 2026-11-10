@@ -1,4 +1,4 @@
-## Lead Engineers
+# Lead Engineers - Past and Present
 
 ![Loren Heyns](https://dreamstudio.com/earth/img/team/Loren-Heyns.jpg)
 <div class="bioText" markdown="1" bio="LorenHeyns">
@@ -18,9 +18,13 @@ Gary is a Data Engineer and Database Developer, specializing in designing, creat
 ## Mounika Mullukuntla
 Mounika is a Full-Stack Developer and AI/ML enthusiast with enterprise experience building responsive web applications, Python-backed REST APIs, and modern UI workflows. She has delivered production-grade retail and e-commerce platforms using React, Angular, and database-backed microservices, optimizing page performance, reducing load latency, and supporting real-time inventory and operations workflows.
 </div>
+
+<!--
 ---
 Alumni
 ---
+-->
+
 ![Dhananjay Surti](https://dreamstudio.com/earth/img/team/dj.jpg)
 <div class="bioText" markdown="1">
 ## Dhananjay Surti
