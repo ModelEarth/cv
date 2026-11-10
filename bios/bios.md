@@ -17,7 +17,6 @@ Gary is a Data Engineer and Database Developer, specializing in designing, creat
 <div class="bioText" markdown="1" bio="MounikaMullukuntla">
 ## Mounika Mullukuntla
 Mounika is a Full-Stack Developer and AI/ML enthusiast with enterprise experience building responsive web applications, Python-backed REST APIs, and modern UI workflows. She has delivered production-grade retail and e-commerce platforms using React, Angular, and database-backed microservices, optimizing page performance, reducing load latency, and supporting real-time inventory and operations workflows.
-[My Recent Work ~ Get In Touch](../bios/MounikaMullukuntla/)
 </div>
 ---
 Alumni
