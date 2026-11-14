@@ -11,7 +11,7 @@ DreamStudio Earth – Atlanta, GA
 
 Primary developer of AI integrated web apps combining Machine Learning and Data Visualizations. Project Director for model.earth data science teams analyzing industry supply-chains with location comparison tools. AI interfaces using Rust, Python and NodeJS. Google Data Commons API timelines. Cloudflare and AWS hosting. International trade flow analysis combining Claude Code CLI, OpenAI Codex, Grok xAI video generation, Azure PostgreSQL, Tabulator, ChartJS, D3, Leaflet Maps.
 
-- [Arts Engine Developer](https://dreamstudio.com/requests/engine/) - Storyboard generation, LLM chat interfaces, Python data pipelines and PostgreSQL databases
+- [Project Engine Developer](https://dreamstudio.com/requests/engine/) - Storyboard generation, LLM chat interfaces, Python data pipelines and PostgreSQL databases
 - [Webroot Manager](https://dreamstudio.com/team/setup/) - Automation for Rust and Python deployments for AI modules and industry comparisons
 - [Product Profiles](https://dreamstudio.com/profile/item/#layout=product&cat=Carpet) - BuildingTransparency API frontend comparing CAD construction product profiles
 - [International+Interstate Data](https://dreamstudio.com/profile/footprint/) - Trade flow analysis with Python Colabs, Azure SQL, Tabulator, Leaflet Maps
